@@ -3,17 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reaction Swipe - Classroom Edition</title>
+    <title>Reaction Swipe - Classroom Legends</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; font-family: 'Inter', sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
-        #score-board { position: absolute; top: 30px; font-size: 1.8rem; color: #00FF41; }
-        #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        #score-board { position: absolute; top: 20px; font-size: 1.8rem; color: #00FF41; }
+        #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         #arrow { font-size: 5rem; height: 80px; }
         #timer-container { width: 80%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
-        #leaderboard { font-size: 0.85rem; color: #888; margin-top: 30px; text-align: center; width: 90%; line-height: 1.6; border-top: 1px solid #333; padding-top: 15px; }
-        .legend-name { color: #00FF41; }
+        
+        /* New Vertical Leaderboard Styles */
+        #leaderboard { 
+            font-size: 1rem; 
+            color: #ccc; 
+            margin-top: 25px; 
+            text-align: center; 
+            width: 85%; 
+            border-top: 2px solid #333; 
+            padding-top: 15px; 
+        }
+        .legend-item { margin: 8px 0; font-size: 1.1rem; }
+        .rank { color: #888; font-size: 0.9rem; margin-right: 5px; }
+        .name { color: #00FF41; font-weight: bold; }
+        .pts { color: #FFD700; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -26,13 +39,14 @@
     </div>
 
     <div id="timer-container"><div id="timer-bar"></div></div>
+    
     <div id="leaderboard">Loading Global Leaderboard...</div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // Your specific Firebase config from the screenshot
+        // Your real keys from your screenshot
         const firebaseConfig = {
             apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM",
             authDomain: "swipegameleaderboard.firebaseapp.com",
@@ -51,14 +65,20 @@
         const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'], arrows = { 'UP': '⬆️', 'DOWN': '⬇️', 'LEFT': '⬅️', 'RIGHT': '➡️' };
         const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
 
-        // Fetch and show top 5 scores
+        // FIXED: This function now creates a clean vertical list of names
         function updateLeaderboard() {
             database.ref('scores').orderByChild('score').limitToLast(5).on('value', snapshot => {
-                let html = '<b>🏆 CLASS LEGENDS 🏆</b><br>';
+                let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
                 let list = [];
                 snapshot.forEach(child => list.push(child.val()));
+                
+                // Show highest score at the top
                 list.reverse().forEach((user, index) => { 
-                    html += `${index + 1}. <span class="legend-name">${user.name}</span>: ${user.score} | `; 
+                    html += `<div class="legend-item">
+                                <span class="rank">#${index + 1}</span> 
+                                <span class="name">${user.name}</span>: 
+                                <span class="pts">${user.score} pts</span>
+                             </div>`; 
                 });
                 leaderboardEl.innerHTML = html;
             });
@@ -67,18 +87,20 @@
 
         function gameOver(reason) {
             clearInterval(timerInterval);
-            let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter your name for the leaderboard:`, "Player");
+            let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
             if(name && score > 0) {
+                // .push() ensures a new entry is created every time
                 database.ref('scores').push({ name: name.substring(0, 10), score: score });
             }
             textEl.innerHTML = "Game Over!<br>Tap to Restart";
             arrowEl.innerText = '💀';
             score = 0; currentCommand = '';
+            timerBar.style.width = "0%";
         }
 
         function startTimer() {
             clearInterval(timerInterval);
-            maxTime = Math.max(600, 2000 - (score * 60)); // Gets harder faster!
+            maxTime = Math.max(600, 2000 - (score * 65)); 
             timeLeft = maxTime;
             timerInterval = setInterval(() => {
                 timeLeft -= 50;
@@ -96,30 +118,21 @@
 
         function checkSwipe(dir) {
             if (dir === currentCommand) { score++; scoreEl.innerText = score; nextRound(); }
-            else gameOver(`Wrong swipe: ${dir}`);
+            else gameOver(`Wrong swipe!`);
         }
 
-        // --- Interaction Logic ---
         let tsX, tsY;
         function handleStart() { if(!currentCommand) { scoreEl.innerText = "0"; nextRound(); } }
 
-        document.addEventListener('touchstart', e => { 
-            tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; 
-            handleStart();
-        });
+        document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(); });
         document.addEventListener('touchend', e => {
             let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
-            if (Math.abs(x) > 30 || Math.abs(y) > 30) {
-                checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
-            }
+            if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
         });
-
         document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
         document.addEventListener('mouseup', e => {
             let x = e.clientX - tsX, y = e.clientY - tsY;
-            if (Math.abs(x) > 30 || Math.abs(y) > 30) {
-                checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
-            }
+            if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
         });
     </script>
 </body>
