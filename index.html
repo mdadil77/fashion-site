@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reaction Swipe</title>
+    <title>Reaction Swipe - Classroom Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; font-family: 'Inter', sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
-        #score-board { position: absolute; top: 40px; font-size: 2rem; color: #00FF41; }
-        #instruction { font-size: 3rem; text-align: center; margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        #arrow { font-size: 6rem; height: 100px; }
-        #timer-container { width: 80%; height: 15px; background: #333; border-radius: 10px; overflow: hidden; }
-        #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear, background-color 0.2s; }
+        #score-board { position: absolute; top: 30px; font-size: 1.8rem; color: #00FF41; }
+        #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        #arrow { font-size: 5rem; height: 80px; }
+        #timer-container { width: 80%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
+        #leaderboard { font-size: 0.85rem; color: #888; margin-top: 30px; text-align: center; width: 90%; line-height: 1.6; border-top: 1px solid #333; padding-top: 15px; }
+        .legend-name { color: #00FF41; }
     </style>
 </head>
 <body>
@@ -23,66 +25,65 @@
         <div id="text">Tap or Click to Start</div>
     </div>
 
-    <div id="timer-container">
-        <div id="timer-bar"></div>
-    </div>
+    <div id="timer-container"><div id="timer-bar"></div></div>
+    <div id="leaderboard">Loading Global Leaderboard...</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // Game Variables
-        let score = 0;
-        let currentCommand = '';
-        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-        const arrows = { 'UP': '⬆️', 'DOWN': '⬇️', 'LEFT': '⬅️', 'RIGHT': '➡️' };
-        
-        // HTML Elements
-        const textEl = document.getElementById('text');
-        const arrowEl = document.getElementById('arrow');
-        const scoreEl = document.getElementById('score');
-        const timerBar = document.getElementById('timer-bar');
-        
-        // Timer Variables
-        let timerInterval;
-        let maxTime = 2000; // Start with 2 seconds per swipe
-        let timeLeft = maxTime;
+        // Your specific Firebase config from the screenshot
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM",
+            authDomain: "swipegameleaderboard.firebaseapp.com",
+            databaseURL: "https://swipegameleaderboard-default-rtdb.firebaseio.com",
+            projectId: "swipegameleaderboard",
+            storageBucket: "swipegameleaderboard.firebasestorage.app",
+            messagingSenderId: "751175472721",
+            appId: "1:751175472721:web:4544195a2dbea5cd948a70",
+            measurementId: "G-8TK6JZDQ2N"
+        };
 
-        // Touch Variables
-        let touchstartX = 0;
-        let touchstartY = 0;
-        let touchendX = 0;
-        let touchendY = 0;
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let score = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
+        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'], arrows = { 'UP': '⬆️', 'DOWN': '⬇️', 'LEFT': '⬅️', 'RIGHT': '➡️' };
+        const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
+
+        // Fetch and show top 5 scores
+        function updateLeaderboard() {
+            database.ref('scores').orderByChild('score').limitToLast(5).on('value', snapshot => {
+                let html = '<b>🏆 CLASS LEGENDS 🏆</b><br>';
+                let list = [];
+                snapshot.forEach(child => list.push(child.val()));
+                list.reverse().forEach((user, index) => { 
+                    html += `${index + 1}. <span class="legend-name">${user.name}</span>: ${user.score} | `; 
+                });
+                leaderboardEl.innerHTML = html;
+            });
+        }
+        updateLeaderboard();
 
         function gameOver(reason) {
-            clearInterval(timerInterval); // Stop the clock!
+            clearInterval(timerInterval);
+            let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter your name for the leaderboard:`, "Player");
+            if(name && score > 0) {
+                database.ref('scores').push({ name: name.substring(0, 10), score: score });
+            }
+            textEl.innerHTML = "Game Over!<br>Tap to Restart";
             arrowEl.innerText = '💀';
-            textEl.innerHTML = `GAME OVER!<br><span style="font-size: 1.5rem; color: #ff4444;">${reason}</span>`;
-            timerBar.style.width = '0%';
-            score = 0;
-            currentCommand = '';
-            setTimeout(() => textEl.innerHTML += "<br><span style='font-size: 1.5rem; color: #aaa;'>Tap to Restart</span>", 1500);
+            score = 0; currentCommand = '';
         }
 
         function startTimer() {
             clearInterval(timerInterval);
-            // Make the game faster for every point scored! (Minimum time: 0.6 seconds)
-            maxTime = Math.max(600, 2000 - (score * 50)); 
+            maxTime = Math.max(600, 2000 - (score * 60)); // Gets harder faster!
             timeLeft = maxTime;
-            
-            // This loop runs every 50 milliseconds to shrink the bar smoothly
             timerInterval = setInterval(() => {
-                timeLeft -= 50; 
-                let percentage = (timeLeft / maxTime) * 100;
-                timerBar.style.width = percentage + '%';
-
-                // Turn the bar red if time is running out (under 30%)
-                if (percentage < 30) {
-                    timerBar.style.background = '#ff4444';
-                } else {
-                    timerBar.style.background = '#00FF41';
-                }
-
-                if (timeLeft <= 0) {
-                    gameOver("Time ran out!");
-                }
+                timeLeft -= 50;
+                timerBar.style.width = (timeLeft / maxTime) * 100 + '%';
+                if (timeLeft <= 0) gameOver("Time out!");
             }, 50);
         }
 
@@ -93,61 +94,32 @@
             startTimer();
         }
 
-        function checkSwipe() {
-            let xDiff = touchendX - touchstartX;
-            let yDiff = touchendY - touchstartY;
-            let swipeDirection = '';
-
-            // Ignore tiny accidental taps instead of counting them as swipes
-            if (Math.abs(xDiff) < 30 && Math.abs(yDiff) < 30) return; 
-
-            if (Math.abs(xDiff) > Math.abs(yDiff)) {
-                swipeDirection = xDiff > 0 ? 'RIGHT' : 'LEFT';
-            } else {
-                swipeDirection = yDiff > 0 ? 'DOWN' : 'UP';
-            }
-
-            if (swipeDirection === currentCommand) {
-                score++;
-                scoreEl.innerText = score;
-                nextRound();
-            } else {
-                gameOver(`You swiped ${swipeDirection}`);
-            }
+        function checkSwipe(dir) {
+            if (dir === currentCommand) { score++; scoreEl.innerText = score; nextRound(); }
+            else gameOver(`Wrong swipe: ${dir}`);
         }
 
-        function handleStart() {
-            if(textEl.innerText.includes("Start") || textEl.innerText.includes("Restart")) {
-                scoreEl.innerText = "0";
-                timerBar.style.background = '#00FF41';
-                nextRound();
-            }
-        }
+        // --- Interaction Logic ---
+        let tsX, tsY;
+        function handleStart() { if(!currentCommand) { scoreEl.innerText = "0"; nextRound(); } }
 
-        // Mobile Touches
-        document.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-            touchstartY = e.changedTouches[0].screenY;
+        document.addEventListener('touchstart', e => { 
+            tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; 
             handleStart();
         });
-
         document.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            touchendY = e.changedTouches[0].screenY;
-            if(currentCommand !== '') checkSwipe();
+            let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
+            if (Math.abs(x) > 30 || Math.abs(y) > 30) {
+                checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
+            }
         });
 
-        // Laptop Clicks & Drags
-        document.addEventListener('mousedown', e => {
-            touchstartX = e.clientX;
-            touchstartY = e.clientY;
-            handleStart();
-        });
-
+        document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
         document.addEventListener('mouseup', e => {
-            touchendX = e.clientX;
-            touchendY = e.clientY;
-            if(currentCommand !== '') checkSwipe();
+            let x = e.clientX - tsX, y = e.clientY - tsY;
+            if (Math.abs(x) > 30 || Math.abs(y) > 30) {
+                checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
+            }
         });
     </script>
 </body>
