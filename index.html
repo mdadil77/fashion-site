@@ -3,50 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Site</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <title>Reaction Swipe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #000; color: #fff; overflow: hidden; }
-        .swiper { width: 100vw; height: 100vh; }
-        .swiper-slide { display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; }
-        .slide-1 { background: linear-gradient(45deg, #1a1a1a, #4a4a4a); }
-        .slide-2 { background: linear-gradient(45deg, #001f3f, #0074D9); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; }
+        #score-board { position: absolute; top: 20px; font-size: 2rem; color: #00FF41; }
+        #instruction { font-size: 4rem; text-align: center; margin-bottom: 20px; }
+        #timer-bar { width: 80%; height: 10px; background: #fff; border-radius: 5px; transition: width 0.1s linear; }
     </style>
 </head>
 <body>
 
-    <div class="swiper">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide slide-1">Premium Looks</div>
-            <div class="swiper-slide slide-2">Smooth Gestures</div>
-        </div>
-    </div>
+    <div id="score-board">Score: <span id="score">0</span></div>
+    <div id="instruction">Tap to Start</div>
+    <div id="timer-bar"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-        const swiper = new Swiper('.swiper', {
-            direction: 'vertical', // Swipe up/down like TikTok or premium sites
-            mousewheel: true,
-            speed: 1000, // Smooth transition speed
-        });
-    </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script>
-        // 1. Set the initial state (hide the text and push it down 50 pixels)
-        gsap.set('.swiper-slide', { opacity: 0, y: 50 });
+        // Game Variables
+        let score = 0;
+        let currentCommand = '';
+        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+        const instructionEl = document.getElementById('instruction');
+        const scoreEl = document.getElementById('score');
+        
+        // Touch Variables
+        let touchstartX = 0;
+        let touchstartY = 0;
+        let touchendX = 0;
+        let touchendY = 0;
 
-        // 2. Animate the first slide immediately when the page loads
-        gsap.to('.slide-1', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+        // Start the game logic
+        function nextRound() {
+            // Pick a random direction
+            currentCommand = directions[Math.floor(Math.random() * directions.length)];
+            instructionEl.innerText = `SWIPE ${currentCommand}!`;
+            // In the future, we will add the timer logic here
+        }
 
-        // 3. Listen for the user swiping, then animate the text
-        swiper.on('slideChangeTransitionStart', function () {
-            // Instantly hide all text on all slides
-            gsap.to('.swiper-slide', { opacity: 0, y: 50, duration: 0.5 });
+        function checkSwipe() {
+            let xDiff = touchendX - touchstartX;
+            let yDiff = touchendY - touchstartY;
+            let swipeDirection = '';
+
+            // Math to determine if the swipe was mostly horizontal or vertical
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                swipeDirection = xDiff > 0 ? 'RIGHT' : 'LEFT';
+            } else {
+                swipeDirection = yDiff > 0 ? 'DOWN' : 'UP'; // Y goes down as numbers go up in web browsers
+            }
+
+            // Check if they matched the command
+            if (swipeDirection === currentCommand) {
+                score++;
+                scoreEl.innerText = score;
+                nextRound();
+            } else {
+                instructionEl.innerText = `GAME OVER! You swiped ${swipeDirection}`;
+                score = 0; // Reset
+                setTimeout(() => instructionEl.innerText = "Tap to Restart", 2000);
+            }
+        }
+
+        // Listeners for mobile touches
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+            touchstartY = e.changedTouches[0].screenY;
             
-            // Find the slide the user just swiped to, and animate its text up smoothly
-            let activeSlide = swiper.slides[swiper.activeIndex];
-            gsap.to(activeSlide, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 });
+            // Start game on first tap
+            if(instructionEl.innerText === "Tap to Start" || instructionEl.innerText === "Tap to Restart") {
+                scoreEl.innerText = "0";
+                nextRound();
+            }
+        });
+
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            touchendY = e.changedTouches[0].screenY;
+            if(currentCommand !== '') checkSwipe();
         });
     </script>
 </body>
