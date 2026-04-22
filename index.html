@@ -81,6 +81,23 @@
             touchendY = e.changedTouches[0].screenY;
             if(currentCommand !== '') checkSwipe();
         });
+        // Listeners for laptop mouse clicks and drags
+        document.addEventListener('mousedown', e => {
+            touchstartX = e.clientX;
+            touchstartY = e.clientY;
+            
+            // Start game on first click
+            if(instructionEl.innerText.includes("Start") || instructionEl.innerText.includes("Restart")) {
+                scoreEl.innerText = "0";
+                nextRound();
+            }
+        });
+
+        document.addEventListener('mouseup', e => {
+            touchendX = e.clientX;
+            touchendY = e.clientY;
+            if(currentCommand !== '') checkSwipe();
+        });
     </script>
 </body>
 </html>
