@@ -31,5 +31,23 @@
             speed: 1000, // Smooth transition speed
         });
     </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        // 1. Set the initial state (hide the text and push it down 50 pixels)
+        gsap.set('.swiper-slide', { opacity: 0, y: 50 });
+
+        // 2. Animate the first slide immediately when the page loads
+        gsap.to('.slide-1', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+
+        // 3. Listen for the user swiping, then animate the text
+        swiper.on('slideChangeTransitionStart', function () {
+            // Instantly hide all text on all slides
+            gsap.to('.swiper-slide', { opacity: 0, y: 50, duration: 0.5 });
+            
+            // Find the slide the user just swiped to, and animate its text up smoothly
+            let activeSlide = swiper.slides[swiper.activeIndex];
+            gsap.to(activeSlide, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 });
+        });
+    </script>
 </body>
 </html>
