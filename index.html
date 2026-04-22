@@ -67,22 +67,45 @@
 
         // FIXED: This function now creates a clean vertical list of names
         function updateLeaderboard() {
-            database.ref('scores').orderByChild('score').limitToLast(5).on('value', snapshot => {
-                let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
-                let list = [];
-                snapshot.forEach(child => list.push(child.val()));
-                
-                // Show highest score at the top
-                list.reverse().forEach((user, index) => { 
-                    html += `<div class="legend-item">
-                                <span class="rank">#${index + 1}</span> 
-                                <span class="name">${user.name}</span>: 
-                                <span class="pts">${user.score} pts</span>
-                             </div>`; 
-                });
-                leaderboardEl.innerHTML = html;
-            });
+            // Replace your existing updateLeaderboard function with this:
+function updateLeaderboard() {
+    // We grab ALL data and let JavaScript do the heavy lifting
+    database.ref('scores').on('value', snapshot => {
+        let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
+        
+        if (!snapshot.exists()) {
+            leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>';
+            return;
         }
+
+        let list = [];
+        snapshot.forEach(child => {
+            let data = child.val();
+            // Only add valid scores to the list
+            if (data && typeof data.score === 'number' && data.score > 0) {
+                list.push(data);
+            }
+        });
+        
+        // 1. Sort the list manually in JavaScript (Highest score first)
+        list.sort((a, b) => b.score - a.score);
+
+        // 2. Slice out only the Top 5 players
+        let top5 = list.slice(0, 5);
+        
+        // 3. Display them
+        top5.forEach((user, index) => { 
+            html += `<div class="legend-item">
+                        <span class="rank">#${index + 1}</span> 
+                        <span style="color:#00FF41; font-weight:bold;">${user.name}</span>: 
+                        <span style="color:#FFD700; margin-left:5px;">${user.score} pts</span>
+                     </div>`; 
+        });
+        
+        leaderboardEl.innerHTML = html;
+    });
+}
+        
         updateLeaderboard();
 
         function gameOver(reason) {
