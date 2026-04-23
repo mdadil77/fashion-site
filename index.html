@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reaction Swipe - Classroom Legends</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+    <title>Reaction Swipe - Arcade Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: 'Inter', sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
+        /* UPGRADE 1: Dark Red Background */
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
+        
         #score-board { position: absolute; top: 20px; font-size: 1.8rem; color: #00FF41; }
         #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        #arrow { font-size: 5rem; height: 80px; }
-        #timer-container { width: 80%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        
+        /* UPGRADE 2: Pro Game Arrows with Neon Glow */
+        #arrow { 
+            font-size: 7rem; 
+            height: 100px; 
+            line-height: 100px;
+            color: #ffffff;
+            text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 50px #ff0000; 
+            font-weight: 900;
+        }
+        
+        #timer-container { width: 80%; height: 12px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 20px; box-shadow: 0 0 10px #000; }
         #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
         
         #leaderboard { 
@@ -19,10 +31,10 @@
             margin-top: 25px; 
             text-align: center; 
             width: 85%; 
-            border-top: 2px solid #333; 
+            border-top: 2px solid #550000; 
             padding-top: 15px; 
         }
-        .legend-item { margin: 8px 0; font-size: 1.1rem; }
+        .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px; }
         .rank { color: #888; font-size: 0.9rem; margin-right: 5px; }
     </style>
 </head>
@@ -31,7 +43,7 @@
     <div id="score-board">Score: <span id="score">0</span></div>
     
     <div id="instruction">
-        <div id="arrow">⏱️</div>
+        <div id="arrow">▶</div>
         <div id="text">Tap or Click to Start</div>
     </div>
 
@@ -59,13 +71,17 @@
         const database = firebase.database();
 
         let score = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
-        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'], arrows = { 'UP': '⬆️', 'DOWN': '⬇️', 'LEFT': '⬅️', 'RIGHT': '➡️' };
+        
+        // UPGRADE 2: Clean geometric arrows instead of emojis
+        const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+        const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
+        
         const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
 
-        // The Bulletproof Leaderboard Logic
+        // UPGRADE 3: Top 10 Leaderboard Logic
         function updateLeaderboard() {
             database.ref('scores').on('value', snapshot => {
-                let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
+                let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
                 
                 if (!snapshot.exists()) {
                     leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>';
@@ -83,14 +99,17 @@
                 // Sort by highest score
                 list.sort((a, b) => b.score - a.score);
 
-                // Take top 5
-                let top5 = list.slice(0, 5);
+                // Take top 10 instead of top 5
+                let top10 = list.slice(0, 10);
                 
-                top5.forEach((user, index) => { 
+                top10.forEach((user, index) => { 
+                    // Add gold color to the #1 player!
+                    let nameColor = index === 0 ? "#FFD700" : "#00FF41";
+                    
                     html += `<div class="legend-item">
                                 <span class="rank">#${index + 1}</span> 
-                                <span style="color:#00FF41; font-weight:bold;">${user.name}</span>: 
-                                <span style="color:#FFD700; margin-left:5px;">${user.score} pts</span>
+                                <span style="color:${nameColor}; font-weight:bold;">${user.name}</span>: 
+                                <span style="color:#fff; margin-left:5px;">${user.score} pts</span>
                              </div>`; 
                 });
                 
@@ -98,18 +117,17 @@
             });
         }
         
-        // Start the leaderboard!
         updateLeaderboard();
 
-        // Game Logic
         function gameOver(reason) {
             clearInterval(timerInterval);
             let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
             if(name && score > 0) {
                 database.ref('scores').push({ name: name.substring(0, 10), score: score });
             }
-            textEl.innerHTML = "Game Over!<br>Tap to Restart";
-            arrowEl.innerText = '💀';
+            textEl.innerHTML = "Game Over!<br><span style='font-size:1.5rem; color:#aaa;'>Tap to Restart</span>";
+            arrowEl.innerText = '✖'; // A clean "X" instead of the skull emoji
+            arrowEl.style.color = "#ff4444";
             score = 0; currentCommand = '';
             timerBar.style.width = "0%";
         }
@@ -128,6 +146,7 @@
         function nextRound() {
             currentCommand = directions[Math.floor(Math.random() * directions.length)];
             arrowEl.innerText = arrows[currentCommand];
+            arrowEl.style.color = "#ffffff"; // Reset color back to white for the glow
             textEl.innerText = `SWIPE ${currentCommand}!`;
             startTimer();
         }
