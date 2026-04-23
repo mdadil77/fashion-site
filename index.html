@@ -13,7 +13,6 @@
         #timer-container { width: 80%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
         
-        /* New Vertical Leaderboard Styles */
         #leaderboard { 
             font-size: 1rem; 
             color: #ccc; 
@@ -25,8 +24,6 @@
         }
         .legend-item { margin: 8px 0; font-size: 1.1rem; }
         .rank { color: #888; font-size: 0.9rem; margin-right: 5px; }
-        .name { color: #00FF41; font-weight: bold; }
-        .pts { color: #FFD700; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -46,7 +43,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script>
-        // Your real keys from your screenshot
+        // Your Firebase Keys
         const firebaseConfig = {
             apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM",
             authDomain: "swipegameleaderboard.firebaseapp.com",
@@ -65,54 +62,50 @@
         const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'], arrows = { 'UP': '⬆️', 'DOWN': '⬇️', 'LEFT': '⬅️', 'RIGHT': '➡️' };
         const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
 
-        // FIXED: This function now creates a clean vertical list of names
+        // The Bulletproof Leaderboard Logic
         function updateLeaderboard() {
-            // Replace your existing updateLeaderboard function with this:
-function updateLeaderboard() {
-    // We grab ALL data and let JavaScript do the heavy lifting
-    database.ref('scores').on('value', snapshot => {
-        let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
-        
-        if (!snapshot.exists()) {
-            leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>';
-            return;
+            database.ref('scores').on('value', snapshot => {
+                let html = '<div style="color:#FFD700; margin-bottom:10px;">🏆 TOP 5 LEGENDS 🏆</div>';
+                
+                if (!snapshot.exists()) {
+                    leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>';
+                    return;
+                }
+
+                let list = [];
+                snapshot.forEach(child => {
+                    let data = child.val();
+                    if (data && typeof data.score === 'number' && data.score > 0) {
+                        list.push(data);
+                    }
+                });
+                
+                // Sort by highest score
+                list.sort((a, b) => b.score - a.score);
+
+                // Take top 5
+                let top5 = list.slice(0, 5);
+                
+                top5.forEach((user, index) => { 
+                    html += `<div class="legend-item">
+                                <span class="rank">#${index + 1}</span> 
+                                <span style="color:#00FF41; font-weight:bold;">${user.name}</span>: 
+                                <span style="color:#FFD700; margin-left:5px;">${user.score} pts</span>
+                             </div>`; 
+                });
+                
+                leaderboardEl.innerHTML = html;
+            });
         }
-
-        let list = [];
-        snapshot.forEach(child => {
-            let data = child.val();
-            // Only add valid scores to the list
-            if (data && typeof data.score === 'number' && data.score > 0) {
-                list.push(data);
-            }
-        });
         
-        // 1. Sort the list manually in JavaScript (Highest score first)
-        list.sort((a, b) => b.score - a.score);
-
-        // 2. Slice out only the Top 5 players
-        let top5 = list.slice(0, 5);
-        
-        // 3. Display them
-        top5.forEach((user, index) => { 
-            html += `<div class="legend-item">
-                        <span class="rank">#${index + 1}</span> 
-                        <span style="color:#00FF41; font-weight:bold;">${user.name}</span>: 
-                        <span style="color:#FFD700; margin-left:5px;">${user.score} pts</span>
-                     </div>`; 
-        });
-        
-        leaderboardEl.innerHTML = html;
-    });
-}
-        
+        // Start the leaderboard!
         updateLeaderboard();
 
+        // Game Logic
         function gameOver(reason) {
             clearInterval(timerInterval);
             let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
             if(name && score > 0) {
-                // .push() ensures a new entry is created every time
                 database.ref('scores').push({ name: name.substring(0, 10), score: score });
             }
             textEl.innerHTML = "Game Over!<br>Tap to Restart";
