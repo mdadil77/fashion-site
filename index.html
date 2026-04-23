@@ -75,6 +75,7 @@
         
         const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
 
+        // PHASE 1 FIX: Dictionary-based Unique Leaderboard
         function updateLeaderboard() {
             database.ref('scores').on('value', snapshot => {
                 let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
@@ -84,14 +85,25 @@
                     return;
                 }
 
-                let list = [];
+                // Use a dictionary to only save a player's BEST score
+                let bestScores = {};
+                
                 snapshot.forEach(child => {
                     let data = child.val();
-                    if (data && typeof data.score === 'number' && data.score > 0) {
-                        list.push(data);
+                    if (data && typeof data.score === 'number' && data.score > 0 && data.name) {
+                        let playerName = data.name.trim(); // Remove accidental spaces
+                        
+                        // If we haven't seen this name yet, OR if this new score is higher than their old one...
+                        if (!bestScores[playerName] || data.score > bestScores[playerName].score) {
+                            bestScores[playerName] = data; // Overwrite with the new high score!
+                        }
                     }
                 });
                 
+                // Convert our dictionary back into a list
+                let list = Object.values(bestScores);
+                
+                // Sort by highest score
                 list.sort((a, b) => b.score - a.score);
                 let top10 = list.slice(0, 10);
                 
@@ -110,11 +122,9 @@
         
         updateLeaderboard();
 
-        // FIXED: The reason is now shown on the screen and in the prompt!
         function gameOver(reason) {
             clearInterval(timerInterval);
             
-            // Wait a tiny fraction of a second before the prompt so the screen can update first
             setTimeout(() => {
                 let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
                 if(name && score > 0) {
@@ -148,7 +158,6 @@
             startTimer();
         }
 
-        // FIXED: Now passes the exact direction you swiped back to the gameOver screen
         function checkSwipe(dir) {
             if (dir === currentCommand) { score++; scoreEl.innerText = score; nextRound(); }
             else gameOver(`You swiped ${dir}`);
