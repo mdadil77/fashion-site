@@ -6,13 +6,11 @@
     <title>Reaction Swipe - Arcade Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
     <style>
-        /* UPGRADE 1: Dark Red Background */
         body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
         
         #score-board { position: absolute; top: 20px; font-size: 1.8rem; color: #00FF41; }
         #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         
-        /* UPGRADE 2: Pro Game Arrows with Neon Glow */
         #arrow { 
             font-size: 7rem; 
             height: 100px; 
@@ -72,13 +70,11 @@
 
         let score = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
         
-        // UPGRADE 2: Clean geometric arrows instead of emojis
         const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
         const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
         
         const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard');
 
-        // UPGRADE 3: Top 10 Leaderboard Logic
         function updateLeaderboard() {
             database.ref('scores').on('value', snapshot => {
                 let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
@@ -96,16 +92,11 @@
                     }
                 });
                 
-                // Sort by highest score
                 list.sort((a, b) => b.score - a.score);
-
-                // Take top 10 instead of top 5
                 let top10 = list.slice(0, 10);
                 
                 top10.forEach((user, index) => { 
-                    // Add gold color to the #1 player!
                     let nameColor = index === 0 ? "#FFD700" : "#00FF41";
-                    
                     html += `<div class="legend-item">
                                 <span class="rank">#${index + 1}</span> 
                                 <span style="color:${nameColor}; font-weight:bold;">${user.name}</span>: 
@@ -119,14 +110,20 @@
         
         updateLeaderboard();
 
+        // FIXED: The reason is now shown on the screen and in the prompt!
         function gameOver(reason) {
             clearInterval(timerInterval);
-            let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
-            if(name && score > 0) {
-                database.ref('scores').push({ name: name.substring(0, 10), score: score });
-            }
-            textEl.innerHTML = "Game Over!<br><span style='font-size:1.5rem; color:#aaa;'>Tap to Restart</span>";
-            arrowEl.innerText = '✖'; // A clean "X" instead of the skull emoji
+            
+            // Wait a tiny fraction of a second before the prompt so the screen can update first
+            setTimeout(() => {
+                let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
+                if(name && score > 0) {
+                    database.ref('scores').push({ name: name.substring(0, 10), score: score });
+                }
+            }, 50);
+            
+            textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
+            arrowEl.innerText = '✖'; 
             arrowEl.style.color = "#ff4444";
             score = 0; currentCommand = '';
             timerBar.style.width = "0%";
@@ -139,21 +136,22 @@
             timerInterval = setInterval(() => {
                 timeLeft -= 50;
                 timerBar.style.width = (timeLeft / maxTime) * 100 + '%';
-                if (timeLeft <= 0) gameOver("Time out!");
+                if (timeLeft <= 0) gameOver("Time ran out!");
             }, 50);
         }
 
         function nextRound() {
             currentCommand = directions[Math.floor(Math.random() * directions.length)];
             arrowEl.innerText = arrows[currentCommand];
-            arrowEl.style.color = "#ffffff"; // Reset color back to white for the glow
+            arrowEl.style.color = "#ffffff"; 
             textEl.innerText = `SWIPE ${currentCommand}!`;
             startTimer();
         }
 
+        // FIXED: Now passes the exact direction you swiped back to the gameOver screen
         function checkSwipe(dir) {
             if (dir === currentCommand) { score++; scoreEl.innerText = score; nextRound(); }
-            else gameOver(`Wrong swipe!`);
+            else gameOver(`You swiped ${dir}`);
         }
 
         let tsX, tsY;
