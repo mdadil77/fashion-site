@@ -7,6 +7,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
   <style>
     body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
+    
+    /* NEW: Whole Screen Shake for Game Over */
+    .screen-shake { animation: bigShake 0.4s ease; }
+    @keyframes bigShake {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-10px, 10px); }
+      40% { transform: translate(10px, -10px); }
+      60% { transform: translate(-10px, -10px); }
+      80% { transform: translate(10px, 10px); }
+      100% { transform: translate(0, 0); }
+    }
 
     /* HUD Layout */
     #hud { position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
@@ -15,12 +26,15 @@
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
     #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
     #speed-bonus { font-size: 1.2rem; color: #00FFFF; position: absolute; opacity: 0; transition: opacity 0.5s, transform 0.5s; font-style: italic; }
+    
+    /* NEW: Display the player's saved name */
+    #player-id { position: absolute; bottom: 10px; font-size: 0.8rem; color: #666; cursor: pointer; }
 
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
     #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 50px #ff0000; font-weight: 900; z-index: 10; }
 
     #timer-container { width: 80%; height: 15px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 30px; box-shadow: 0 0 10px #000; z-index: 10; border: 1px solid #333; }
-    #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
+    #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear, background-color 0.2s ease; }
     .freeze-anim { background: #00FFFF !important; box-shadow: 0 0 15px #00FFFF; }
 
     #leaderboard { font-size: 1rem; color: #ccc; margin-top: 25px; text-align: center; width: 85%; border-top: 2px solid #550000; padding-top: 15px; z-index: 10; }
@@ -66,6 +80,8 @@
   
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Global Leaderboard...</div>
+  
+  <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
   <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
@@ -93,29 +109,26 @@
     // Game Variables
     let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
     let isFrozen = false;
+    
+    // Memory Bank (Local Storage)
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
+    let savedPlayerName = localStorage.getItem('arcadePlayerName');
+    let savedPlayerAvatar = localStorage.getItem('arcadePlayerAvatar');
+    
+    if (savedPlayerName) {
+        document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`;
+    }
 
     // Design Arrays
     const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
     const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
-    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎'];
+    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁'];
 
-    const textEl = document.getElementById('text'),
-          arrowEl = document.getElementById('arrow'),
-          scoreEl = document.getElementById('score'),
-          timerBar = document.getElementById('timer-bar'),
-          leaderboardEl = document.getElementById('leaderboard'),
-          comboBoard = document.getElementById('combo-board'),
-          comboEl = document.getElementById('combo'),
-          speedBonusEl = document.getElementById('speed-bonus');
+    const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo'), speedBonusEl = document.getElementById('speed-bonus');
+    const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
 
-    const soundCorrect = document.getElementById('sound-correct');
-    const soundWrong = document.getElementById('sound-wrong');
-    const soundMilestone = document.getElementById('sound-milestone');
-
-    // Leaderboard Logic (With Avatars)
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
         let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
@@ -138,7 +151,7 @@
         
         top10.forEach((user, index) => {
           let nameColor = index === 0 ? "#FFD700" : "#00FF41";
-          let av = user.avatar || '👤'; // Fallback if no avatar
+          let av = user.avatar || '👤';
           html += `<div class="legend-item">
                      <span class="rank">#${index + 1}</span> 
                      <span class="avatar">${av}</span>
@@ -151,19 +164,28 @@
     }
     updateLeaderboard();
 
-    function triggerConfetti() {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 });
+    function triggerConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 }); }
+
+    // Change Name Function
+    function changeName() {
+        let newName = prompt("Enter your new arcade name:", savedPlayerName || "Player");
+        if (newName) {
+            savedPlayerName = newName.substring(0, 10);
+            savedPlayerAvatar = avatarsList[Math.floor(Math.random() * avatarsList.length)];
+            localStorage.setItem('arcadePlayerName', savedPlayerName);
+            localStorage.setItem('arcadePlayerAvatar', savedPlayerAvatar);
+            document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`;
+        }
     }
 
     function gameOver(reason) {
       clearInterval(timerInterval);
       let finalScore = score;
       
-      document.body.style.background = '#2A0000'; // Reset BG
+      document.body.style.background = '#2A0000';
       comboBoard.style.display = 'none';
       combo = 0;
 
-      // Local High Score check
       if(finalScore > localHigh) {
         localHigh = finalScore;
         localStorage.setItem('arcadeBest', localHigh);
@@ -171,16 +193,23 @@
       }
 
       arrowEl.classList.remove('wrong-anim', 'correct-anim');
+      document.body.classList.remove('screen-shake');
       void arrowEl.offsetWidth; 
+      
+      // Trigger the new massive screen shake!
       arrowEl.classList.add('wrong-anim');
+      document.body.classList.add('screen-shake');
       soundWrong.currentTime = 0;
       soundWrong.play().catch(e => console.log(e));
 
+      // SMART MEMORY CHECK: Only ask for name if they don't have one saved
       setTimeout(() => {
-        let name = prompt(`GAME OVER! ${reason}. Score: ${finalScore}\nEnter name for the list:`, "Player");
-        if(name && finalScore > 0) {
-          let randomAvatar = avatarsList[Math.floor(Math.random() * avatarsList.length)];
-          database.ref('scores').push({ name: name.substring(0, 10), score: finalScore, avatar: randomAvatar });
+        if (!savedPlayerName && finalScore > 0) {
+            changeName(); 
+        }
+        
+        if (savedPlayerName && finalScore > 0) {
+            database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
         }
       }, 400); 
       
@@ -196,10 +225,16 @@
       timeLeft = maxTime;
       
       timerInterval = setInterval(() => {
-        if(isFrozen) return; // Don't drain time if frozen!
+        if(isFrozen) return; 
         
         timeLeft -= 50;
-        timerBar.style.width = (timeLeft / maxTime) * 100 + '%';
+        let percentage = (timeLeft / maxTime) * 100;
+        timerBar.style.width = percentage + '%';
+        
+        // NEW: Dynamic Danger Colors
+        if (percentage > 50) timerBar.style.background = '#00FF41'; // Safe Green
+        else if (percentage > 25) timerBar.style.background = '#FFD700'; // Warning Yellow
+        else timerBar.style.background = '#FF0000'; // Critical Red
         
         if (timeLeft <= 0) gameOver("Time ran out!");
       }, 50);
@@ -209,18 +244,15 @@
       currentCommand = directions[Math.floor(Math.random() * directions.length)];
       arrowEl.innerText = arrows[currentCommand];
       arrowEl.style.color = "#ffffff";
-      document.body.style.background = bgColors[currentCommand]; // Dynamic Background
+      document.body.style.background = bgColors[currentCommand];
       textEl.innerText = `SWIPE ${currentCommand}!`;
       startTimer();
     }
 
-    // Velocity Tracking Variables
     let interactionStartTime = 0;
 
     function checkSwipe(dir, speedMs) {
       if (dir === currentCommand) { 
-        
-        // Velocity Feature: Fast swipes get 2 points!
         if(speedMs < 200) { 
             score += 2; 
             speedBonusEl.style.transform = `translateY(-30px)`;
@@ -233,21 +265,19 @@
         combo++;
         scoreEl.innerText = score; 
         
-        // Visuals
         arrowEl.classList.remove('correct-anim', 'wrong-anim');
+        document.body.classList.remove('screen-shake');
         void arrowEl.offsetWidth; 
         arrowEl.classList.add('correct-anim');
         soundCorrect.currentTime = 0;
         soundCorrect.play().catch(e => console.log(e));
 
-        // Combo Logic
         if (combo >= 5) {
             comboBoard.style.display = 'block';
             comboEl.innerText = combo;
         }
 
-        // Milestone & Freeze Logic
-        if (combo % 15 === 0) { // Every 15 combo hits, freeze timer for 2 seconds
+        if (combo % 15 === 0) { 
             isFrozen = true;
             timerBar.classList.add('freeze-anim');
             soundMilestone.play().catch(e=>console.log(e));
@@ -263,13 +293,11 @@
       else gameOver(`You swiped ${dir}`);
     }
 
-    let tsX, tsY;
     function handleStart(e) { 
         interactionStartTime = Date.now();
-        if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); nextRound(); } 
+        if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
-    // Input Listeners (with Velocity Tracking)
     document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(e); });
     document.addEventListener('mouseup', e => {
       let x = e.clientX - tsX, y = e.clientY - tsY;
