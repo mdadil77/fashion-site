@@ -3,22 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reaction Swipe - Arcade Edition</title>
+  <title>Reaction Swipe - Ultimate Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; }
+    body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
 
-    #score-board { position: absolute; top: 20px; font-size: 1.8rem; color: #00FF41; }
-    #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    /* HUD Layout */
+    #hud { position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
+    .score-box { display: flex; flex-direction: column; align-items: center; }
+    #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
+    #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
+    #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
+    #speed-bonus { font-size: 1.2rem; color: #00FFFF; position: absolute; opacity: 0; transition: opacity 0.5s, transform 0.5s; font-style: italic; }
 
-    #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 50px #ff0000; font-weight: 900; }
+    #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
+    #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ff0000, 0 0 30px #ff0000, 0 0 50px #ff0000; font-weight: 900; z-index: 10; }
 
-    #timer-container { width: 80%; height: 12px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 20px; box-shadow: 0 0 10px #000; }
+    #timer-container { width: 80%; height: 15px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 30px; box-shadow: 0 0 10px #000; z-index: 10; border: 1px solid #333; }
     #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
+    .freeze-anim { background: #00FFFF !important; box-shadow: 0 0 15px #00FFFF; }
 
-    #leaderboard { font-size: 1rem; color: #ccc; margin-top: 25px; text-align: center; width: 85%; border-top: 2px solid #550000; padding-top: 15px; }
-    .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px; }
-    .rank { color: #888; font-size: 0.9rem; margin-right: 5px; }
+    #leaderboard { font-size: 1rem; color: #ccc; margin-top: 25px; text-align: center; width: 85%; border-top: 2px solid #550000; padding-top: 15px; z-index: 10; }
+    .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1); }
+    .rank { color: #888; font-size: 0.9rem; width: 25px; text-align: right; }
+    .avatar { font-size: 1.2rem; }
 
     /* Animations */
     .correct-anim { animation: pulse 0.3s ease; }
@@ -41,16 +49,28 @@
 </head>
 <body>
 
-  <div id="score-board">Score: <span id="score">0</span></div>
+  <div id="hud">
+    <div class="score-box">
+      <div id="score-board"><span id="score">0</span></div>
+      <div id="local-high">Best: <span id="best-score">0</span></div>
+    </div>
+    <div id="combo-board">COMBO x<span id="combo">0</span></div>
+  </div>
+  
+  <div id="speed-bonus">+2 FAST!</div>
+
   <div id="instruction">
     <div id="arrow">▶</div>
-    <div id="text">Tap or Click to Start</div>
+    <div id="text">Tap to Start</div>
   </div>
+  
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Global Leaderboard...</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
   <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="sound-milestone" src="https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg"></audio>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -70,26 +90,37 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let score = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
+    // Game Variables
+    let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
+    let isFrozen = false;
+    let localHigh = localStorage.getItem('arcadeBest') || 0;
+    document.getElementById('best-score').innerText = localHigh;
+
+    // Design Arrays
     const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
+    const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
+    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎'];
 
     const textEl = document.getElementById('text'),
           arrowEl = document.getElementById('arrow'),
           scoreEl = document.getElementById('score'),
           timerBar = document.getElementById('timer-bar'),
-          leaderboardEl = document.getElementById('leaderboard');
+          leaderboardEl = document.getElementById('leaderboard'),
+          comboBoard = document.getElementById('combo-board'),
+          comboEl = document.getElementById('combo'),
+          speedBonusEl = document.getElementById('speed-bonus');
 
     const soundCorrect = document.getElementById('sound-correct');
     const soundWrong = document.getElementById('sound-wrong');
+    const soundMilestone = document.getElementById('sound-milestone');
 
+    // Leaderboard Logic (With Avatars)
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
         let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
-        if (!snapshot.exists()) {
-          leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>';
-          return;
-        }
+        if (!snapshot.exists()) { leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>'; return; }
+        
         let bestScores = {};
         snapshot.forEach(child => {
           let data = child.val();
@@ -100,26 +131,45 @@
             }
           }
         });
+        
         let list = Object.values(bestScores);
         list.sort((a, b) => b.score - a.score);
         let top10 = list.slice(0, 10);
+        
         top10.forEach((user, index) => {
           let nameColor = index === 0 ? "#FFD700" : "#00FF41";
-          html += `<div class="legend-item"><span class="rank">#${index + 1}</span> 
-                   <span style="color:${nameColor}; font-weight:bold;">${user.name}</span>: 
-                   <span style="color:#fff; margin-left:5px;">${user.score} pts</span></div>`;
+          let av = user.avatar || '👤'; // Fallback if no avatar
+          html += `<div class="legend-item">
+                     <span class="rank">#${index + 1}</span> 
+                     <span class="avatar">${av}</span>
+                     <span style="color:${nameColor}; font-weight:bold;">${user.name}</span>
+                     <span style="color:#fff; margin-left:auto;">${user.score} pts</span>
+                   </div>`;
         });
         leaderboardEl.innerHTML = html;
       });
     }
     updateLeaderboard();
 
+    function triggerConfetti() {
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 });
+    }
+
     function gameOver(reason) {
       clearInterval(timerInterval);
-      
-      // THE FIX: We take a snapshot of the score right now before anything else happens!
       let finalScore = score;
       
+      document.body.style.background = '#2A0000'; // Reset BG
+      comboBoard.style.display = 'none';
+      combo = 0;
+
+      // Local High Score check
+      if(finalScore > localHigh) {
+        localHigh = finalScore;
+        localStorage.setItem('arcadeBest', localHigh);
+        document.getElementById('best-score').innerText = localHigh;
+      }
+
       arrowEl.classList.remove('wrong-anim', 'correct-anim');
       void arrowEl.offsetWidth; 
       arrowEl.classList.add('wrong-anim');
@@ -127,29 +177,30 @@
       soundWrong.play().catch(e => console.log(e));
 
       setTimeout(() => {
-        // We use finalScore here instead of score!
         let name = prompt(`GAME OVER! ${reason}. Score: ${finalScore}\nEnter name for the list:`, "Player");
         if(name && finalScore > 0) {
-          database.ref('scores').push({ name: name.substring(0, 10), score: finalScore });
+          let randomAvatar = avatarsList[Math.floor(Math.random() * avatarsList.length)];
+          database.ref('scores').push({ name: name.substring(0, 10), score: finalScore, avatar: randomAvatar });
         }
       }, 400); 
       
       textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
       arrowEl.innerText = '✖'; 
       arrowEl.style.color = "#ff4444";
-      
-      // Reset the main score for the next game
-      score = 0; 
-      currentCommand = ''; timerBar.style.width = "0%";
+      score = 0; currentCommand = ''; timerBar.style.width = "0%";
     }
 
     function startTimer() {
       clearInterval(timerInterval);
-      maxTime = Math.max(600, 2000 - (score * 65));
+      maxTime = Math.max(500, 2000 - (score * 50));
       timeLeft = maxTime;
+      
       timerInterval = setInterval(() => {
+        if(isFrozen) return; // Don't drain time if frozen!
+        
         timeLeft -= 50;
         timerBar.style.width = (timeLeft / maxTime) * 100 + '%';
+        
         if (timeLeft <= 0) gameOver("Time ran out!");
       }, 50);
     }
@@ -158,20 +209,54 @@
       currentCommand = directions[Math.floor(Math.random() * directions.length)];
       arrowEl.innerText = arrows[currentCommand];
       arrowEl.style.color = "#ffffff";
+      document.body.style.background = bgColors[currentCommand]; // Dynamic Background
       textEl.innerText = `SWIPE ${currentCommand}!`;
       startTimer();
     }
 
-    function checkSwipe(dir) {
+    // Velocity Tracking Variables
+    let interactionStartTime = 0;
+
+    function checkSwipe(dir, speedMs) {
       if (dir === currentCommand) { 
-        score++; 
+        
+        // Velocity Feature: Fast swipes get 2 points!
+        if(speedMs < 200) { 
+            score += 2; 
+            speedBonusEl.style.transform = `translateY(-30px)`;
+            speedBonusEl.style.opacity = '1';
+            setTimeout(() => { speedBonusEl.style.opacity = '0'; speedBonusEl.style.transform = `translateY(0)`; }, 500);
+        } else {
+            score++; 
+        }
+
+        combo++;
         scoreEl.innerText = score; 
         
+        // Visuals
         arrowEl.classList.remove('correct-anim', 'wrong-anim');
         void arrowEl.offsetWidth; 
         arrowEl.classList.add('correct-anim');
         soundCorrect.currentTime = 0;
         soundCorrect.play().catch(e => console.log(e));
+
+        // Combo Logic
+        if (combo >= 5) {
+            comboBoard.style.display = 'block';
+            comboEl.innerText = combo;
+        }
+
+        // Milestone & Freeze Logic
+        if (combo % 15 === 0) { // Every 15 combo hits, freeze timer for 2 seconds
+            isFrozen = true;
+            timerBar.classList.add('freeze-anim');
+            soundMilestone.play().catch(e=>console.log(e));
+            triggerConfetti();
+            setTimeout(() => { 
+                isFrozen = false; 
+                timerBar.classList.remove('freeze-anim');
+            }, 2000);
+        }
 
         nextRound(); 
       }
@@ -179,18 +264,24 @@
     }
 
     let tsX, tsY;
-    function handleStart() { if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); nextRound(); } }
+    function handleStart(e) { 
+        interactionStartTime = Date.now();
+        if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); nextRound(); } 
+    }
 
-    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
+    // Input Listeners (with Velocity Tracking)
+    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(e); });
     document.addEventListener('mouseup', e => {
       let x = e.clientX - tsX, y = e.clientY - tsY;
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
+      let timeTaken = Date.now() - interactionStartTime;
+      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), timeTaken);
     });
 
-    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(); });
+    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); });
     document.addEventListener('touchend', e => {
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
+      let timeTaken = Date.now() - interactionStartTime;
+      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), timeTaken);
     });
   </script>
 </body>
