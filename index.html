@@ -20,7 +20,7 @@
     .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 5px; }
     .rank { color: #888; font-size: 0.9rem; margin-right: 5px; }
 
-    /* Your Custom Animations */
+    /* Animations */
     .correct-anim { animation: pulse 0.3s ease; }
     .wrong-anim { animation: shake 0.4s ease; }
 
@@ -56,7 +56,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM",
       authDomain: "swipegameleaderboard.firebaseapp.com",
@@ -84,7 +83,6 @@
     const soundCorrect = document.getElementById('sound-correct');
     const soundWrong = document.getElementById('sound-wrong');
 
-    // Leaderboard Logic
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
         let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
@@ -119,24 +117,30 @@
     function gameOver(reason) {
       clearInterval(timerInterval);
       
-      // Trigger your shake animation and play wrong sound
+      // THE FIX: We take a snapshot of the score right now before anything else happens!
+      let finalScore = score;
+      
       arrowEl.classList.remove('wrong-anim', 'correct-anim');
-      void arrowEl.offsetWidth; // Force CSS reflow to restart animation
+      void arrowEl.offsetWidth; 
       arrowEl.classList.add('wrong-anim');
       soundWrong.currentTime = 0;
       soundWrong.play().catch(e => console.log(e));
 
       setTimeout(() => {
-        let name = prompt(`GAME OVER! ${reason}. Score: ${score}\nEnter name for the list:`, "Player");
-        if(name && score > 0) {
-          database.ref('scores').push({ name: name.substring(0, 10), score: score });
+        // We use finalScore here instead of score!
+        let name = prompt(`GAME OVER! ${reason}. Score: ${finalScore}\nEnter name for the list:`, "Player");
+        if(name && finalScore > 0) {
+          database.ref('scores').push({ name: name.substring(0, 10), score: finalScore });
         }
-      }, 400); // Wait for the shake animation to finish before popping up prompt
+      }, 400); 
       
       textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
       arrowEl.innerText = '✖'; 
       arrowEl.style.color = "#ff4444";
-      score = 0; currentCommand = ''; timerBar.style.width = "0%";
+      
+      // Reset the main score for the next game
+      score = 0; 
+      currentCommand = ''; timerBar.style.width = "0%";
     }
 
     function startTimer() {
@@ -163,9 +167,8 @@
         score++; 
         scoreEl.innerText = score; 
         
-        // Trigger your pulse animation and play correct sound
         arrowEl.classList.remove('correct-anim', 'wrong-anim');
-        void arrowEl.offsetWidth; // Force CSS reflow to restart animation
+        void arrowEl.offsetWidth; 
         arrowEl.classList.add('correct-anim');
         soundCorrect.currentTime = 0;
         soundCorrect.play().catch(e => console.log(e));
@@ -178,14 +181,12 @@
     let tsX, tsY;
     function handleStart() { if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); nextRound(); } }
 
-    // Desktop Clicks
     document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
     document.addEventListener('mouseup', e => {
       let x = e.clientX - tsX, y = e.clientY - tsY;
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
     });
 
-    // Mobile Touches
     document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(); });
     document.addEventListener('touchend', e => {
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
