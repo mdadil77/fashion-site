@@ -8,7 +8,6 @@
   <style>
     body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
     
-    /* NEW: Whole Screen Shake for Game Over */
     .screen-shake { animation: bigShake 0.4s ease; }
     @keyframes bigShake {
       0% { transform: translate(0, 0); }
@@ -19,15 +18,12 @@
       100% { transform: translate(0, 0); }
     }
 
-    /* HUD Layout */
     #hud { position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; }
     .score-box { display: flex; flex-direction: column; align-items: center; }
     #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
     #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
-    #speed-bonus { font-size: 1.2rem; color: #00FFFF; position: absolute; opacity: 0; transition: opacity 0.5s, transform 0.5s; font-style: italic; }
     
-    /* NEW: Display the player's saved name */
     #player-id { position: absolute; bottom: 10px; font-size: 0.8rem; color: #666; cursor: pointer; }
 
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
@@ -42,7 +38,6 @@
     .rank { color: #888; font-size: 0.9rem; width: 25px; text-align: right; }
     .avatar { font-size: 1.2rem; }
 
-    /* Animations */
     .correct-anim { animation: pulse 0.3s ease; }
     .wrong-anim { animation: shake 0.4s ease; }
 
@@ -70,8 +65,6 @@
     </div>
     <div id="combo-board">COMBO x<span id="combo">0</span></div>
   </div>
-  
-  <div id="speed-bonus">+2 FAST!</div>
 
   <div id="instruction">
     <div id="arrow">▶</div>
@@ -80,7 +73,6 @@
   
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Global Leaderboard...</div>
-  
   <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -106,11 +98,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Game Variables
     let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
     let isFrozen = false;
     
-    // Memory Bank (Local Storage)
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
     let savedPlayerName = localStorage.getItem('arcadePlayerName');
@@ -120,13 +110,12 @@
         document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`;
     }
 
-    // Design Arrays
     const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
     const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
     const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁'];
 
-    const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo'), speedBonusEl = document.getElementById('speed-bonus');
+    const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
     const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
 
     function updateLeaderboard() {
@@ -166,7 +155,6 @@
 
     function triggerConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 }); }
 
-    // Change Name Function
     function changeName() {
         let newName = prompt("Enter your new arcade name:", savedPlayerName || "Player");
         if (newName) {
@@ -196,13 +184,11 @@
       document.body.classList.remove('screen-shake');
       void arrowEl.offsetWidth; 
       
-      // Trigger the new massive screen shake!
       arrowEl.classList.add('wrong-anim');
       document.body.classList.add('screen-shake');
       soundWrong.currentTime = 0;
       soundWrong.play().catch(e => console.log(e));
 
-      // SMART MEMORY CHECK: Only ask for name if they don't have one saved
       setTimeout(() => {
         if (!savedPlayerName && finalScore > 0) {
             changeName(); 
@@ -231,10 +217,9 @@
         let percentage = (timeLeft / maxTime) * 100;
         timerBar.style.width = percentage + '%';
         
-        // NEW: Dynamic Danger Colors
-        if (percentage > 50) timerBar.style.background = '#00FF41'; // Safe Green
-        else if (percentage > 25) timerBar.style.background = '#FFD700'; // Warning Yellow
-        else timerBar.style.background = '#FF0000'; // Critical Red
+        if (percentage > 50) timerBar.style.background = '#00FF41'; 
+        else if (percentage > 25) timerBar.style.background = '#FFD700'; 
+        else timerBar.style.background = '#FF0000'; 
         
         if (timeLeft <= 0) gameOver("Time ran out!");
       }, 50);
@@ -249,19 +234,10 @@
       startTimer();
     }
 
-    let interactionStartTime = 0;
-
-    function checkSwipe(dir, speedMs) {
+    // PURE SCORING: Strictly 1 point per swipe
+    function checkSwipe(dir) {
       if (dir === currentCommand) { 
-        if(speedMs < 200) { 
-            score += 2; 
-            speedBonusEl.style.transform = `translateY(-30px)`;
-            speedBonusEl.style.opacity = '1';
-            setTimeout(() => { speedBonusEl.style.opacity = '0'; speedBonusEl.style.transform = `translateY(0)`; }, 500);
-        } else {
-            score++; 
-        }
-
+        score++; 
         combo++;
         scoreEl.innerText = score; 
         
@@ -293,23 +269,21 @@
       else gameOver(`You swiped ${dir}`);
     }
 
-    function handleStart(e) { 
-        interactionStartTime = Date.now();
+    function handleStart() { 
         if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
-    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(e); });
+    let tsX, tsY;
+    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
     document.addEventListener('mouseup', e => {
       let x = e.clientX - tsX, y = e.clientY - tsY;
-      let timeTaken = Date.now() - interactionStartTime;
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), timeTaken);
+      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
     });
 
-    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); });
+    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(); });
     document.addEventListener('touchend', e => {
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
-      let timeTaken = Date.now() - interactionStartTime;
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), timeTaken);
+      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'));
     });
   </script>
 </body>
