@@ -20,7 +20,6 @@
   <style>
     body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
     
-    /* Screen Shake Animation */
     .screen-shake { animation: bigShake 0.4s ease; }
     @keyframes bigShake {
       0% { transform: translate(0, 0); }
@@ -31,52 +30,40 @@
       100% { transform: translate(0, 0); }
     }
 
-    /* Top HUD Elements */
     #hud { position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
     .score-box { display: flex; flex-direction: column; align-items: center; }
     #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
     #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
     
-    /* Player Identification */
-    #player-id { position: absolute; bottom: 10px; font-size: 0.8rem; color: #666; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; }
+    /* Bottom Controls */
+    #player-id { position: absolute; bottom: 15px; left: 15px; font-size: 0.8rem; color: #888; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; }
+    #player-id:hover { color: #fff; }
+    
+    /* NEW: Share Button Styling */
+    #share-btn { position: absolute; bottom: 15px; right: 15px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s; }
+    #share-btn:hover { background: rgba(0, 255, 65, 0.3); color: #fff; }
 
-    /* Center Game Elements */
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
     #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ffffff, 0 0 30px #ffffff; font-weight: 900; z-index: 10; transition: color 0.2s, text-shadow 0.2s; }
 
-    /* Dynamic Timer */
     #timer-container { width: 80%; height: 15px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 30px; box-shadow: 0 0 10px #000; z-index: 10; border: 1px solid #333; }
     #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear, background-color 0.2s ease; }
     .freeze-anim { background: #00FFFF !important; box-shadow: 0 0 15px #00FFFF; }
 
-    /* Global Leaderboard */
     #leaderboard { font-size: 1rem; color: #ccc; margin-top: 25px; text-align: center; width: 85%; border-top: 2px solid #550000; padding-top: 15px; z-index: 10; }
     .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1); }
     .rank { color: #888; font-size: 0.9rem; width: 25px; text-align: right; }
     .avatar { font-size: 1.2rem; }
 
-    /* Floating Point Animation */
     .float-pt { position: absolute; color: #00FF41; font-size: 2rem; font-weight: bold; pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 50; text-shadow: 0 0 10px #000; }
     @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
 
-    /* Arrow Pulse Animations */
     .correct-anim { animation: pulse 0.3s ease; }
     .wrong-anim { animation: shake 0.4s ease; }
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); color: #ff4444; }
-      25% { transform: translateX(-15px); }
-      50% { transform: translateX(15px); }
-      75% { transform: translateX(-15px); }
-      100% { transform: translateX(0); color: #ff4444; }
-    }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    @keyframes shake { 0% { transform: translateX(0); color: #ff4444; } 25% { transform: translateX(-15px); } 50% { transform: translateX(15px); } 75% { transform: translateX(-15px); } 100% { transform: translateX(0); color: #ff4444; } }
   </style>
 </head>
 <body>
@@ -96,7 +83,9 @@
   
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Swiplay Network...</div>
+  
   <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
+  <div id="share-btn" onclick="shareGame()">🔗 Invite Friend</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
   <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
@@ -107,7 +96,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
   <script>
-    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM",
       authDomain: "swipegameleaderboard.firebaseapp.com",
@@ -122,12 +110,10 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Core Game Variables
     let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
     let isFrozen = false;
     let isReverse = false; 
     
-    // Memory Bank Setup
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
     let savedPlayerName = localStorage.getItem('arcadePlayerName');
@@ -137,18 +123,15 @@
         document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`;
     }
 
-    // Logic Arrays & Dictionaries
     const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
     const opposites = { 'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT' }; 
     const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
     const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁', '🕹️'];
 
-    // DOM Elements
     const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
     const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
 
-    // Display Top 10 Leaderboard
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
         let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000; letter-spacing: 1px;">🏆 SWIPLAY TOP 10 🏆</div>';
@@ -159,9 +142,7 @@
           let data = child.val();
           if (data && typeof data.score === 'number' && data.score > 0 && data.name) {
             let playerName = data.name.trim();
-            if (!bestScores[playerName] || data.score > bestScores[playerName].score) {
-              bestScores[playerName] = data;
-            }
+            if (!bestScores[playerName] || data.score > bestScores[playerName].score) { bestScores[playerName] = data; }
           }
         });
         
@@ -184,20 +165,17 @@
     }
     updateLeaderboard();
 
-    // Visual Effects
     function triggerConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 }); }
 
     function spawnFloatingPoint(x, y) {
         let pt = document.createElement('div');
         pt.className = 'float-pt';
         pt.innerText = '+1';
-        pt.style.left = (x - 20) + 'px'; 
-        pt.style.top = (y - 20) + 'px';
+        pt.style.left = (x - 20) + 'px'; pt.style.top = (y - 20) + 'px';
         document.body.appendChild(pt);
         setTimeout(() => pt.remove(), 600);
     }
 
-    // Name Management
     function changeName() {
         let newName = prompt("Enter your Swiplay username:", savedPlayerName || "Player");
         if (newName) {
@@ -209,15 +187,39 @@
         }
     }
 
-    // Game Logic
+    // NEW: The Viral Share Function
+    function shareGame() {
+        // Stop the game if they click share while playing
+        if(currentCommand) { clearInterval(timerInterval); score = 0; currentCommand = ''; timerBar.style.width = "0%"; textEl.innerText = "Tap to Play Swiplay"; arrowEl.innerText = '▶'; }
+        
+        let shareText = localHigh > 0 
+            ? `I just scored ${localHigh} points on Swiplay! 🕹️ Think your reflexes are faster than mine?` 
+            : `Check out Swiplay, a fast-paced reflex arcade game! 🕹️ Can you beat the global high score?`;
+            
+        let shareData = {
+            title: 'Swiplay Reflex Arcade',
+            text: shareText,
+            url: 'https://funwithfrnds.vercel.app'
+        };
+
+        // Try to open the native phone share menu
+        if (navigator.share) {
+            navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
+        } else {
+            // If they are on a computer that doesn't support the share menu, copy the link instead
+            navigator.clipboard.writeText(`${shareData.text} Play here: ${shareData.url}`).then(() => {
+                alert("Game link copied to clipboard! Paste it to your friends.");
+            });
+        }
+    }
+
     function gameOver(reason) {
       clearInterval(timerInterval);
       let finalScore = score;
       
       document.body.style.background = '#2A0000';
       comboBoard.style.display = 'none';
-      combo = 0;
-      isReverse = false; 
+      combo = 0; isReverse = false; 
 
       if(finalScore > localHigh) {
         localHigh = finalScore;
@@ -240,9 +242,7 @@
       }, 400); 
       
       textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
-      arrowEl.innerText = '✖'; 
-      arrowEl.style.color = "#ff4444";
-      arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
+      arrowEl.innerText = '✖'; arrowEl.style.color = "#ff4444"; arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
       score = 0; currentCommand = ''; timerBar.style.width = "0%";
     }
 
@@ -253,7 +253,6 @@
       
       timerInterval = setInterval(() => {
         if(isFrozen) return; 
-        
         timeLeft -= 50;
         let percentage = (timeLeft / maxTime) * 100;
         timerBar.style.width = percentage + '%';
@@ -269,23 +268,15 @@
     function nextRound() {
       currentCommand = directions[Math.floor(Math.random() * directions.length)];
       arrowEl.innerText = arrows[currentCommand];
-      
       isReverse = Math.random() < 0.2; 
       
       if (isReverse) {
-          arrowEl.style.color = "#FF00FF"; 
-          arrowEl.style.textShadow = "0 0 20px #FF00FF, 0 0 40px #FF00FF";
-          textEl.innerText = `SWIPE OPPOSITE!`;
-          textEl.style.color = "#FF00FF";
-          document.body.style.background = "#200020"; 
+          arrowEl.style.color = "#FF00FF"; arrowEl.style.textShadow = "0 0 20px #FF00FF, 0 0 40px #FF00FF";
+          textEl.innerText = `SWIPE OPPOSITE!`; textEl.style.color = "#FF00FF"; document.body.style.background = "#200020"; 
       } else {
-          arrowEl.style.color = "#ffffff";
-          arrowEl.style.textShadow = "0 0 10px #ffffff, 0 0 30px #ffffff";
-          textEl.innerText = `SWIPE ${currentCommand}!`;
-          textEl.style.color = "#ffffff";
-          document.body.style.background = bgColors[currentCommand];
+          arrowEl.style.color = "#ffffff"; arrowEl.style.textShadow = "0 0 10px #ffffff, 0 0 30px #ffffff";
+          textEl.innerText = `SWIPE ${currentCommand}!`; textEl.style.color = "#ffffff"; document.body.style.background = bgColors[currentCommand];
       }
-      
       startTimer();
     }
 
@@ -293,57 +284,43 @@
       let requiredSwipe = isReverse ? opposites[currentCommand] : currentCommand;
 
       if (dir === requiredSwipe) { 
-        score++; 
-        combo++;
-        scoreEl.innerText = score; 
-        
+        score++; combo++; scoreEl.innerText = score; 
         spawnFloatingPoint(touchX, touchY); 
         
-        arrowEl.classList.remove('correct-anim', 'wrong-anim');
-        document.body.classList.remove('screen-shake');
-        void arrowEl.offsetWidth; 
+        arrowEl.classList.remove('correct-anim', 'wrong-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
         arrowEl.classList.add('correct-anim');
-        soundCorrect.currentTime = 0;
-        soundCorrect.play().catch(e => console.log(e));
+        soundCorrect.currentTime = 0; soundCorrect.play().catch(e => console.log(e));
 
-        if (combo >= 5) {
-            comboBoard.style.display = 'block';
-            comboEl.innerText = combo;
-        }
-
+        if (combo >= 5) { comboBoard.style.display = 'block'; comboEl.innerText = combo; }
         if (combo % 15 === 0) { 
-            isFrozen = true;
-            timerBar.classList.add('freeze-anim');
-            soundMilestone.play().catch(e=>console.log(e));
-            triggerConfetti();
-            setTimeout(() => { 
-                isFrozen = false; 
-                timerBar.classList.remove('freeze-anim');
-            }, 2000);
+            isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>console.log(e)); triggerConfetti();
+            setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000);
         }
-
         nextRound(); 
-      }
-      else {
+      } else {
           let mistakeMessage = isReverse ? `Trap! You swiped ${dir}` : `You swiped ${dir}`;
           gameOver(mistakeMessage);
       }
     }
 
     // Input Handling
-    function handleStart() { 
-        if(!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
+    function handleStart(e) {
+        // Prevent starting the game if clicking the bottom buttons
+        if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
+        if (!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
     let tsX, tsY;
-    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(); });
+    document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(e); });
     document.addEventListener('mouseup', e => {
+      if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
       let x = e.clientX - tsX, y = e.clientY - tsY;
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), e.clientX, e.clientY);
     });
 
-    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(); });
+    document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); });
     document.addEventListener('touchend', e => {
+      if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
       let touchEndObj = e.changedTouches[0];
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), touchEndObj.clientX, touchEndObj.clientY);
