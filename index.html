@@ -3,9 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="google-site-verification" content="AsBhcQ14lhMgL6EIUHyqReRy-zcLIwM9gLCYuiirQVU" />
-  <title>Reaction Swipe - Ultimate Arcade</title>
+  
+  <meta name="google-site-verification" content="AsBhcQ14lhMgL6ElUHyqReRy-zcLIwM9gLCYuiirQVU" />
+  
+  <title>Swiplay | The Ultimate Reflex Arcade</title>
+  <meta name="description" content="Test your reflexes in Swiplay! A fast-paced, brain-bending arcade game with global leaderboards. Can you survive the cognitive trap?">
+  <meta name="keywords" content="swiplay, reaction game, swipe game, browser game, fun with friends, arcade, reflex trainer">
+  
+  <meta property="og:title" content="Swiplay - Play Now!">
+  <meta property="og:description" content="I challenge you to beat my high score in Swiplay. Tap the link to play!">
+  <meta property="og:url" content="https://funwithfrnds.vercel.app">
+  <meta property="og:type" content="website">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+  
   <style>
     body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
     
@@ -28,7 +39,7 @@
     #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
     
     /* Player Identification */
-    #player-id { position: absolute; bottom: 10px; font-size: 0.8rem; color: #666; cursor: pointer; z-index: 20; }
+    #player-id { position: absolute; bottom: 10px; font-size: 0.8rem; color: #666; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; }
 
     /* Center Game Elements */
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
@@ -49,7 +60,7 @@
     .float-pt { position: absolute; color: #00FF41; font-size: 2rem; font-weight: bold; pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 50; text-shadow: 0 0 10px #000; }
     @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
 
-    /* Arrow Animations */
+    /* Arrow Pulse Animations */
     .correct-anim { animation: pulse 0.3s ease; }
     .wrong-anim { animation: shake 0.4s ease; }
 
@@ -80,11 +91,11 @@
 
   <div id="instruction">
     <div id="arrow">▶</div>
-    <div id="text">Tap to Start</div>
+    <div id="text">Tap to Play Swiplay</div>
   </div>
   
   <div id="timer-container"><div id="timer-bar"></div></div>
-  <div id="leaderboard">Loading Global Leaderboard...</div>
+  <div id="leaderboard">Loading Swiplay Network...</div>
   <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -131,7 +142,7 @@
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
     const opposites = { 'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT' }; 
     const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
-    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁'];
+    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁', '🕹️'];
 
     // DOM Elements
     const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
@@ -140,7 +151,7 @@
     // Display Top 10 Leaderboard
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
-        let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000;">🏆 TOP 10 LEGENDS 🏆</div>';
+        let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000; letter-spacing: 1px;">🏆 SWIPLAY TOP 10 🏆</div>';
         if (!snapshot.exists()) { leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>'; return; }
         
         let bestScores = {};
@@ -188,7 +199,7 @@
 
     // Name Management
     function changeName() {
-        let newName = prompt("Enter your new arcade name:", savedPlayerName || "Player");
+        let newName = prompt("Enter your Swiplay username:", savedPlayerName || "Player");
         if (newName) {
             savedPlayerName = newName.substring(0, 10);
             savedPlayerAvatar = avatarsList[Math.floor(Math.random() * avatarsList.length)];
