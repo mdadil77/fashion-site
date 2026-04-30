@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
   <meta name="google-site-verification" content="AsBhcQ14lhMgL6ElUHyqReRy-zcLIwM9gLCYuiirQVU" />
   <title>Swiplay | The Ultimate Reflex Arcade</title>
   
@@ -17,7 +16,7 @@
 
     /* ================= MAIN MENU UI ================= */
     #menu-container { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; width: 100%; height: 100%; background: #2A0000; position: absolute; top: 0; left: 0; }
-    .menu-title { font-size: 4rem; color: #ffffff; text-shadow: 0 0 10px #ff0041, 0 0 30px #ff0041; margin-bottom: 40px; letter-spacing: 2px; }
+    .menu-title { font-size: 4rem; color: #ffffff; text-shadow: 0 0 10px #ff0041, 0 0 30px #ff0041; margin-bottom: 40px; letter-spacing: 2px; cursor: pointer; }
     .menu-btn { background: #00FF41; color: #000; font-size: 1.5rem; font-family: 'Inter', sans-serif; font-weight: 900; padding: 15px 30px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; width: 250px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,255,65,0.4); transition: transform 0.1s; }
     .menu-btn:active { transform: scale(0.95); }
     .menu-btn.secondary { background: #FFD700; box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
@@ -28,14 +27,27 @@
     #room-code-input { font-size: 3rem; text-align: center; text-transform: uppercase; width: 200px; padding: 10px; font-family: 'Inter', sans-serif; font-weight: 900; background: #1a0000; color: #FFD700; border: 2px solid #FFD700; border-radius: 10px; margin-bottom: 20px; outline: none; }
     .back-btn { margin-top: 30px; font-size: 1rem; color: #888; text-decoration: underline; cursor: pointer; }
 
-    /* ================= GAME UI (Hidden Initially) ================= */
+    /* ================= GAME UI (The Fighter HUD) ================= */
     #game-ui { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-    #hud { position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
+    
+    /* HUD Container perfectly splits left and right */
+    #hud { position: absolute; top: 20px; width: 85%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
+    
+    /* Left Side: Local Player */
     .score-box { display: flex; flex-direction: column; align-items: flex-start; }
-    #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
-    #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
+    #local-name-display { display: none; font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
+    #score-board { font-size: 2.5rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; line-height: 1; margin-top: 5px; }
+    #local-high { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
+    
+    /* Right Side: Opponent */
+    #opponent-box { display: none; flex-direction: column; align-items: flex-end; }
+    #opponent-name-display { font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
+    #opponent-score-board { font-size: 2.5rem; color: #ff0041; text-shadow: 0 0 10px #ff0041; line-height: 1; margin-top: 5px; }
+
+    /* Center Overlay Elements */
     #combo-board { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; white-space: nowrap; }
     #share-btn { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 30; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); }
+    
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
     #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ffffff, 0 0 30px #ffffff; font-weight: 900; z-index: 10; transition: color 0.2s, text-shadow 0.2s; }
     #timer-container { width: 80%; height: 15px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 30px; box-shadow: 0 0 10px #000; z-index: 10; border: 1px solid #333; }
@@ -71,7 +83,7 @@
 
   <!-- ================= LOBBY SCREEN (HOST) ================= -->
   <div id="lobby-screen">
-    <h2>Waiting for a friend...</h2>
+    <h2>Waiting for opponent...</h2>
     <p>Tell them to join with this code:</p>
     <div id="room-code-display">XXXX</div>
     <div class="loader" style="color: #00FF41;">Searching...</div>
@@ -89,12 +101,22 @@
   <!-- ================= GAME UI ================= -->
   <div id="game-ui">
     <div id="hud">
+      <!-- Player 1 (Top Left) -->
       <div class="score-box">
+        <div id="local-name-display">YOU</div>
         <div id="score-board"><span id="score">0</span></div>
         <div id="local-high">Best: <span id="best-score">0</span></div>
       </div>
+      
       <div id="combo-board">COMBO x<span id="combo">0</span></div>
+      
+      <!-- Player 2 (Top Right) -->
+      <div id="opponent-box">
+        <div id="opponent-name-display">Enemy</div>
+        <div id="opponent-score-board"><span id="opponent-score">0</span></div>
+      </div>
     </div>
+    
     <div id="share-btn" onclick="shareGame()">🔗 Invite</div>
     <div id="instruction">
       <div id="arrow">▶</div>
@@ -104,7 +126,6 @@
     <div class="back-btn" onclick="exitGame()" style="position: absolute; bottom: 20px;">Quit to Menu</div>
   </div>
 
-  <!-- Audio & External Libraries -->
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
   <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
   <audio id="sound-milestone" src="https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg"></audio>
@@ -113,12 +134,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
   <script>
-    // Firebase Init
     const firebaseConfig = { apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM", authDomain: "swipegameleaderboard.firebaseapp.com", databaseURL: "https://swipegameleaderboard-default-rtdb.firebaseio.com", projectId: "swipegameleaderboard", storageBucket: "swipegameleaderboard.firebasestorage.app", messagingSenderId: "751175472721", appId: "1:751175472721:web:4544195a2dbea5cd948a70", measurementId: "G-8TK6JZDQ2N" };
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Memory & Player Setup
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
     let savedPlayerName = localStorage.getItem('arcadePlayerName');
@@ -137,43 +156,94 @@
         }
     }
 
-    // ================= MULTIPLAYER LOBBY LOGIC =================
+    // ================= MULTIPLAYER SYNC LOGIC =================
     let currentRoom = null;
     let isMultiplayer = false;
+    let isHost = false; 
 
     function generateCode() { return Math.random().toString(36).substring(2, 6).toUpperCase(); }
 
+    function prepareMultiplayerUI(opponentName) {
+        document.getElementById('share-btn').style.display = 'none'; // Hide share button during 1v1
+        document.getElementById('local-high').style.display = 'none'; // Hide local best
+        
+        // Show names for both players
+        document.getElementById('local-name-display').style.display = 'block';
+        document.getElementById('local-name-display').innerText = savedPlayerName;
+        
+        document.getElementById('opponent-box').style.display = 'flex'; // Show opponent side
+        document.getElementById('opponent-name-display').innerText = opponentName;
+        document.getElementById('opponent-score').innerText = '0';
+        
+        listenToOpponent();
+    }
+
+    function listenToOpponent() {
+        database.ref('rooms/' + currentRoom).on('value', snapshot => {
+            let data = snapshot.val();
+            if(!data) return;
+
+            // 1. Live Score Syncing
+            let opponentScore = isHost ? data.guestScore : data.hostScore;
+            document.getElementById('opponent-score').innerText = opponentScore;
+
+            // 2. Win/Loss Detection
+            let opponentStatus = isHost ? data.guestStatus : data.hostStatus;
+            let myStatus = isHost ? data.hostStatus : data.guestStatus;
+            
+            if (opponentStatus === 'dead' && myStatus === 'alive') {
+                triggerWin();
+            }
+        });
+    }
+
+    function triggerWin() {
+        clearInterval(timerInterval);
+        isFrozen = true; 
+        document.body.style.background = '#00FF41';
+        arrowEl.style.color = '#ffffff';
+        arrowEl.innerText = '🏆';
+        textEl.innerHTML = `YOU WIN!<br><span style="font-size: 1.2rem; margin-top:10px; display:block;">Opponent knocked out.</span>`;
+        soundMilestone.play().catch(e=>console.log(e));
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        
+        setTimeout(() => { exitGame(); }, 4000);
+    }
+
+    // --- Lobby Functions ---
     function startSolo() {
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('game-ui').style.display = 'flex';
+        document.getElementById('share-btn').style.display = 'block';
+        document.getElementById('local-high').style.display = 'block';
+        document.getElementById('local-name-display').style.display = 'none'; // Hide name in solo
+        document.getElementById('opponent-box').style.display = 'none';
         isMultiplayer = false;
     }
 
     function hostGame() {
         if (!savedPlayerName) { changeName(); if(!savedPlayerName) return; }
-        
         currentRoom = generateCode();
         isMultiplayer = true;
+        isHost = true;
         
-        // Create Room in Database
         database.ref('rooms/' + currentRoom).set({
-            status: 'waiting',
-            hostName: savedPlayerName,
-            guestName: ''
+            status: 'waiting', hostName: savedPlayerName, guestName: '',
+            hostScore: 0, guestScore: 0, hostStatus: 'alive', guestStatus: 'alive'
         });
 
         document.getElementById('menu-container').style.display = 'none';
         document.getElementById('lobby-screen').style.display = 'flex';
         document.getElementById('room-code-display').innerText = currentRoom;
 
-        // Wait for Friend
-        database.ref('rooms/' + currentRoom).on('value', snapshot => {
+        let waitListener = database.ref('rooms/' + currentRoom).on('value', snapshot => {
             let data = snapshot.val();
             if (data && data.guestName !== '') {
-                database.ref('rooms/' + currentRoom).off(); // Stop lobby listening
+                database.ref('rooms/' + currentRoom).off('value', waitListener); 
                 alert(data.guestName + " joined! PREPARE TO SWIPE.");
                 document.getElementById('lobby-screen').style.display = 'none';
                 document.getElementById('game-ui').style.display = 'flex';
+                prepareMultiplayerUI(data.guestName);
             }
         });
     }
@@ -194,12 +264,14 @@
                 if(data.status === 'waiting' && data.guestName === '') {
                     currentRoom = code;
                     isMultiplayer = true;
-                    // Tell the Host we are here!
+                    isHost = false;
+                    
                     database.ref('rooms/' + code).update({ guestName: savedPlayerName, status: 'playing' });
                     
                     alert("Joined " + data.hostName + "'s room!");
                     document.getElementById('join-screen').style.display = 'none';
                     document.getElementById('game-ui').style.display = 'flex';
+                    prepareMultiplayerUI(data.hostName);
                 } else { alert("Room is full or already playing!"); }
             } else { alert("Room not found!"); }
         });
@@ -213,14 +285,19 @@
     }
 
     function exitGame() {
-        gameOver("Quit to Menu");
+        clearInterval(timerInterval);
+        if(currentRoom) { database.ref('rooms/' + currentRoom).off(); } 
+        
+        score = 0; currentCommand = ''; timerBar.style.width = "0%"; isFrozen = false;
+        arrowEl.innerText = '▶'; arrowEl.style.color = '#ffffff'; textEl.innerHTML = 'Tap to Play';
+        document.body.style.background = '#2A0000';
+        
         document.getElementById('game-ui').style.display = 'none';
         document.getElementById('menu-container').style.display = 'flex';
     }
 
-    // ================= CORE GAME LOGIC (Unchanged for now) =================
+    // ================= CORE GAME LOGIC =================
     let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
-    let isFrozen = false, isReverse = false; 
     const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
     const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
     const opposites = { 'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT' }; 
@@ -229,14 +306,7 @@
     const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
     const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
 
-    function checkAdmin() {
-        let pwd = prompt("Admin Access: Enter password to wipe leaderboard.");
-        if (pwd === "admin123") {
-            if(confirm("WARNING: This will permanently delete ALL scores. Sure?")) {
-                database.ref('scores').remove().then(() => alert("Leaderboard wiped!")).catch(err => alert("Error: " + err.message));
-            }
-        }
-    }
+    function checkAdmin() { let pwd = prompt("Admin Access:"); if (pwd === "admin123") { if(confirm("Wipe leaderboard?")) { database.ref('scores').remove(); } } }
 
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
@@ -264,7 +334,7 @@
     function spawnFloatingPoint(x, y) { let pt = document.createElement('div'); pt.className = 'float-pt'; pt.innerText = '+1'; pt.style.left = (x - 20) + 'px'; pt.style.top = (y - 20) + 'px'; document.body.appendChild(pt); setTimeout(() => pt.remove(), 600); }
 
     function shareGame() {
-        let shareText = localHigh > 0 ? `I just scored ${localHigh} on Swiplay! Think your reflexes are faster?` : `Check out Swiplay! Can you beat the high score?`;
+        let shareText = localHigh > 0 ? `I scored ${localHigh} on Swiplay! Think your reflexes are faster?` : `Check out Swiplay! Can you beat the high score?`;
         let shareData = { title: 'Swiplay', text: shareText, url: 'https://funwithfrnds.vercel.app' };
         if (navigator.share) { navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} Play: ${shareData.url}`).then(() => alert("Copied to clipboard!")); }
     }
@@ -278,13 +348,18 @@
       arrowEl.classList.add('wrong-anim'); document.body.classList.add('screen-shake');
       soundWrong.currentTime = 0; soundWrong.play().catch(e => console.log(e));
 
-      // Only push score to Global Leaderboard if we are in Solo Arcade
+      if (isMultiplayer && currentRoom) {
+          database.ref('rooms/' + currentRoom).update({
+              [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
+          });
+      }
+
       if (!isMultiplayer && finalScore > 0) {
           if (!savedPlayerName) changeName(); 
           if (savedPlayerName) database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
       }
       
-      textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
+      textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span>`;
       arrowEl.innerText = '✖'; arrowEl.style.color = "#ff4444"; arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
       score = 0; currentCommand = ''; timerBar.style.width = "0%";
     }
@@ -307,9 +382,17 @@
     }
 
     function checkSwipe(dir, touchX, touchY) {
+      if(isFrozen) return;
       let requiredSwipe = isReverse ? opposites[currentCommand] : currentCommand;
       if (dir === requiredSwipe) { 
         score++; combo++; scoreEl.innerText = score; spawnFloatingPoint(touchX, touchY); 
+        
+        if (isMultiplayer && currentRoom) {
+            database.ref('rooms/' + currentRoom).update({
+                [isHost ? 'hostScore' : 'guestScore']: score
+            });
+        }
+
         arrowEl.classList.remove('correct-anim', 'wrong-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
         arrowEl.classList.add('correct-anim'); soundCorrect.currentTime = 0; soundCorrect.play().catch(e=>console.log(e));
         if (combo >= 5) { comboBoard.style.display = 'block'; comboEl.innerText = combo; }
@@ -320,27 +403,27 @@
 
     function handleStart(e) {
         if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
-        if (!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
+        if (!currentCommand && !isFrozen) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
     let tsX, tsY;
     document.addEventListener('mousedown', e => { 
-        if(document.getElementById('menu-container').style.display !== 'none') return;
+        if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
         tsX = e.clientX; tsY = e.clientY; handleStart(e); 
     });
     document.addEventListener('mouseup', e => {
-      if(document.getElementById('menu-container').style.display !== 'none') return;
+      if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
       if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
       let x = e.clientX - tsX, y = e.clientY - tsY;
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), e.clientX, e.clientY);
     });
 
     document.addEventListener('touchstart', e => { 
-        if(document.getElementById('menu-container').style.display !== 'none') return;
+        if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
         tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); 
     });
     document.addEventListener('touchend', e => {
-      if(document.getElementById('menu-container').style.display !== 'none') return;
+      if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
       if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY; let touchEndObj = e.changedTouches[0];
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), touchEndObj.clientX, touchEndObj.clientY);
