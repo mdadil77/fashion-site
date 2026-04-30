@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- Google Site Verification -->
   <meta name="google-site-verification" content="AsBhcQ14lhMgL6ElUHyqReRy-zcLIwM9gLCYuiirQVU" />
   
   <title>Swiplay | The Ultimate Reflex Arcade</title>
@@ -30,18 +31,19 @@
       100% { transform: translate(0, 0); }
     }
 
-    #hud { position: absolute; top: 15px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
-    .score-box { display: flex; flex-direction: column; align-items: center; }
+    #hud { position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
+    .score-box { display: flex; flex-direction: column; align-items: flex-start; }
     #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
-    #combo-board { font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; }
     
-    /* Bottom Controls */
-    #player-id { position: absolute; bottom: 15px; left: 15px; font-size: 0.8rem; color: #888; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; }
+    /* Center the combo board so it doesn't overlap the new share button */
+    #combo-board { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; white-space: nowrap; }
+    
+    #player-id { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #888; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; }
     #player-id:hover { color: #fff; }
     
-    /* NEW: Share Button Styling */
-    #share-btn { position: absolute; bottom: 15px; right: 15px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s; }
+    /* MOVED: Share Button is now Top Right */
+    #share-btn { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 30; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s; }
     #share-btn:hover { background: rgba(0, 255, 65, 0.3); color: #fff; }
 
     #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
@@ -76,6 +78,9 @@
     <div id="combo-board">COMBO x<span id="combo">0</span></div>
   </div>
 
+  <!-- Share Button moved to top right independent of the HUD flexbox -->
+  <div id="share-btn" onclick="shareGame()">🔗 Invite Friend</div>
+
   <div id="instruction">
     <div id="arrow">▶</div>
     <div id="text">Tap to Play Swiplay</div>
@@ -84,8 +89,8 @@
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Swiplay Network...</div>
   
+  <!-- Player ID moved perfectly to center bottom -->
   <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
-  <div id="share-btn" onclick="shareGame()">🔗 Invite Friend</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
   <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
@@ -187,9 +192,7 @@
         }
     }
 
-    // NEW: The Viral Share Function
     function shareGame() {
-        // Stop the game if they click share while playing
         if(currentCommand) { clearInterval(timerInterval); score = 0; currentCommand = ''; timerBar.style.width = "0%"; textEl.innerText = "Tap to Play Swiplay"; arrowEl.innerText = '▶'; }
         
         let shareText = localHigh > 0 
@@ -202,11 +205,9 @@
             url: 'https://funwithfrnds.vercel.app'
         };
 
-        // Try to open the native phone share menu
         if (navigator.share) {
             navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
         } else {
-            // If they are on a computer that doesn't support the share menu, copy the link instead
             navigator.clipboard.writeText(`${shareData.text} Play here: ${shareData.url}`).then(() => {
                 alert("Game link copied to clipboard! Paste it to your friends.");
             });
@@ -303,9 +304,7 @@
       }
     }
 
-    // Input Handling
     function handleStart(e) {
-        // Prevent starting the game if clicking the bottom buttons
         if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
         if (!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
