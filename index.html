@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Google Site Verification -->
   <meta name="google-site-verification" content="AsBhcQ14lhMgL6ElUHyqReRy-zcLIwM9gLCYuiirQVU" />
   
   <title>Swiplay | The Ultimate Reflex Arcade</title>
@@ -22,27 +21,18 @@
     body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
     
     .screen-shake { animation: bigShake 0.4s ease; }
-    @keyframes bigShake {
-      0% { transform: translate(0, 0); }
-      20% { transform: translate(-10px, 10px); }
-      40% { transform: translate(10px, -10px); }
-      60% { transform: translate(-10px, -10px); }
-      80% { transform: translate(10px, 10px); }
-      100% { transform: translate(0, 0); }
-    }
+    @keyframes bigShake { 0% { transform: translate(0, 0); } 20% { transform: translate(-10px, 10px); } 40% { transform: translate(10px, -10px); } 60% { transform: translate(-10px, -10px); } 80% { transform: translate(10px, 10px); } 100% { transform: translate(0, 0); } }
 
     #hud { position: absolute; top: 20px; width: 90%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
     .score-box { display: flex; flex-direction: column; align-items: flex-start; }
     #score-board { font-size: 2.2rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; }
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: -5px; }
     
-    /* Center the combo board so it doesn't overlap the new share button */
     #combo-board { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; white-space: nowrap; }
     
     #player-id { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #888; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; transition: color 0.2s; }
     #player-id:hover { color: #fff; }
     
-    /* MOVED: Share Button is now Top Right */
     #share-btn { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 30; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); transition: all 0.2s; }
     #share-btn:hover { background: rgba(0, 255, 65, 0.3); color: #fff; }
 
@@ -63,7 +53,6 @@
 
     .correct-anim { animation: pulse 0.3s ease; }
     .wrong-anim { animation: shake 0.4s ease; }
-
     @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
     @keyframes shake { 0% { transform: translateX(0); color: #ff4444; } 25% { transform: translateX(-15px); } 50% { transform: translateX(15px); } 75% { transform: translateX(-15px); } 100% { transform: translateX(0); color: #ff4444; } }
   </style>
@@ -78,7 +67,6 @@
     <div id="combo-board">COMBO x<span id="combo">0</span></div>
   </div>
 
-  <!-- Share Button moved to top right independent of the HUD flexbox -->
   <div id="share-btn" onclick="shareGame()">🔗 Invite Friend</div>
 
   <div id="instruction">
@@ -88,8 +76,6 @@
   
   <div id="timer-container"><div id="timer-bar"></div></div>
   <div id="leaderboard">Loading Swiplay Network...</div>
-  
-  <!-- Player ID moved perfectly to center bottom -->
   <div id="player-id" onclick="changeName()">👤 Identify Yourself</div>
 
   <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
@@ -116,8 +102,7 @@
     const database = firebase.database();
 
     let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
-    let isFrozen = false;
-    let isReverse = false; 
+    let isFrozen = false, isReverse = false; 
     
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
@@ -137,9 +122,24 @@
     const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
     const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
 
+    // NEW: Secret Admin Function
+    function checkAdmin() {
+        let pwd = prompt("Admin Access: Enter password to wipe leaderboard.");
+        if (pwd === "admin123") {
+            if(confirm("WARNING: This will permanently delete ALL scores from the database. Are you absolutely sure?")) {
+                database.ref('scores').remove()
+                    .then(() => alert("Leaderboard completely wiped!"))
+                    .catch(err => alert("Error deleting: " + err.message));
+            }
+        } else if (pwd !== null) {
+            alert("Incorrect password. Nice try! 😉");
+        }
+    }
+
     function updateLeaderboard() {
       database.ref('scores').on('value', snapshot => {
-        let html = '<div style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000; letter-spacing: 1px;">🏆 SWIPLAY TOP 10 🏆</div>';
+        // Notice the 'onclick="checkAdmin()"' added to the title below!
+        let html = '<div onclick="checkAdmin()" style="color:#FFD700; margin-bottom:10px; font-weight:900; text-shadow: 0 0 5px #000; letter-spacing: 1px; cursor: pointer;">🏆 SWIPLAY TOP 10 🏆</div>';
         if (!snapshot.exists()) { leaderboardEl.innerHTML = html + '<div style="color:#888;">No scores yet!</div>'; return; }
         
         let bestScores = {};
@@ -158,12 +158,7 @@
         top10.forEach((user, index) => {
           let nameColor = index === 0 ? "#FFD700" : "#00FF41";
           let av = user.avatar || '👤';
-          html += `<div class="legend-item">
-                     <span class="rank">#${index + 1}</span> 
-                     <span class="avatar">${av}</span>
-                     <span style="color:${nameColor}; font-weight:bold;">${user.name}</span>
-                     <span style="color:#fff; margin-left:auto;">${user.score} pts</span>
-                   </div>`;
+          html += `<div class="legend-item"><span class="rank">#${index + 1}</span> <span class="avatar">${av}</span><span style="color:${nameColor}; font-weight:bold;">${user.name}</span><span style="color:#fff; margin-left:auto;">${user.score} pts</span></div>`;
         });
         leaderboardEl.innerHTML = html;
       });
@@ -174,11 +169,8 @@
 
     function spawnFloatingPoint(x, y) {
         let pt = document.createElement('div');
-        pt.className = 'float-pt';
-        pt.innerText = '+1';
-        pt.style.left = (x - 20) + 'px'; pt.style.top = (y - 20) + 'px';
-        document.body.appendChild(pt);
-        setTimeout(() => pt.remove(), 600);
+        pt.className = 'float-pt'; pt.innerText = '+1'; pt.style.left = (x - 20) + 'px'; pt.style.top = (y - 20) + 'px';
+        document.body.appendChild(pt); setTimeout(() => pt.remove(), 600);
     }
 
     function changeName() {
@@ -194,48 +186,22 @@
 
     function shareGame() {
         if(currentCommand) { clearInterval(timerInterval); score = 0; currentCommand = ''; timerBar.style.width = "0%"; textEl.innerText = "Tap to Play Swiplay"; arrowEl.innerText = '▶'; }
-        
-        let shareText = localHigh > 0 
-            ? `I just scored ${localHigh} points on Swiplay! 🕹️ Think your reflexes are faster than mine?` 
-            : `Check out Swiplay, a fast-paced reflex arcade game! 🕹️ Can you beat the global high score?`;
-            
-        let shareData = {
-            title: 'Swiplay Reflex Arcade',
-            text: shareText,
-            url: 'https://funwithfrnds.vercel.app'
-        };
-
-        if (navigator.share) {
-            navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
-        } else {
-            navigator.clipboard.writeText(`${shareData.text} Play here: ${shareData.url}`).then(() => {
-                alert("Game link copied to clipboard! Paste it to your friends.");
-            });
-        }
+        let shareText = localHigh > 0 ? `I just scored ${localHigh} points on Swiplay! 🕹️ Think your reflexes are faster than mine?` : `Check out Swiplay, a fast-paced reflex arcade game! 🕹️ Can you beat the global high score?`;
+        let shareData = { title: 'Swiplay Reflex Arcade', text: shareText, url: 'https://funwithfrnds.vercel.app' };
+        if (navigator.share) { navigator.share(shareData).catch((err) => console.log('Error sharing:', err));
+        } else { navigator.clipboard.writeText(`${shareData.text} Play here: ${shareData.url}`).then(() => alert("Game link copied to clipboard! Paste it to your friends.")); }
     }
 
     function gameOver(reason) {
       clearInterval(timerInterval);
       let finalScore = score;
-      
-      document.body.style.background = '#2A0000';
-      comboBoard.style.display = 'none';
-      combo = 0; isReverse = false; 
+      document.body.style.background = '#2A0000'; comboBoard.style.display = 'none'; combo = 0; isReverse = false; 
 
-      if(finalScore > localHigh) {
-        localHigh = finalScore;
-        localStorage.setItem('arcadeBest', localHigh);
-        document.getElementById('best-score').innerText = localHigh;
-      }
+      if(finalScore > localHigh) { localHigh = finalScore; localStorage.setItem('arcadeBest', localHigh); document.getElementById('best-score').innerText = localHigh; }
 
-      arrowEl.classList.remove('wrong-anim', 'correct-anim');
-      document.body.classList.remove('screen-shake');
-      void arrowEl.offsetWidth; 
-      
-      arrowEl.classList.add('wrong-anim');
-      document.body.classList.add('screen-shake');
-      soundWrong.currentTime = 0;
-      soundWrong.play().catch(e => console.log(e));
+      arrowEl.classList.remove('wrong-anim', 'correct-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
+      arrowEl.classList.add('wrong-anim'); document.body.classList.add('screen-shake');
+      soundWrong.currentTime = 0; soundWrong.play().catch(e => console.log(e));
 
       setTimeout(() => {
         if (!savedPlayerName && finalScore > 0) changeName(); 
@@ -249,79 +215,54 @@
 
     function startTimer() {
       clearInterval(timerInterval);
-      maxTime = Math.max(500, 2000 - (score * 50));
-      timeLeft = maxTime;
+      maxTime = Math.max(500, 2000 - (score * 50)); timeLeft = maxTime;
       
       timerInterval = setInterval(() => {
-        if(isFrozen) return; 
-        timeLeft -= 50;
-        let percentage = (timeLeft / maxTime) * 100;
-        timerBar.style.width = percentage + '%';
-        
-        if (percentage > 50) timerBar.style.background = '#00FF41'; 
-        else if (percentage > 25) timerBar.style.background = '#FFD700'; 
-        else timerBar.style.background = '#FF0000'; 
-        
+        if(isFrozen) return; timeLeft -= 50;
+        let percentage = (timeLeft / maxTime) * 100; timerBar.style.width = percentage + '%';
+        if (percentage > 50) timerBar.style.background = '#00FF41'; else if (percentage > 25) timerBar.style.background = '#FFD700'; else timerBar.style.background = '#FF0000'; 
         if (timeLeft <= 0) gameOver("Time ran out!");
       }, 50);
     }
 
     function nextRound() {
-      currentCommand = directions[Math.floor(Math.random() * directions.length)];
-      arrowEl.innerText = arrows[currentCommand];
+      currentCommand = directions[Math.floor(Math.random() * directions.length)]; arrowEl.innerText = arrows[currentCommand];
       isReverse = Math.random() < 0.2; 
-      
-      if (isReverse) {
-          arrowEl.style.color = "#FF00FF"; arrowEl.style.textShadow = "0 0 20px #FF00FF, 0 0 40px #FF00FF";
-          textEl.innerText = `SWIPE OPPOSITE!`; textEl.style.color = "#FF00FF"; document.body.style.background = "#200020"; 
-      } else {
-          arrowEl.style.color = "#ffffff"; arrowEl.style.textShadow = "0 0 10px #ffffff, 0 0 30px #ffffff";
-          textEl.innerText = `SWIPE ${currentCommand}!`; textEl.style.color = "#ffffff"; document.body.style.background = bgColors[currentCommand];
-      }
+      if (isReverse) { arrowEl.style.color = "#FF00FF"; arrowEl.style.textShadow = "0 0 20px #FF00FF, 0 0 40px #FF00FF"; textEl.innerText = `SWIPE OPPOSITE!`; textEl.style.color = "#FF00FF"; document.body.style.background = "#200020"; 
+      } else { arrowEl.style.color = "#ffffff"; arrowEl.style.textShadow = "0 0 10px #ffffff, 0 0 30px #ffffff"; textEl.innerText = `SWIPE ${currentCommand}!`; textEl.style.color = "#ffffff"; document.body.style.background = bgColors[currentCommand]; }
       startTimer();
     }
 
     function checkSwipe(dir, touchX, touchY) {
       let requiredSwipe = isReverse ? opposites[currentCommand] : currentCommand;
-
       if (dir === requiredSwipe) { 
-        score++; combo++; scoreEl.innerText = score; 
-        spawnFloatingPoint(touchX, touchY); 
-        
+        score++; combo++; scoreEl.innerText = score; spawnFloatingPoint(touchX, touchY); 
         arrowEl.classList.remove('correct-anim', 'wrong-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
-        arrowEl.classList.add('correct-anim');
-        soundCorrect.currentTime = 0; soundCorrect.play().catch(e => console.log(e));
-
+        arrowEl.classList.add('correct-anim'); soundCorrect.currentTime = 0; soundCorrect.play().catch(e => console.log(e));
         if (combo >= 5) { comboBoard.style.display = 'block'; comboEl.innerText = combo; }
-        if (combo % 15 === 0) { 
-            isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>console.log(e)); triggerConfetti();
-            setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000);
-        }
+        if (combo % 15 === 0) { isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>console.log(e)); triggerConfetti(); setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000); }
         nextRound(); 
-      } else {
-          let mistakeMessage = isReverse ? `Trap! You swiped ${dir}` : `You swiped ${dir}`;
-          gameOver(mistakeMessage);
-      }
+      } else { gameOver(isReverse ? `Trap! You swiped ${dir}` : `You swiped ${dir}`); }
     }
 
+    // Notice we added the title click to the ignored targets here so the game doesn't start when you click it
     function handleStart(e) {
-        if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
+        if (e.target.id === 'player-id' || e.target.id === 'share-btn' || e.target.innerHTML.includes("SWIPLAY TOP 10")) return;
         if (!currentCommand) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
     let tsX, tsY;
     document.addEventListener('mousedown', e => { tsX = e.clientX; tsY = e.clientY; handleStart(e); });
     document.addEventListener('mouseup', e => {
-      if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
+      if (e.target.id === 'player-id' || e.target.id === 'share-btn' || e.target.innerHTML.includes("SWIPLAY TOP 10")) return;
       let x = e.clientX - tsX, y = e.clientY - tsY;
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), e.clientX, e.clientY);
     });
 
     document.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); });
     document.addEventListener('touchend', e => {
-      if (e.target.id === 'player-id' || e.target.id === 'share-btn') return;
-      let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY;
-      let touchEndObj = e.changedTouches[0];
+      if (e.target.id === 'player-id' || e.target.id === 'share-btn' || e.target.innerHTML.includes("SWIPLAY TOP 10")) return;
+      let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY; let touchEndObj = e.changedTouches[0];
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), touchEndObj.clientX, touchEndObj.clientY);
     });
   </script>
