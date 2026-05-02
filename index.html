@@ -27,24 +27,20 @@
     #room-code-input { font-size: 3rem; text-align: center; text-transform: uppercase; width: 200px; padding: 10px; font-family: 'Inter', sans-serif; font-weight: 900; background: #1a0000; color: #FFD700; border: 2px solid #FFD700; border-radius: 10px; margin-bottom: 20px; outline: none; }
     .back-btn { margin-top: 30px; font-size: 1rem; color: #888; text-decoration: underline; cursor: pointer; }
 
-    /* ================= GAME UI (The Fighter HUD) ================= */
+    /* ================= GAME UI ================= */
     #game-ui { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
     
-    /* HUD Container perfectly splits left and right */
     #hud { position: absolute; top: 20px; width: 85%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
     
-    /* Left Side: Local Player */
     .score-box { display: flex; flex-direction: column; align-items: flex-start; }
     #local-name-display { display: none; font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
     #score-board { font-size: 2.5rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; line-height: 1; margin-top: 5px; }
     #local-high { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
     
-    /* Right Side: Opponent */
     #opponent-box { display: none; flex-direction: column; align-items: flex-end; }
     #opponent-name-display { font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
     #opponent-score-board { font-size: 2.5rem; color: #ff0041; text-shadow: 0 0 10px #ff0041; line-height: 1; margin-top: 5px; }
 
-    /* Center Overlay Elements */
     #combo-board { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; white-space: nowrap; }
     #share-btn { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 30; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); }
     
@@ -70,18 +66,15 @@
 </head>
 <body>
 
-  <!-- ================= MAIN MENU ================= -->
   <div id="menu-container">
     <div class="menu-title" onclick="checkAdmin()">SWIPLAY</div>
     <button class="menu-btn" onclick="startSolo()">👤 Solo Arcade</button>
     <button class="menu-btn secondary" onclick="hostGame()">👑 Host 1v1</button>
     <button class="menu-btn tertiary" onclick="showJoinScreen()">🤝 Join 1v1</button>
-    
     <div id="leaderboard">Loading Swiplay Network...</div>
     <div id="player-id" onclick="changeName()" style="position: relative; margin-top: 30px; bottom: 0;">👤 Identify Yourself</div>
   </div>
 
-  <!-- ================= LOBBY SCREEN (HOST) ================= -->
   <div id="lobby-screen">
     <h2>Waiting for opponent...</h2>
     <p>Tell them to join with this code:</p>
@@ -90,7 +83,6 @@
     <div class="back-btn" onclick="cancelLobby()">Cancel</div>
   </div>
 
-  <!-- ================= JOIN SCREEN (GUEST) ================= -->
   <div id="join-screen">
     <h2>Enter Room Code</h2>
     <input type="text" id="room-code-input" maxlength="4" autocomplete="off" autocorrect="off">
@@ -98,25 +90,19 @@
     <div class="back-btn" onclick="cancelLobby()">Cancel</div>
   </div>
 
-  <!-- ================= GAME UI ================= -->
   <div id="game-ui">
     <div id="hud">
-      <!-- Player 1 (Top Left) -->
       <div class="score-box">
         <div id="local-name-display">YOU</div>
         <div id="score-board"><span id="score">0</span></div>
         <div id="local-high">Best: <span id="best-score">0</span></div>
       </div>
-      
       <div id="combo-board">COMBO x<span id="combo">0</span></div>
-      
-      <!-- Player 2 (Top Right) -->
       <div id="opponent-box">
         <div id="opponent-name-display">Enemy</div>
         <div id="opponent-score-board"><span id="opponent-score">0</span></div>
       </div>
     </div>
-    
     <div id="share-btn" onclick="shareGame()">🔗 Invite</div>
     <div id="instruction">
       <div id="arrow">▶</div>
@@ -164,17 +150,13 @@
     function generateCode() { return Math.random().toString(36).substring(2, 6).toUpperCase(); }
 
     function prepareMultiplayerUI(opponentName) {
-        document.getElementById('share-btn').style.display = 'none'; // Hide share button during 1v1
-        document.getElementById('local-high').style.display = 'none'; // Hide local best
-        
-        // Show names for both players
+        document.getElementById('share-btn').style.display = 'none'; 
+        document.getElementById('local-high').style.display = 'none'; 
         document.getElementById('local-name-display').style.display = 'block';
         document.getElementById('local-name-display').innerText = savedPlayerName;
-        
-        document.getElementById('opponent-box').style.display = 'flex'; // Show opponent side
+        document.getElementById('opponent-box').style.display = 'flex'; 
         document.getElementById('opponent-name-display').innerText = opponentName;
         document.getElementById('opponent-score').innerText = '0';
-        
         listenToOpponent();
     }
 
@@ -183,11 +165,9 @@
             let data = snapshot.val();
             if(!data) return;
 
-            // 1. Live Score Syncing
             let opponentScore = isHost ? data.guestScore : data.hostScore;
             document.getElementById('opponent-score').innerText = opponentScore;
 
-            // 2. Win/Loss Detection
             let opponentStatus = isHost ? data.guestStatus : data.hostStatus;
             let myStatus = isHost ? data.hostStatus : data.guestStatus;
             
@@ -204,10 +184,43 @@
         arrowEl.style.color = '#ffffff';
         arrowEl.innerText = '🏆';
         textEl.innerHTML = `YOU WIN!<br><span style="font-size: 1.2rem; margin-top:10px; display:block;">Opponent knocked out.</span>`;
-        soundMilestone.play().catch(e=>console.log(e));
+        soundMilestone.currentTime = 0;
+        soundMilestone.play().catch(e=>{});
         confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
         
         setTimeout(() => { exitGame(); }, 4000);
+    }
+
+    // NEW: Synchronized Auto-Start Countdown
+    function startCountdown() {
+        isFrozen = true; // Blocks any manual swiping during countdown
+        currentCommand = 'WAIT';
+        score = 0; combo = 0; scoreEl.innerText = "0";
+        document.body.style.background = '#2A0000';
+        
+        arrowEl.style.color = '#FFD700';
+        arrowEl.style.textShadow = '0 0 20px #FFD700';
+        textEl.innerHTML = "MATCH STARTING";
+        timerBar.style.width = "100%";
+        timerBar.style.background = "#00FF41";
+
+        let count = 3;
+        arrowEl.innerText = count;
+        soundMilestone.currentTime = 0;
+        soundMilestone.play().catch(e=>{});
+
+        let cd = setInterval(() => {
+            count--;
+            if(count > 0) {
+                arrowEl.innerText = count;
+                soundMilestone.currentTime = 0;
+                soundMilestone.play().catch(e=>{});
+            } else {
+                clearInterval(cd);
+                isFrozen = false;
+                nextRound(); // The game automatically starts here!
+            }
+        }, 1000);
     }
 
     // --- Lobby Functions ---
@@ -216,9 +229,16 @@
         document.getElementById('game-ui').style.display = 'flex';
         document.getElementById('share-btn').style.display = 'block';
         document.getElementById('local-high').style.display = 'block';
-        document.getElementById('local-name-display').style.display = 'none'; // Hide name in solo
+        document.getElementById('local-name-display').style.display = 'none'; 
         document.getElementById('opponent-box').style.display = 'none';
         isMultiplayer = false;
+        
+        arrowEl.innerText = '▶';
+        textEl.innerHTML = 'Tap to Play';
+        arrowEl.style.color = '#ffffff';
+        scoreEl.innerText = "0";
+        currentCommand = '';
+        isFrozen = false;
     }
 
     function hostGame() {
@@ -240,10 +260,10 @@
             let data = snapshot.val();
             if (data && data.guestName !== '') {
                 database.ref('rooms/' + currentRoom).off('value', waitListener); 
-                alert(data.guestName + " joined! PREPARE TO SWIPE.");
                 document.getElementById('lobby-screen').style.display = 'none';
                 document.getElementById('game-ui').style.display = 'flex';
                 prepareMultiplayerUI(data.guestName);
+                startCountdown(); // Instantly start the countdown
             }
         });
     }
@@ -268,10 +288,10 @@
                     
                     database.ref('rooms/' + code).update({ guestName: savedPlayerName, status: 'playing' });
                     
-                    alert("Joined " + data.hostName + "'s room!");
                     document.getElementById('join-screen').style.display = 'none';
                     document.getElementById('game-ui').style.display = 'flex';
                     prepareMultiplayerUI(data.hostName);
+                    startCountdown(); // Instantly start the countdown
                 } else { alert("Room is full or already playing!"); }
             } else { alert("Room not found!"); }
         });
@@ -286,7 +306,14 @@
 
     function exitGame() {
         clearInterval(timerInterval);
-        if(currentRoom) { database.ref('rooms/' + currentRoom).off(); } 
+        
+        if (isMultiplayer && currentRoom) {
+            database.ref('rooms/' + currentRoom).off();
+            // Let opponent know you quit
+            database.ref('rooms/' + currentRoom).update({
+                [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
+            });
+        } 
         
         score = 0; currentCommand = ''; timerBar.style.width = "0%"; isFrozen = false;
         arrowEl.innerText = '▶'; arrowEl.style.color = '#ffffff'; textEl.innerHTML = 'Tap to Play';
@@ -294,6 +321,9 @@
         
         document.getElementById('game-ui').style.display = 'none';
         document.getElementById('menu-container').style.display = 'flex';
+        
+        isMultiplayer = false;
+        currentRoom = null;
     }
 
     // ================= CORE GAME LOGIC =================
@@ -352,14 +382,14 @@
           database.ref('rooms/' + currentRoom).update({
               [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
           });
-      }
-
-      if (!isMultiplayer && finalScore > 0) {
+          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Returning to menu...</span>`;
+          setTimeout(() => { exitGame(); }, 4000);
+      } else {
           if (!savedPlayerName) changeName(); 
-          if (savedPlayerName) database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
+          if (savedPlayerName && finalScore > 0) database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
+          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
       }
       
-      textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span>`;
       arrowEl.innerText = '✖'; arrowEl.style.color = "#ff4444"; arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
       score = 0; currentCommand = ''; timerBar.style.width = "0%";
     }
@@ -394,15 +424,20 @@
         }
 
         arrowEl.classList.remove('correct-anim', 'wrong-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
-        arrowEl.classList.add('correct-anim'); soundCorrect.currentTime = 0; soundCorrect.play().catch(e=>console.log(e));
+        arrowEl.classList.add('correct-anim'); soundCorrect.currentTime = 0; soundCorrect.play().catch(e=>{});
         if (combo >= 5) { comboBoard.style.display = 'block'; comboEl.innerText = combo; }
-        if (combo % 15 === 0) { isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>console.log(e)); triggerConfetti(); setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000); }
+        if (combo % 15 === 0) { isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>{}); triggerConfetti(); setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000); }
         nextRound(); 
       } else { gameOver(isReverse ? `Trap! You swiped ${dir}` : `You swiped ${dir}`); }
     }
 
     function handleStart(e) {
-        if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
+        if (e.target.closest && e.target.closest('.back-btn')) return;
+        if (e.target.id === 'share-btn') return;
+        
+        // In multiplayer, the game handles its own restarting/starting so manual taps are disabled
+        if (isMultiplayer) return;
+
         if (!currentCommand && !isFrozen) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
@@ -413,7 +448,8 @@
     });
     document.addEventListener('mouseup', e => {
       if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
-      if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
+      if (e.target.closest && e.target.closest('.back-btn')) return;
+      if (e.target.id === 'share-btn') return;
       let x = e.clientX - tsX, y = e.clientY - tsY;
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), e.clientX, e.clientY);
     });
@@ -424,7 +460,8 @@
     });
     document.addEventListener('touchend', e => {
       if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
-      if (e.target.closest('.back-btn') || e.target.id === 'share-btn') return;
+      if (e.target.closest && e.target.closest('.back-btn')) return;
+      if (e.target.id === 'share-btn') return;
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY; let touchEndObj = e.changedTouches[0];
       if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), touchEndObj.clientX, touchEndObj.clientY);
     });
