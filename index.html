@@ -17,7 +17,6 @@
     /* ================= MAIN MENU UI ================= */
     #menu-container { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; width: 100%; height: 100%; background: #2A0000; position: absolute; top: 0; left: 0; }
     
-    /* NEW: Coin Bank Styling */
     #coin-bank { position: absolute; top: 20px; left: 20px; font-size: 1.2rem; color: #FFD700; background: rgba(255,215,0,0.1); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.3); font-weight: bold; z-index: 100; display: flex; align-items: center; gap: 8px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
     
     .menu-title { font-size: 4rem; color: #ffffff; text-shadow: 0 0 10px #ff0041, 0 0 30px #ff0041; margin-bottom: 40px; letter-spacing: 2px; cursor: pointer; }
@@ -71,9 +70,7 @@
 <body>
 
   <div id="menu-container">
-    <!-- NEW: The Coin Bank Display -->
     <div id="coin-bank">💰 <span id="total-coins">0</span></div>
-    
     <div class="menu-title" onclick="checkAdmin()">SWIPLAY</div>
     <button class="menu-btn" onclick="startSolo()">👤 Solo Arcade</button>
     <button class="menu-btn secondary" onclick="hostGame()">👑 Host 1v1</button>
@@ -135,7 +132,6 @@
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
     
-    // NEW: Load total coins from browser storage
     let totalCoins = parseInt(localStorage.getItem('arcadeCoins')) || 0;
     document.getElementById('total-coins').innerText = totalCoins;
 
@@ -145,7 +141,6 @@
 
     if (savedPlayerName) { document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`; }
 
-    // NEW: Function to securely add and save coins
     function addCoins(amount) {
         totalCoins += amount;
         localStorage.setItem('arcadeCoins', totalCoins);
@@ -201,7 +196,6 @@
         clearInterval(timerInterval);
         isFrozen = true; 
         
-        // NEW: Calculate Winner's Purse (+50 Bonus for winning!)
         let winBonus = 50;
         let totalEarned = score + winBonus;
         addCoins(totalEarned);
@@ -398,7 +392,6 @@
       let finalScore = score;
       document.body.style.background = '#2A0000'; comboBoard.style.display = 'none'; combo = 0; isReverse = false; 
       
-      // NEW: Add earned coins to bank (even if you lose, you keep what you swiped!)
       if (finalScore > 0) { addCoins(finalScore); }
 
       if(finalScore > localHigh) { localHigh = finalScore; localStorage.setItem('arcadeBest', localHigh); document.getElementById('best-score').innerText = localHigh; }
@@ -440,8 +433,9 @@
     }
 
     function checkSwipe(dir, touchX, touchY) {
-      if(isFrozen) return;
+      if(isFrozen || !currentCommand) return; 
       let requiredSwipe = isReverse ? opposites[currentCommand] : currentCommand;
+      
       if (dir === requiredSwipe) { 
         score++; combo++; scoreEl.innerText = score; spawnFloatingPoint(touchX, touchY); 
         
@@ -466,13 +460,14 @@
         if (!currentCommand && !isFrozen) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
+    // ================= TOUCH INPUT FIX =================
     let tsX, tsY;
     document.addEventListener('mousedown', e => { 
-        if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
+        if(document.getElementById('game-ui').style.display !== 'flex') return;
         tsX = e.clientX; tsY = e.clientY; handleStart(e); 
     });
     document.addEventListener('mouseup', e => {
-      if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
+      if(document.getElementById('game-ui').style.display !== 'flex') return;
       if (e.target.closest && e.target.closest('.back-btn')) return;
       if (e.target.id === 'share-btn') return;
       let x = e.clientX - tsX, y = e.clientY - tsY;
@@ -480,11 +475,11 @@
     });
 
     document.addEventListener('touchstart', e => { 
-        if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
+        if(document.getElementById('game-ui').style.display !== 'flex') return;
         tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); 
     });
     document.addEventListener('touchend', e => {
-      if(document.getElementById('menu-container').style.display !== 'none' || document.getElementById('lobby-screen').style.display !== 'none' || document.getElementById('join-screen').style.display !== 'none') return;
+      if(document.getElementById('game-ui').style.display !== 'flex') return;
       if (e.target.closest && e.target.closest('.back-btn')) return;
       if (e.target.id === 'share-btn') return;
       let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY; let touchEndObj = e.changedTouches[0];
