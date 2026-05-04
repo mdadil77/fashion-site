@@ -16,6 +16,10 @@
 
     /* ================= MAIN MENU UI ================= */
     #menu-container { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; width: 100%; height: 100%; background: #2A0000; position: absolute; top: 0; left: 0; }
+    
+    /* NEW: Coin Bank Styling */
+    #coin-bank { position: absolute; top: 20px; left: 20px; font-size: 1.2rem; color: #FFD700; background: rgba(255,215,0,0.1); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.3); font-weight: bold; z-index: 100; display: flex; align-items: center; gap: 8px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+    
     .menu-title { font-size: 4rem; color: #ffffff; text-shadow: 0 0 10px #ff0041, 0 0 30px #ff0041; margin-bottom: 40px; letter-spacing: 2px; cursor: pointer; }
     .menu-btn { background: #00FF41; color: #000; font-size: 1.5rem; font-family: 'Inter', sans-serif; font-weight: 900; padding: 15px 30px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; width: 250px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,255,65,0.4); transition: transform 0.1s; }
     .menu-btn:active { transform: scale(0.95); }
@@ -67,6 +71,9 @@
 <body>
 
   <div id="menu-container">
+    <!-- NEW: The Coin Bank Display -->
+    <div id="coin-bank">💰 <span id="total-coins">0</span></div>
+    
     <div class="menu-title" onclick="checkAdmin()">SWIPLAY</div>
     <button class="menu-btn" onclick="startSolo()">👤 Solo Arcade</button>
     <button class="menu-btn secondary" onclick="hostGame()">👑 Host 1v1</button>
@@ -124,13 +131,26 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // ================= MEMORY & COIN BANK =================
     let localHigh = localStorage.getItem('arcadeBest') || 0;
     document.getElementById('best-score').innerText = localHigh;
+    
+    // NEW: Load total coins from browser storage
+    let totalCoins = parseInt(localStorage.getItem('arcadeCoins')) || 0;
+    document.getElementById('total-coins').innerText = totalCoins;
+
     let savedPlayerName = localStorage.getItem('arcadePlayerName');
     let savedPlayerAvatar = localStorage.getItem('arcadePlayerAvatar');
     const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁', '🕹️'];
 
     if (savedPlayerName) { document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`; }
+
+    // NEW: Function to securely add and save coins
+    function addCoins(amount) {
+        totalCoins += amount;
+        localStorage.setItem('arcadeCoins', totalCoins);
+        document.getElementById('total-coins').innerText = totalCoins;
+    }
 
     function changeName() {
         let newName = prompt("Enter your Swiplay username:", savedPlayerName || "Player");
@@ -180,10 +200,16 @@
     function triggerWin() {
         clearInterval(timerInterval);
         isFrozen = true; 
+        
+        // NEW: Calculate Winner's Purse (+50 Bonus for winning!)
+        let winBonus = 50;
+        let totalEarned = score + winBonus;
+        addCoins(totalEarned);
+
         document.body.style.background = '#00FF41';
         arrowEl.style.color = '#ffffff';
         arrowEl.innerText = '🏆';
-        textEl.innerHTML = `YOU WIN!<br><span style="font-size: 1.2rem; margin-top:10px; display:block;">Opponent knocked out.</span>`;
+        textEl.innerHTML = `YOU WIN!<br><span style="font-size: 1.2rem; margin-top:10px; display:block;">Opponent knocked out.</span><br><span style="color:#FFD700; font-size:1.4rem; margin-top:15px; display:block; text-shadow: 0 0 10px #FFD700;">💰 +${totalEarned} Coins!</span>`;
         soundMilestone.currentTime = 0;
         soundMilestone.play().catch(e=>{});
         confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
@@ -191,9 +217,8 @@
         setTimeout(() => { exitGame(); }, 4000);
     }
 
-    // NEW: Synchronized Auto-Start Countdown
     function startCountdown() {
-        isFrozen = true; // Blocks any manual swiping during countdown
+        isFrozen = true; 
         currentCommand = 'WAIT';
         score = 0; combo = 0; scoreEl.innerText = "0";
         document.body.style.background = '#2A0000';
@@ -218,7 +243,7 @@
             } else {
                 clearInterval(cd);
                 isFrozen = false;
-                nextRound(); // The game automatically starts here!
+                nextRound(); 
             }
         }, 1000);
     }
@@ -263,7 +288,7 @@
                 document.getElementById('lobby-screen').style.display = 'none';
                 document.getElementById('game-ui').style.display = 'flex';
                 prepareMultiplayerUI(data.guestName);
-                startCountdown(); // Instantly start the countdown
+                startCountdown(); 
             }
         });
     }
@@ -291,7 +316,7 @@
                     document.getElementById('join-screen').style.display = 'none';
                     document.getElementById('game-ui').style.display = 'flex';
                     prepareMultiplayerUI(data.hostName);
-                    startCountdown(); // Instantly start the countdown
+                    startCountdown(); 
                 } else { alert("Room is full or already playing!"); }
             } else { alert("Room not found!"); }
         });
@@ -309,7 +334,6 @@
         
         if (isMultiplayer && currentRoom) {
             database.ref('rooms/' + currentRoom).off();
-            // Let opponent know you quit
             database.ref('rooms/' + currentRoom).update({
                 [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
             });
@@ -373,6 +397,10 @@
       clearInterval(timerInterval);
       let finalScore = score;
       document.body.style.background = '#2A0000'; comboBoard.style.display = 'none'; combo = 0; isReverse = false; 
+      
+      // NEW: Add earned coins to bank (even if you lose, you keep what you swiped!)
+      if (finalScore > 0) { addCoins(finalScore); }
+
       if(finalScore > localHigh) { localHigh = finalScore; localStorage.setItem('arcadeBest', localHigh); document.getElementById('best-score').innerText = localHigh; }
       arrowEl.classList.remove('wrong-anim', 'correct-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
       arrowEl.classList.add('wrong-anim'); document.body.classList.add('screen-shake');
@@ -382,12 +410,12 @@
           database.ref('rooms/' + currentRoom).update({
               [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
           });
-          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Returning to menu...</span>`;
+          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='color:#FFD700; font-size:1.2rem; margin-top:5px; display:block;'>💰 +${finalScore} Coins</span><br><span style='font-size:1rem; color:#aaa; margin-top:10px; display:block;'>Returning to menu...</span>`;
           setTimeout(() => { exitGame(); }, 4000);
       } else {
           if (!savedPlayerName) changeName(); 
           if (savedPlayerName && finalScore > 0) database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
-          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='font-size:1.2rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
+          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='color:#FFD700; font-size:1.2rem; margin-top:5px; display:block;'>💰 +${finalScore} Coins</span><br><span style='font-size:1rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
       }
       
       arrowEl.innerText = '✖'; arrowEl.style.color = "#ff4444"; arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
@@ -434,10 +462,7 @@
     function handleStart(e) {
         if (e.target.closest && e.target.closest('.back-btn')) return;
         if (e.target.id === 'share-btn') return;
-        
-        // In multiplayer, the game handles its own restarting/starting so manual taps are disabled
         if (isMultiplayer) return;
-
         if (!currentCommand && !isFrozen) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
     }
 
