@@ -2,489 +2,274 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="google-site-verification" content="AsBhcQ14lhMgL6ElUHyqReRy-zcLIwM9gLCYuiirQVU" />
-  <title>Swiplay | The Ultimate Reflex Arcade</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Swiplay Gaming Lounge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
   <style>
-    body { margin: 0; font-family: 'Inter', sans-serif; background: #2A0000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; touch-action: none; transition: background 0.2s; }
+    /* CORE STYLES */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: #0b0d14; color: #e2e8f0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
     
-    .screen-shake { animation: bigShake 0.4s ease; }
-    @keyframes bigShake { 0% { transform: translate(0, 0); } 20% { transform: translate(-10px, 10px); } 40% { transform: translate(10px, -10px); } 60% { transform: translate(-10px, -10px); } 80% { transform: translate(10px, 10px); } 100% { transform: translate(0, 0); } }
+    /* ONBOARDING SCREEN */
+    #onboarding { position: fixed; inset: 0; background: rgba(11, 13, 20, 0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .auth-box { background: #161a2b; padding: 40px; border-radius: 20px; border: 1px solid #2d3748; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0, 255, 102, 0.1); }
+    .avatar-grid { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+    .avatar-btn { font-size: 2.5rem; background: none; border: 2px solid transparent; border-radius: 50%; cursor: pointer; transition: 0.2s; padding: 5px; }
+    .avatar-btn.selected { border-color: #00ff66; transform: scale(1.1); background: rgba(0, 255, 102, 0.1); }
+    .input-box { width: 100%; padding: 15px; background: #0b0d14; border: 1px solid #2d3748; color: white; border-radius: 10px; margin-bottom: 20px; font-size: 1rem; outline: none; }
+    .input-box:focus { border-color: #00ff66; }
+    .btn-green { background: #00ff66; color: #0b0d14; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+    .btn-green:hover { background: #00cc52; box-shadow: 0 0 15px rgba(0, 255, 102, 0.4); }
 
-    /* ================= MAIN MENU UI ================= */
-    #menu-container { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; width: 100%; height: 100%; background: #2A0000; position: absolute; top: 0; left: 0; }
-    
-    #coin-bank { position: absolute; top: 20px; left: 20px; font-size: 1.2rem; color: #FFD700; background: rgba(255,215,0,0.1); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.3); font-weight: bold; z-index: 100; display: flex; align-items: center; gap: 8px; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-    
-    .menu-title { font-size: 4rem; color: #ffffff; text-shadow: 0 0 10px #ff0041, 0 0 30px #ff0041; margin-bottom: 40px; letter-spacing: 2px; cursor: pointer; }
-    .menu-btn { background: #00FF41; color: #000; font-size: 1.5rem; font-family: 'Inter', sans-serif; font-weight: 900; padding: 15px 30px; margin: 10px; border: none; border-radius: 10px; cursor: pointer; width: 250px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,255,65,0.4); transition: transform 0.1s; }
-    .menu-btn:active { transform: scale(0.95); }
-    .menu-btn.secondary { background: #FFD700; box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
-    .menu-btn.tertiary { background: #00FFFF; box-shadow: 0 5px 15px rgba(0,255,255,0.4); }
-    
-    #lobby-screen, #join-screen { display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; width: 100%; height: 100%; background: #2A0000; position: absolute; top: 0; left: 0; }
-    #room-code-display { font-size: 5rem; color: #FFD700; letter-spacing: 5px; margin: 20px 0; text-shadow: 0 0 20px #FFD700; }
-    #room-code-input { font-size: 3rem; text-align: center; text-transform: uppercase; width: 200px; padding: 10px; font-family: 'Inter', sans-serif; font-weight: 900; background: #1a0000; color: #FFD700; border: 2px solid #FFD700; border-radius: 10px; margin-bottom: 20px; outline: none; }
-    .back-btn { margin-top: 30px; font-size: 1rem; color: #888; text-decoration: underline; cursor: pointer; }
+    /* HEADER */
+    header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #161a2b; border-bottom: 1px solid #2d3748; }
+    .logo { font-weight: 800; font-size: 1.5rem; color: #fff; }
+    .logo span { color: #00ff66; }
+    .user-badge { display: flex; align-items: center; gap: 10px; background: #0b0d14; padding: 5px 15px; border-radius: 20px; border: 1px solid #2d3748; }
 
-    /* ================= GAME UI ================= */
-    #game-ui { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+    /* MAIN LAYOUT */
+    .layout { display: flex; flex: 1; overflow: hidden; }
     
-    #hud { position: absolute; top: 20px; width: 85%; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; }
+    /* SIDE PANELS (CHAT & PLAYERS) */
+    .side-panel { width: 300px; background: #161a2b; display: flex; flex-direction: column; border-right: 1px solid #2d3748; }
+    .side-panel.right { border-right: none; border-left: 1px solid #2d3748; }
+    .panel-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
+    .online-dot { color: #00ff66; }
     
-    .score-box { display: flex; flex-direction: column; align-items: flex-start; }
-    #local-name-display { display: none; font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
-    #score-board { font-size: 2.5rem; color: #00FF41; text-shadow: 0 0 10px #00FF41; line-height: 1; margin-top: 5px; }
-    #local-high { font-size: 0.9rem; color: #aaa; margin-top: 5px; }
-    
-    #opponent-box { display: none; flex-direction: column; align-items: flex-end; }
-    #opponent-name-display { font-size: 0.9rem; color: #aaa; margin-bottom: -5px; text-transform: uppercase; letter-spacing: 1px; }
-    #opponent-score-board { font-size: 2.5rem; color: #ff0041; text-shadow: 0 0 10px #ff0041; line-height: 1; margin-top: 5px; }
+    /* CHAT BOX */
+    .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { background: #2d3748; padding: 10px 15px; border-radius: 15px; border-top-left-radius: 2px; font-size: 0.9rem; align-self: flex-start; max-width: 90%; }
+    .chat-msg.self { background: rgba(0, 255, 102, 0.1); border: 1px solid #00ff66; border-top-left-radius: 15px; border-top-right-radius: 2px; align-self: flex-end; }
+    .chat-input-area { padding: 15px; border-top: 1px solid #2d3748; display: flex; gap: 10px; }
+    .chat-input { flex: 1; background: #0b0d14; border: 1px solid #2d3748; color: white; padding: 10px; border-radius: 8px; outline: none; }
+    .send-btn { background: #00ff66; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; font-weight: bold; }
 
-    #combo-board { position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.5rem; color: #FFD700; display: none; text-shadow: 0 0 10px #FFD700; white-space: nowrap; }
-    #share-btn { position: absolute; top: 20px; right: 20px; font-size: 0.8rem; color: #00FF41; cursor: pointer; z-index: 30; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; background: rgba(0, 255, 65, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 65, 0.3); }
+    /* PLAYERS LIST */
+    .players-list { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .player-card { display: flex; justify-content: space-between; align-items: center; background: #0b0d14; padding: 10px; border-radius: 10px; border: 1px solid #2d3748; }
+    .challenge-btn { background: transparent; border: 1px solid #00ff66; color: #00ff66; padding: 5px 10px; border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+    .challenge-btn:hover { background: #00ff66; color: #000; }
+
+    /* GAME GRID (CENTER) */
+    .center-stage { flex: 1; padding: 30px; overflow-y: auto; background: #0b0d14; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+    .game-card { background: #161a2b; border: 1px solid #2d3748; border-radius: 15px; padding: 25px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .game-card:hover { border-color: #00ff66; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,255,102,0.1); }
+    .game-icon { font-size: 3rem; margin-bottom: 15px; }
+    .game-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+    .game-desc { font-size: 0.8rem; color: #a0aec0; }
+
+    /* GAME MODAL */
+    #game-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; }
+    .modal-box { background: #161a2b; padding: 30px; border-radius: 20px; border: 1px solid #00ff66; width: 90%; max-width: 350px; text-align: center; }
+    .modal-icon { font-size: 4rem; margin-bottom: 10px; }
+    .btn-blue { background: #3182ce; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; }
+    .btn-outline { background: transparent; color: #fc8181; border: 1px solid #fc8181; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; margin-top: 15px; cursor: pointer; }
     
-    #instruction { font-size: 2.5rem; text-align: center; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 10; }
-    #arrow { font-size: 7rem; height: 100px; line-height: 100px; color: #ffffff; text-shadow: 0 0 10px #ffffff, 0 0 30px #ffffff; font-weight: 900; z-index: 10; transition: color 0.2s, text-shadow 0.2s; }
-    #timer-container { width: 80%; height: 15px; background: #1a0000; border-radius: 10px; overflow: hidden; margin-top: 30px; box-shadow: 0 0 10px #000; z-index: 10; border: 1px solid #333; }
-    #timer-bar { width: 100%; height: 100%; background: #00FF41; transition: width 0.05s linear; }
-    .freeze-anim { background: #00FFFF !important; box-shadow: 0 0 15px #00FFFF; }
-
-    #leaderboard { font-size: 1rem; color: #ccc; margin-top: 25px; text-align: center; width: 85%; border-top: 2px solid #550000; padding-top: 15px; z-index: 10; }
-    .legend-item { margin: 6px 0; font-size: 1.1rem; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255,255,255,0.1); }
-    .rank { color: #888; font-size: 0.9rem; width: 25px; text-align: right; }
-    .avatar { font-size: 1.2rem; }
-
-    #player-id { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: #888; cursor: pointer; z-index: 20; text-transform: uppercase; letter-spacing: 1px; }
-    .float-pt { position: absolute; color: #00FF41; font-size: 2rem; font-weight: bold; pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 50; text-shadow: 0 0 10px #000; }
-    @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-60px) scale(1.5); } }
-    .correct-anim { animation: pulse 0.3s ease; }
-    .wrong-anim { animation: shake 0.4s ease; }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-    @keyframes shake { 0% { transform: translateX(0); color: #ff4444; } 25% { transform: translateX(-15px); } 50% { transform: translateX(15px); } 75% { transform: translateX(-15px); } 100% { transform: translateX(0); color: #ff4444; } }
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 900px) {
+      .side-panel { display: none; } /* Hide side panels on mobile for now */
+    }
   </style>
 </head>
 <body>
 
-  <div id="menu-container">
-    <div id="coin-bank">💰 <span id="total-coins">0</span></div>
-    <div class="menu-title" onclick="checkAdmin()">SWIPLAY</div>
-    <button class="menu-btn" onclick="startSolo()">👤 Solo Arcade</button>
-    <button class="menu-btn secondary" onclick="hostGame()">👑 Host 1v1</button>
-    <button class="menu-btn tertiary" onclick="showJoinScreen()">🤝 Join 1v1</button>
-    <div id="leaderboard">Loading Swiplay Network...</div>
-    <div id="player-id" onclick="changeName()" style="position: relative; margin-top: 30px; bottom: 0;">👤 Identify Yourself</div>
-  </div>
-
-  <div id="lobby-screen">
-    <h2>Waiting for opponent...</h2>
-    <p>Tell them to join with this code:</p>
-    <div id="room-code-display">XXXX</div>
-    <div class="loader" style="color: #00FF41;">Searching...</div>
-    <div class="back-btn" onclick="cancelLobby()">Cancel</div>
-  </div>
-
-  <div id="join-screen">
-    <h2>Enter Room Code</h2>
-    <input type="text" id="room-code-input" maxlength="4" autocomplete="off" autocorrect="off">
-    <button class="menu-btn tertiary" onclick="attemptJoin()">JOIN GAME</button>
-    <div class="back-btn" onclick="cancelLobby()">Cancel</div>
-  </div>
-
-  <div id="game-ui">
-    <div id="hud">
-      <div class="score-box">
-        <div id="local-name-display">YOU</div>
-        <div id="score-board"><span id="score">0</span></div>
-        <div id="local-high">Best: <span id="best-score">0</span></div>
+  <!-- 1. LOGIN / AVATAR SCREEN -->
+  <div id="onboarding">
+    <div class="auth-box">
+      <h1 class="logo">Swi<span>play</span></h1>
+      <p style="color: #a0aec0; margin-top: 5px;">Gaming Lounge</p>
+      
+      <div class="avatar-grid">
+        <button class="avatar-btn selected" onclick="pickAvatar(this, '🤖')">🤖</button>
+        <button class="avatar-btn" onclick="pickAvatar(this, '🦊')">🦊</button>
+        <button class="avatar-btn" onclick="pickAvatar(this, '⚡')">⚡</button>
+        <button class="avatar-btn" onclick="pickAvatar(this, '👑')">👑</button>
       </div>
-      <div id="combo-board">COMBO x<span id="combo">0</span></div>
-      <div id="opponent-box">
-        <div id="opponent-name-display">Enemy</div>
-        <div id="opponent-score-board"><span id="opponent-score">0</span></div>
+
+      <input type="text" id="username" class="input-box" placeholder="Enter your nickname..." autocomplete="off">
+      <button class="btn-green" onclick="enterLobby()">Enter Lounge</button>
+    </div>
+  </div>
+
+  <!-- 2. MAIN HEADER -->
+  <header>
+    <div class="logo">Swi<span>play</span></div>
+    <div class="user-badge" id="my-profile">
+      <span id="my-avatar">🤖</span>
+      <span id="my-name">Guest</span>
+    </div>
+  </header>
+
+  <!-- 3. LOBBY LAYOUT -->
+  <div class="layout">
+    
+    <!-- LEFT: GLOBAL CHAT -->
+    <div class="side-panel">
+      <div class="panel-header">💬 Global Chat</div>
+      <div class="chat-messages" id="chat-box">
+        <div class="chat-msg"><strong>System:</strong> Welcome to Swiplay Lounge!</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Type a message..." onkeypress="handleEnter(event)">
+        <button class="send-btn" onclick="sendMessage()">▶</button>
       </div>
     </div>
-    <div id="share-btn" onclick="shareGame()">🔗 Invite</div>
-    <div id="instruction">
-      <div id="arrow">▶</div>
-      <div id="text">Tap to Play</div>
+
+    <!-- CENTER: GAME GRID -->
+    <div class="center-stage">
+      <div class="grid">
+        
+        <div class="game-card" onclick="openModal('Swipe Game', '⚡', 'Fast-paced reaction game', 'swipe-game.html')">
+          <div class="game-icon">⚡</div>
+          <div class="game-title">Swipe Game</div>
+          <div class="game-desc">Reaction swiping</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('Chess', '♟️', 'Strategic 2D board', 'chess.html')">
+          <div class="game-icon">♟️</div>
+          <div class="game-title">Chess</div>
+          <div class="game-desc">Strategic 2D pieces</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('Ludo Classic', '🎲', 'Board and dice game', 'ludo.html')">
+          <div class="game-icon">🎲</div>
+          <div class="game-title">Ludo Classic</div>
+          <div class="game-desc">Roll the dice</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('WordRush', '⌨️', 'Competitive typing speed', 'wordrush.html')">
+          <div class="game-icon">⌨️</div>
+          <div class="game-title">WordRush</div>
+          <div class="game-desc">Type to win</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('Swipe Brawl', '🥊', 'Combat boxer clash', 'brawl.html')">
+          <div class="game-icon">🥊</div>
+          <div class="game-title">Swipe Brawl</div>
+          <div class="game-desc">Jab, Hook, Block</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('Snakes & Ladders', '🐍', 'Classic climbing game', 'snakes.html')">
+          <div class="game-icon">🐍</div>
+          <div class="game-title">Snakes & Ladders</div>
+          <div class="game-desc">Climb to the top</div>
+        </div>
+
+        <div class="game-card" onclick="openModal('RPS: Clash', '✊', 'Rock Paper Scissors', 'rps.html')">
+          <div class="game-icon">✊</div>
+          <div class="game-title">RPS: Clash</div>
+          <div class="game-desc">Mind games</div>
+        </div>
+
+      </div>
     </div>
-    <div id="timer-container"><div id="timer-bar"></div></div>
-    <div class="back-btn" onclick="exitGame()" style="position: absolute; bottom: 20px;">Quit to Menu</div>
+
+    <!-- RIGHT: ONLINE PLAYERS -->
+    <div class="side-panel right">
+      <div class="panel-header">
+        <span>Active Players</span>
+        <span class="online-dot">● 152</span>
+      </div>
+      <div class="players-list" id="players-list">
+        <!-- Mock Data for UI -->
+        <div class="player-card">
+          <div>🦊 Zack</div>
+          <button class="challenge-btn">Invite</button>
+        </div>
+        <div class="player-card">
+          <div>⚡ Sarah</div>
+          <button class="challenge-btn">Invite</button>
+        </div>
+        <div class="player-card">
+          <div>👑 Viper</div>
+          <button class="challenge-btn">Invite</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
-  <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-  <audio id="sound-milestone" src="https://actions.google.com/sounds/v1/cartoon/magic_chime_chord.ogg"></audio>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <!-- 4. GAME LAUNCH MODAL -->
+  <div id="game-modal">
+    <div class="modal-box">
+      <div class="modal-icon" id="modal-icon">⚡</div>
+      <h2 id="modal-title">Swipe Game</h2>
+      <p id="modal-desc" style="color: #a0aec0; margin-bottom: 20px; font-size: 0.9rem;">Reaction swiping</p>
+      
+      <!-- We save the target URL here secretly so the buttons know where to go -->
+      <input type="hidden" id="modal-url">
+
+      <button class="btn-green" onclick="launchGame('random')">🎲 Play with Random</button>
+      <button class="btn-blue" onclick="launchGame('friend')">🔑 Play with Friend by Code</button>
+      <button class="btn-outline" onclick="closeModal()">✖ Exit</button>
+    </div>
+  </div>
 
   <script>
-    const firebaseConfig = { apiKey: "AIzaSyDfC30PXcNaSi2o8RMwza8EoaPdyK069AM", authDomain: "swipegameleaderboard.firebaseapp.com", databaseURL: "https://swipegameleaderboard-default-rtdb.firebaseio.com", projectId: "swipegameleaderboard", storageBucket: "swipegameleaderboard.firebasestorage.app", messagingSenderId: "751175472721", appId: "1:751175472721:web:4544195a2dbea5cd948a70", measurementId: "G-8TK6JZDQ2N" };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+    // --- ONBOARDING LOGIC ---
+    let currentUser = { name: "Guest", avatar: "🤖" };
 
-    // ================= MEMORY & COIN BANK =================
-    let localHigh = localStorage.getItem('arcadeBest') || 0;
-    document.getElementById('best-score').innerText = localHigh;
-    
-    let totalCoins = parseInt(localStorage.getItem('arcadeCoins')) || 0;
-    document.getElementById('total-coins').innerText = totalCoins;
-
-    let savedPlayerName = localStorage.getItem('arcadePlayerName');
-    let savedPlayerAvatar = localStorage.getItem('arcadePlayerAvatar');
-    const avatarsList = ['🦊', '👾', '🚀', '🔥', '🐉', '⚡', '🤖', '💀', '👽', '😎', '👑', '🦁', '🕹️'];
-
-    if (savedPlayerName) { document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`; }
-
-    function addCoins(amount) {
-        totalCoins += amount;
-        localStorage.setItem('arcadeCoins', totalCoins);
-        document.getElementById('total-coins').innerText = totalCoins;
+    function pickAvatar(btn, emoji) {
+      document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      currentUser.avatar = emoji;
     }
 
-    function changeName() {
-        let newName = prompt("Enter your Swiplay username:", savedPlayerName || "Player");
-        if (newName) {
-            savedPlayerName = newName.substring(0, 10);
-            savedPlayerAvatar = avatarsList[Math.floor(Math.random() * avatarsList.length)];
-            localStorage.setItem('arcadePlayerName', savedPlayerName); localStorage.setItem('arcadePlayerAvatar', savedPlayerAvatar);
-            document.getElementById('player-id').innerText = `${savedPlayerAvatar} ${savedPlayerName} (Tap to change)`;
-        }
-    }
-
-    // ================= MULTIPLAYER SYNC LOGIC =================
-    let currentRoom = null;
-    let isMultiplayer = false;
-    let isHost = false; 
-
-    function generateCode() { return Math.random().toString(36).substring(2, 6).toUpperCase(); }
-
-    function prepareMultiplayerUI(opponentName) {
-        document.getElementById('share-btn').style.display = 'none'; 
-        document.getElementById('local-high').style.display = 'none'; 
-        document.getElementById('local-name-display').style.display = 'block';
-        document.getElementById('local-name-display').innerText = savedPlayerName;
-        document.getElementById('opponent-box').style.display = 'flex'; 
-        document.getElementById('opponent-name-display').innerText = opponentName;
-        document.getElementById('opponent-score').innerText = '0';
-        listenToOpponent();
-    }
-
-    function listenToOpponent() {
-        database.ref('rooms/' + currentRoom).on('value', snapshot => {
-            let data = snapshot.val();
-            if(!data) return;
-
-            let opponentScore = isHost ? data.guestScore : data.hostScore;
-            document.getElementById('opponent-score').innerText = opponentScore;
-
-            let opponentStatus = isHost ? data.guestStatus : data.hostStatus;
-            let myStatus = isHost ? data.hostStatus : data.guestStatus;
-            
-            if (opponentStatus === 'dead' && myStatus === 'alive') {
-                triggerWin();
-            }
-        });
-    }
-
-    function triggerWin() {
-        clearInterval(timerInterval);
-        isFrozen = true; 
-        
-        let winBonus = 50;
-        let totalEarned = score + winBonus;
-        addCoins(totalEarned);
-
-        document.body.style.background = '#00FF41';
-        arrowEl.style.color = '#ffffff';
-        arrowEl.innerText = '🏆';
-        textEl.innerHTML = `YOU WIN!<br><span style="font-size: 1.2rem; margin-top:10px; display:block;">Opponent knocked out.</span><br><span style="color:#FFD700; font-size:1.4rem; margin-top:15px; display:block; text-shadow: 0 0 10px #FFD700;">💰 +${totalEarned} Coins!</span>`;
-        soundMilestone.currentTime = 0;
-        soundMilestone.play().catch(e=>{});
-        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-        
-        setTimeout(() => { exitGame(); }, 4000);
-    }
-
-    function startCountdown() {
-        isFrozen = true; 
-        currentCommand = 'WAIT';
-        score = 0; combo = 0; scoreEl.innerText = "0";
-        document.body.style.background = '#2A0000';
-        
-        arrowEl.style.color = '#FFD700';
-        arrowEl.style.textShadow = '0 0 20px #FFD700';
-        textEl.innerHTML = "MATCH STARTING";
-        timerBar.style.width = "100%";
-        timerBar.style.background = "#00FF41";
-
-        let count = 3;
-        arrowEl.innerText = count;
-        soundMilestone.currentTime = 0;
-        soundMilestone.play().catch(e=>{});
-
-        let cd = setInterval(() => {
-            count--;
-            if(count > 0) {
-                arrowEl.innerText = count;
-                soundMilestone.currentTime = 0;
-                soundMilestone.play().catch(e=>{});
-            } else {
-                clearInterval(cd);
-                isFrozen = false;
-                nextRound(); 
-            }
-        }, 1000);
-    }
-
-    // --- Lobby Functions ---
-    function startSolo() {
-        document.getElementById('menu-container').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'flex';
-        document.getElementById('share-btn').style.display = 'block';
-        document.getElementById('local-high').style.display = 'block';
-        document.getElementById('local-name-display').style.display = 'none'; 
-        document.getElementById('opponent-box').style.display = 'none';
-        isMultiplayer = false;
-        
-        arrowEl.innerText = '▶';
-        textEl.innerHTML = 'Tap to Play';
-        arrowEl.style.color = '#ffffff';
-        scoreEl.innerText = "0";
-        currentCommand = '';
-        isFrozen = false;
-    }
-
-    function hostGame() {
-        if (!savedPlayerName) { changeName(); if(!savedPlayerName) return; }
-        currentRoom = generateCode();
-        isMultiplayer = true;
-        isHost = true;
-        
-        database.ref('rooms/' + currentRoom).set({
-            status: 'waiting', hostName: savedPlayerName, guestName: '',
-            hostScore: 0, guestScore: 0, hostStatus: 'alive', guestStatus: 'alive'
-        });
-
-        document.getElementById('menu-container').style.display = 'none';
-        document.getElementById('lobby-screen').style.display = 'flex';
-        document.getElementById('room-code-display').innerText = currentRoom;
-
-        let waitListener = database.ref('rooms/' + currentRoom).on('value', snapshot => {
-            let data = snapshot.val();
-            if (data && data.guestName !== '') {
-                database.ref('rooms/' + currentRoom).off('value', waitListener); 
-                document.getElementById('lobby-screen').style.display = 'none';
-                document.getElementById('game-ui').style.display = 'flex';
-                prepareMultiplayerUI(data.guestName);
-                startCountdown(); 
-            }
-        });
-    }
-
-    function showJoinScreen() {
-        if (!savedPlayerName) { changeName(); if(!savedPlayerName) return; }
-        document.getElementById('menu-container').style.display = 'none';
-        document.getElementById('join-screen').style.display = 'flex';
-    }
-
-    function attemptJoin() {
-        let code = document.getElementById('room-code-input').value.toUpperCase();
-        if(code.length !== 4) { alert("Code must be 4 letters."); return; }
-
-        database.ref('rooms/' + code).once('value', snapshot => {
-            if(snapshot.exists()) {
-                let data = snapshot.val();
-                if(data.status === 'waiting' && data.guestName === '') {
-                    currentRoom = code;
-                    isMultiplayer = true;
-                    isHost = false;
-                    
-                    database.ref('rooms/' + code).update({ guestName: savedPlayerName, status: 'playing' });
-                    
-                    document.getElementById('join-screen').style.display = 'none';
-                    document.getElementById('game-ui').style.display = 'flex';
-                    prepareMultiplayerUI(data.hostName);
-                    startCountdown(); 
-                } else { alert("Room is full or already playing!"); }
-            } else { alert("Room not found!"); }
-        });
-    }
-
-    function cancelLobby() {
-        if(currentRoom) { database.ref('rooms/' + currentRoom).remove(); currentRoom = null; }
-        document.getElementById('lobby-screen').style.display = 'none';
-        document.getElementById('join-screen').style.display = 'none';
-        document.getElementById('menu-container').style.display = 'flex';
-    }
-
-    function exitGame() {
-        clearInterval(timerInterval);
-        
-        if (isMultiplayer && currentRoom) {
-            database.ref('rooms/' + currentRoom).off();
-            database.ref('rooms/' + currentRoom).update({
-                [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
-            });
-        } 
-        
-        score = 0; currentCommand = ''; timerBar.style.width = "0%"; isFrozen = false;
-        arrowEl.innerText = '▶'; arrowEl.style.color = '#ffffff'; textEl.innerHTML = 'Tap to Play';
-        document.body.style.background = '#2A0000';
-        
-        document.getElementById('game-ui').style.display = 'none';
-        document.getElementById('menu-container').style.display = 'flex';
-        
-        isMultiplayer = false;
-        currentRoom = null;
-    }
-
-    // ================= CORE GAME LOGIC =================
-    let score = 0, combo = 0, currentCommand = '', timerInterval, maxTime = 2000, timeLeft = maxTime;
-    const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-    const arrows = { 'UP': '↑', 'DOWN': '↓', 'LEFT': '←', 'RIGHT': '→' };
-    const opposites = { 'UP': 'DOWN', 'DOWN': 'UP', 'LEFT': 'RIGHT', 'RIGHT': 'LEFT' }; 
-    const bgColors = { 'UP': '#1A2A3A', 'DOWN': '#3A1A3A', 'LEFT': '#3A3A1A', 'RIGHT': '#1A3A2A' };
-
-    const textEl = document.getElementById('text'), arrowEl = document.getElementById('arrow'), scoreEl = document.getElementById('score'), timerBar = document.getElementById('timer-bar'), leaderboardEl = document.getElementById('leaderboard'), comboBoard = document.getElementById('combo-board'), comboEl = document.getElementById('combo');
-    const soundCorrect = document.getElementById('sound-correct'), soundWrong = document.getElementById('sound-wrong'), soundMilestone = document.getElementById('sound-milestone');
-
-    function checkAdmin() { let pwd = prompt("Admin Access:"); if (pwd === "admin123") { if(confirm("Wipe leaderboard?")) { database.ref('scores').remove(); } } }
-
-    function updateLeaderboard() {
-      database.ref('scores').on('value', snapshot => {
-        let html = '';
-        if (!snapshot.exists()) { leaderboardEl.innerHTML = '<div style="color:#888;">No scores yet!</div>'; return; }
-        let bestScores = {};
-        snapshot.forEach(child => {
-          let data = child.val();
-          if (data && typeof data.score === 'number' && data.score > 0 && data.name) {
-            let playerName = data.name.trim();
-            if (!bestScores[playerName] || data.score > bestScores[playerName].score) bestScores[playerName] = data;
-          }
-        });
-        let list = Object.values(bestScores); list.sort((a, b) => b.score - a.score); let top10 = list.slice(0, 10);
-        top10.forEach((user, index) => {
-          let nameColor = index === 0 ? "#FFD700" : "#00FF41";
-          html += `<div class="legend-item"><span class="rank">#${index + 1}</span> <span class="avatar">${user.avatar||'👤'}</span><span style="color:${nameColor}; font-weight:bold;">${user.name}</span><span style="color:#fff; margin-left:auto;">${user.score} pts</span></div>`;
-        });
-        leaderboardEl.innerHTML = html;
-      });
-    }
-    updateLeaderboard();
-
-    function triggerConfetti() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 100 }); }
-    function spawnFloatingPoint(x, y) { let pt = document.createElement('div'); pt.className = 'float-pt'; pt.innerText = '+1'; pt.style.left = (x - 20) + 'px'; pt.style.top = (y - 20) + 'px'; document.body.appendChild(pt); setTimeout(() => pt.remove(), 600); }
-
-    function shareGame() {
-        let shareText = localHigh > 0 ? `I scored ${localHigh} on Swiplay! Think your reflexes are faster?` : `Check out Swiplay! Can you beat the high score?`;
-        let shareData = { title: 'Swiplay', text: shareText, url: 'https://funwithfrnds.vercel.app' };
-        if (navigator.share) { navigator.share(shareData); } else { navigator.clipboard.writeText(`${shareData.text} Play: ${shareData.url}`).then(() => alert("Copied to clipboard!")); }
-    }
-
-    function gameOver(reason) {
-      clearInterval(timerInterval);
-      let finalScore = score;
-      document.body.style.background = '#2A0000'; comboBoard.style.display = 'none'; combo = 0; isReverse = false; 
+    function enterLobby() {
+      const nameInput = document.getElementById('username').value.trim();
+      if (!nameInput) return alert("Please enter a nickname!");
       
-      if (finalScore > 0) { addCoins(finalScore); }
+      currentUser.name = nameInput;
+      document.getElementById('my-name').innerText = currentUser.name;
+      document.getElementById('my-avatar').innerText = currentUser.avatar;
+      document.getElementById('onboarding').style.display = 'none';
 
-      if(finalScore > localHigh) { localHigh = finalScore; localStorage.setItem('arcadeBest', localHigh); document.getElementById('best-score').innerText = localHigh; }
-      arrowEl.classList.remove('wrong-anim', 'correct-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
-      arrowEl.classList.add('wrong-anim'); document.body.classList.add('screen-shake');
-      soundWrong.currentTime = 0; soundWrong.play().catch(e => console.log(e));
+      // Save to localStorage so if they refresh, they keep their identity
+      localStorage.setItem('swiplay_user', JSON.stringify(currentUser));
+    }
 
-      if (isMultiplayer && currentRoom) {
-          database.ref('rooms/' + currentRoom).update({
-              [isHost ? 'hostStatus' : 'guestStatus']: 'dead'
-          });
-          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='color:#FFD700; font-size:1.2rem; margin-top:5px; display:block;'>💰 +${finalScore} Coins</span><br><span style='font-size:1rem; color:#aaa; margin-top:10px; display:block;'>Returning to menu...</span>`;
-          setTimeout(() => { exitGame(); }, 4000);
-      } else {
-          if (!savedPlayerName) changeName(); 
-          if (savedPlayerName && finalScore > 0) database.ref('scores').push({ name: savedPlayerName, score: finalScore, avatar: savedPlayerAvatar });
-          textEl.innerHTML = `Game Over!<br><span style='font-size:1.5rem; color:#ff4444;'>${reason}</span><br><span style='color:#FFD700; font-size:1.2rem; margin-top:5px; display:block;'>💰 +${finalScore} Coins</span><br><span style='font-size:1rem; color:#aaa; margin-top:10px; display:block;'>Tap to Restart</span>`;
-      }
+    // --- CHAT LOGIC ---
+    function handleEnter(e) {
+      if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chatBox = document.getElementById('chat-box');
+      chatBox.innerHTML += `
+        <div class="chat-msg self">
+          <strong>${currentUser.avatar} ${currentUser.name}:</strong> ${text}
+        </div>
+      `;
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // --- MODAL LOGIC ---
+    function openModal(title, icon, desc, targetUrl) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-icon').innerText = icon;
+      document.getElementById('modal-desc').innerText = desc;
+      document.getElementById('modal-url').value = targetUrl; // Secretly save the destination
       
-      arrowEl.innerText = '✖'; arrowEl.style.color = "#ff4444"; arrowEl.style.textShadow = "0 0 10px #ff0000, 0 0 30px #ff0000";
-      score = 0; currentCommand = ''; timerBar.style.width = "0%";
+      document.getElementById('game-modal').style.display = 'flex';
     }
 
-    function startTimer() {
-      clearInterval(timerInterval); maxTime = Math.max(500, 2000 - (score * 50)); timeLeft = maxTime;
-      timerInterval = setInterval(() => {
-        if(isFrozen) return; timeLeft -= 50; let percentage = (timeLeft / maxTime) * 100; timerBar.style.width = percentage + '%';
-        if (percentage > 50) timerBar.style.background = '#00FF41'; else if (percentage > 25) timerBar.style.background = '#FFD700'; else timerBar.style.background = '#FF0000'; 
-        if (timeLeft <= 0) gameOver("Time ran out!");
-      }, 50);
+    function closeModal() {
+      document.getElementById('game-modal').style.display = 'none';
     }
 
-    function nextRound() {
-      currentCommand = directions[Math.floor(Math.random() * directions.length)]; arrowEl.innerText = arrows[currentCommand];
-      isReverse = Math.random() < 0.2; 
-      if (isReverse) { arrowEl.style.color = "#FF00FF"; arrowEl.style.textShadow = "0 0 20px #FF00FF, 0 0 40px #FF00FF"; textEl.innerText = `SWIPE OPPOSITE!`; textEl.style.color = "#FF00FF"; document.body.style.background = "#200020"; } 
-      else { arrowEl.style.color = "#ffffff"; arrowEl.style.textShadow = "0 0 10px #ffffff, 0 0 30px #ffffff"; textEl.innerText = `SWIPE ${currentCommand}!`; textEl.style.color = "#ffffff"; document.body.style.background = bgColors[currentCommand]; }
-      startTimer();
+    function launchGame(mode) {
+      const targetUrl = document.getElementById('modal-url').value;
+      // Later, this is where Socket.io logic will trigger!
+      // For now, it will just route them to the game file.
+      window.location.href = targetUrl + "?mode=" + mode; 
     }
-
-    function checkSwipe(dir, touchX, touchY) {
-      if(isFrozen || !currentCommand) return; 
-      let requiredSwipe = isReverse ? opposites[currentCommand] : currentCommand;
-      
-      if (dir === requiredSwipe) { 
-        score++; combo++; scoreEl.innerText = score; spawnFloatingPoint(touchX, touchY); 
-        
-        if (isMultiplayer && currentRoom) {
-            database.ref('rooms/' + currentRoom).update({
-                [isHost ? 'hostScore' : 'guestScore']: score
-            });
-        }
-
-        arrowEl.classList.remove('correct-anim', 'wrong-anim'); document.body.classList.remove('screen-shake'); void arrowEl.offsetWidth; 
-        arrowEl.classList.add('correct-anim'); soundCorrect.currentTime = 0; soundCorrect.play().catch(e=>{});
-        if (combo >= 5) { comboBoard.style.display = 'block'; comboEl.innerText = combo; }
-        if (combo % 15 === 0) { isFrozen = true; timerBar.classList.add('freeze-anim'); soundMilestone.play().catch(e=>{}); triggerConfetti(); setTimeout(() => { isFrozen = false; timerBar.classList.remove('freeze-anim'); }, 2000); }
-        nextRound(); 
-      } else { gameOver(isReverse ? `Trap! You swiped ${dir}` : `You swiped ${dir}`); }
-    }
-
-    function handleStart(e) {
-        if (e.target.closest && e.target.closest('.back-btn')) return;
-        if (e.target.id === 'share-btn') return;
-        if (isMultiplayer) return;
-        if (!currentCommand && !isFrozen) { scoreEl.innerText = "0"; arrowEl.classList.remove('wrong-anim'); document.body.classList.remove('screen-shake'); nextRound(); } 
-    }
-
-    // ================= TOUCH INPUT FIX =================
-    let tsX, tsY;
-    document.addEventListener('mousedown', e => { 
-        if(document.getElementById('game-ui').style.display !== 'flex') return;
-        tsX = e.clientX; tsY = e.clientY; handleStart(e); 
-    });
-    document.addEventListener('mouseup', e => {
-      if(document.getElementById('game-ui').style.display !== 'flex') return;
-      if (e.target.closest && e.target.closest('.back-btn')) return;
-      if (e.target.id === 'share-btn') return;
-      let x = e.clientX - tsX, y = e.clientY - tsY;
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), e.clientX, e.clientY);
-    });
-
-    document.addEventListener('touchstart', e => { 
-        if(document.getElementById('game-ui').style.display !== 'flex') return;
-        tsX = e.touches[0].clientX; tsY = e.touches[0].clientY; handleStart(e); 
-    });
-    document.addEventListener('touchend', e => {
-      if(document.getElementById('game-ui').style.display !== 'flex') return;
-      if (e.target.closest && e.target.closest('.back-btn')) return;
-      if (e.target.id === 'share-btn') return;
-      let x = e.changedTouches[0].clientX - tsX, y = e.changedTouches[0].clientY - tsY; let touchEndObj = e.changedTouches[0];
-      if (Math.abs(x) > 30 || Math.abs(y) > 30) checkSwipe(Math.abs(x) > Math.abs(y) ? (x > 0 ? 'RIGHT' : 'LEFT') : (y > 0 ? 'DOWN' : 'UP'), touchEndObj.clientX, touchEndObj.clientY);
-    });
   </script>
 </body>
 </html>
