@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
-  <!-- =======================================================================
-       SEO, OPEN GRAPH & TWITTER CARDS
-       ======================================================================= -->
   <title>Swiplay Gaming Lounge | The Ultimate Arcade Experience</title>
   <meta name="description" content="Play fast-paced multiplayer arcade games including Swipe Game, Chess, Ludo, and WordRush. Chat globally, challenge friends, and climb the leaderboard!">
   <meta name="theme-color" content="#080a10">
@@ -23,25 +20,15 @@
   <meta name="twitter:description" content="Play fast-paced multiplayer arcade games! Challenge friends instantly.">
   <meta name="twitter:image" content="https://YOUR-SITE-URL.com/og-image.png">
 
-  <!-- =======================================================================
-       FAVICON & PWA
-       ======================================================================= -->
   <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23080a10'/><text x='50' y='75' font-family='sans-serif' font-size='80' font-weight='900' fill='%2300ff66' text-anchor='middle'>S</text></svg>">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- =======================================================================
-       ANALYTICS (PLACEHOLDER)
-       Paste Google Analytics or Plausible script here
-       ======================================================================= -->
   <!-- <script defer data-domain="YOUR-SITE-URL.com" src="https://plausible.io/js/script.js"></script> -->
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   
   <style>
-    /* ==========================================================================
-       VARIABLES & THEME
-       ========================================================================== */
     :root {
       --bg-dark: #080a10; --bg-light: #1a2035;
       --accent: #00ff66; --accent-glow: rgba(0, 255, 102, 0.4);
@@ -72,13 +59,9 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 255, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 255, 102, 0); } }
 
-    /* Demo Badge */
     .demo-badge { display: none; background: rgba(255,204,0,0.2); color: var(--gold); font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 6px; border: 1px solid var(--gold); }
     body.demo-mode .demo-badge { display: inline-block; }
 
-    /* ==========================================================================
-       AVATAR SYSTEM
-       ========================================================================== */
     .avatar-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); aspect-ratio: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; user-select: none; }
     .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .gender-dot { position: absolute; bottom: -2%; right: -2%; width: 28%; height: 28%; border-radius: 50%; border: 2px solid var(--bg-dark); z-index: 2; }
@@ -86,9 +69,6 @@
     .gender-female { background: var(--female); box-shadow: 0 0 8px var(--female); }
     .gender-none { background: var(--none); box-shadow: none; }
 
-    /* ==========================================================================
-       BUTTONS & INPUTS
-       ========================================================================== */
     .btn-primary { background: var(--accent); color: #000; font-weight: 800; padding: 14px 24px; border-radius: 12px; transition: var(--transition); box-shadow: 0 4px 15px rgba(0, 255, 102, 0.2); width: 100%; }
     .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 255, 102, 0.4); background: #00e65c; }
     .btn-primary:active:not(:disabled) { transform: translateY(1px); }
@@ -106,9 +86,6 @@
     
     .error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 6px; min-height: 1.2rem; font-weight: 600; }
 
-    /* ==========================================================================
-       ONBOARDING
-       ========================================================================== */
     #onboarding-screen { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(8, 10, 16, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 20px; transition: opacity 0.5s; overflow-y: auto; }
     .onboarding-card { width: 100%; max-width: 440px; padding: 32px; animation: fadeSlideUp 0.6s ease-out; margin: auto; }
     .brand-title { text-align: center; font-size: 2.5rem; font-weight: 900; margin-bottom: 5px; background: linear-gradient(90deg, #fff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -135,7 +112,6 @@
     .gender-pill.male.selected { border-color: var(--male); background: rgba(76, 201, 240, 0.15); color: var(--male); box-shadow: 0 0 15px rgba(76, 201, 240, 0.2); }
     .gender-pill.female.selected { border-color: var(--female); background: rgba(255, 107, 203, 0.15); color: var(--female); box-shadow: 0 0 15px rgba(255, 107, 203, 0.2); }
 
-    /* CAMERA MODAL */
     #camera-modal { position: fixed; inset: 0; z-index: 1001; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); padding: 20px; }
     .camera-content { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
     .video-container { width: 100%; aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: #000; position: relative; border: 4px solid var(--glass-border); margin: 0 auto; max-width: 300px; }
@@ -146,11 +122,7 @@
     .camera-actions button { flex: 1; min-width: 120px; }
     .privacy-note { font-size: 0.75rem; color: var(--text-muted); text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;}
 
-    /* ==========================================================================
-       LOBBY & PANELS
-       ========================================================================== */
     #lobby-container { display: flex; flex-direction: column; height: 100%; height: 100dvh; display: none; opacity: 0; transition: opacity 0.4s; }
-    
     .guest-banner { display: none; background: rgba(255,204,0,0.1); color: var(--gold); text-align: center; padding: 8px; font-size: 0.8rem; font-weight: 700; border-bottom: 1px solid rgba(255,204,0,0.2); cursor: pointer; transition: 0.2s; }
     .guest-banner:hover { background: rgba(255,204,0,0.2); }
 
@@ -178,7 +150,6 @@
     .panel-header { padding: 16px 20px; font-weight: 800; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
     .panel-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
 
-    /* CHAT */
     .chat-panel { width: 320px; border-right: 1px solid var(--glass-border); background: rgba(8, 10, 16, 0.4); }
     .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
     .chat-msg-row { display: flex; gap: 12px; align-items: flex-start; }
@@ -200,7 +171,6 @@
     .chat-emoji-picker.active { display: grid; animation: fadeIn 0.2s; }
     .chat-emoji-picker button { font-size: 1.5rem; padding: 5px; transition: 0.2s; border-radius: 8px; }
 
-    /* CENTER PANEL (Games/Leaderboard) */
     .center-panel { flex: 1; display: flex; flex-direction: column; }
     .center-header { padding: 20px 24px 0; display: flex; gap: 20px; border-bottom: 1px solid var(--glass-border); }
     .center-tab { padding: 10px 0; font-size: 1.2rem; font-weight: 900; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; }
@@ -230,7 +200,6 @@
     .lb-rank.gold { color: var(--gold); } .lb-rank.silver { color: var(--silver); } .lb-rank.bronze { color: var(--bronze); }
     .lb-score { margin-left: auto; font-weight: 900; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 
-    /* RIGHT PANEL (Players) */
     .players-panel { width: 300px; border-left: 1px solid var(--glass-border); background: rgba(8, 10, 16, 0.4); display: flex; flex-direction: column; }
     .live-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); animation: pulseGlow 2s infinite; }
     .players-filter { padding: 16px; border-bottom: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 12px; }
@@ -249,13 +218,9 @@
     .invite-btn { font-size: 0.75rem; font-weight: 700; padding: 6px 12px; background: rgba(255,255,255,0.1); border-radius: 8px; transition: 0.2s; }
     .invite-btn:hover { background: var(--text); color: #000; }
 
-    /* FOOTER */
     .desktop-footer { text-align: center; padding: 10px; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--glass-border); background: var(--bg-dark); }
     .desktop-footer a { text-decoration: underline; margin: 0 10px; }
 
-    /* ==========================================================================
-       MODALS & TOASTS
-       ========================================================================== */
     .modal-overlay { position: fixed; inset: 0; z-index: 2000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); padding: 20px; }
     .modal-content { width: 100%; max-width: 400px; padding: 32px; text-align: center; display: flex; flex-direction: column; gap: 20px; position: relative; animation: fadeSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
     .modal-close { position: absolute; top: 16px; right: 16px; font-size: 1.5rem; color: var(--text-muted); transition: 0.2s; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
@@ -271,18 +236,13 @@
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Toasts */
     #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
     .toast { background: rgba(255,255,255,0.95); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: fadeSlideUp 0.3s ease-out forwards; }
     @keyframes fadeOutDown { to { opacity: 0; transform: translateY(20px); } }
 
-    /* Cookie Notice */
     .cookie-notice { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-light); border-top: 1px solid var(--glass-border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 2500; font-size: 0.85rem; transform: translateY(100%); transition: 0.4s; }
     .cookie-notice.show { transform: translateY(0); }
 
-    /* ==========================================================================
-       MOBILE RESPONSIVE
-       ========================================================================== */
     .mobile-tab-bar { display: none; }
     
     @media (max-width: 900px) {
@@ -305,9 +265,6 @@
 </head>
 <body>
 
-  <!-- =========================================================================
-       ONBOARDING SCREEN
-       ========================================================================= -->
   <div id="onboarding-screen">
     <div class="glass onboarding-card">
       <h1 class="brand-title">Swi<span>play</span></h1>
@@ -340,7 +297,6 @@
     </div>
   </div>
 
-  <!-- CAMERA MODAL -->
   <div id="camera-modal" class="modal-overlay">
     <div class="glass camera-content">
       <h3 style="text-align: center; font-weight: 800;">Take a Photo</h3>
@@ -365,7 +321,6 @@
   </div>
   <canvas id="camera-canvas" width="128" height="128" style="display: none;"></canvas>
 
-  <!-- CONFIRM LOGOUT MODAL -->
   <div id="logout-modal" class="modal-overlay">
     <div class="glass modal-content" style="max-width: 300px; padding: 24px;">
       <h3 style="margin-bottom: 10px;">Log Out?</h3>
@@ -377,9 +332,6 @@
     </div>
   </div>
 
-  <!-- =========================================================================
-       MAIN LOBBY
-       ========================================================================= -->
   <div id="lobby-container">
     <div class="guest-banner" id="guest-banner">Playing as guest. Finish your profile to chat and rank! ➔</div>
     
@@ -404,8 +356,6 @@
     </header>
 
     <div class="lobby-body">
-      
-      <!-- LEFT: GLOBAL CHAT -->
       <section class="panel chat-panel" id="panel-chat">
         <div class="panel-header">
           <div class="panel-title">💬 Global Lounge</div>
@@ -421,19 +371,16 @@
         </div>
       </section>
 
-      <!-- CENTER: GAMES / LEADERBOARD TOGGLE -->
       <section class="panel center-panel active" id="panel-center">
         <div class="center-header">
           <div class="center-tab active" data-target="games-view">Arena</div>
           <div class="center-tab" data-target="leaderboard-view">🏆 Leaderboard<span class="demo-badge">Demo</span></div>
         </div>
         
-        <!-- Games View -->
         <div class="games-grid-container active" id="games-view">
           <div class="games-grid" id="games-grid"></div>
         </div>
 
-        <!-- Leaderboard View -->
         <div class="leaderboard-container" id="leaderboard-view">
           <div class="lb-filters">
             <button class="filter-chip active" data-lbf="today">Today</button>
@@ -444,7 +391,6 @@
         </div>
       </section>
 
-      <!-- RIGHT: ACTIVE PLAYERS -->
       <section class="panel players-panel" id="panel-players">
         <div class="panel-header">
           <div class="panel-title">Active Players<span class="demo-badge">Demo</span></div>
@@ -462,38 +408,31 @@
         </div>
         <div class="players-list" id="players-list"></div>
       </section>
-
     </div>
 
-    <!-- DESKTOP FOOTER -->
     <div class="desktop-footer">
       <span>© Swiplay Lounge</span>
       <a href="mailto:support@swiplay.com" onclick="trackEvent('mailto_click')">Report a problem</a>
       <span>Privacy: Photos and names stay on your device until multiplayer launches.</span>
     </div>
 
-    <!-- MOBILE TAB BAR -->
     <nav class="mobile-tab-bar">
       <button class="tab-btn" data-target="panel-chat"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
       <button class="tab-btn active" data-target="panel-center"><span class="tab-icon">🎮</span><span class="tab-label">Games</span></button>
       <button class="tab-btn" data-target="panel-players"><span class="tab-icon">👥</span><span class="tab-label">Players</span></button>
-      <!-- Leaderboard tab for mobile handled by switching center panel tabs automatically -->
     </nav>
   </div>
 
-  <!-- GAME LAUNCH MODAL -->
   <div id="game-modal" class="modal-overlay">
     <div class="glass modal-content">
       <button class="modal-close" id="btn-close-modal">×</button>
       
-      <!-- Finding Match -->
       <div class="finding-state" id="finding-state">
         <div class="spinner"></div>
         <h3 style="font-weight: 800;">Finding opponent...</h3>
         <button class="btn-ghost" id="btn-cancel-finding">Cancel</button>
       </div>
 
-      <!-- Coming Soon -->
       <div class="coming-soon-state" id="coming-soon-state">
         <div class="modal-icon">🚧</div>
         <h3 style="font-weight: 800; font-size: 1.5rem;">Coming Soon</h3>
@@ -501,7 +440,6 @@
         <button class="btn-primary" id="btn-notify-me" style="margin-top: 10px;">Notify Me</button>
       </div>
 
-      <!-- Main Modal View -->
       <div id="modal-main-view">
         <div class="modal-icon" id="modal-g-icon">⚡</div>
         <h2 class="modal-title" id="modal-g-title">Game Title</h2>
@@ -544,10 +482,7 @@
   </div>
 
   <script>
-    /* ==========================================================================
-       1. CONFIG & UTILITIES
-       ========================================================================== */
-    const DEMO_MODE = true; // Set to false to hide "Demo" badges
+    const DEMO_MODE = true; 
     if (DEMO_MODE) document.body.classList.add('demo-mode');
 
     const Storage = {
@@ -559,8 +494,7 @@
     function showToast(msg) {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
+      toast.className = 'toast'; toast.textContent = msg;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.animation = 'fadeOutDown 0.3s ease-in forwards';
@@ -568,21 +502,18 @@
       }, 3000);
     }
 
-    // Analytics Placeholder
     function trackEvent(eventName, props = {}) {
       try {
         if (window.plausible) window.plausible(eventName, { props });
-        // if (window.gtag) gtag('event', eventName, props);
-        console.log(`[Analytics] ${eventName}`, props);
       } catch(e) {}
     }
 
-    // Escape HTML
     function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    
     const BAD_WORDS = ['fuck', 'shit', 'bitch', 'dick', 'cunt', 'bastard'];
-function filterProfanity(text) {
-  return BAD_WORDS.reduce((t, w) => t.replace(new RegExp(`\\b${w}\\b`, 'gi'), '***'), text);
-}
+    function filterProfanity(text) {
+      return BAD_WORDS.reduce((t, w) => t.replace(new RegExp(`\\b${w}\\b`, 'gi'), '***'), text);
+    }
 
     function renderAvatar(user, sizePx = 40) {
       const wrapper = document.createElement('div');
@@ -602,9 +533,6 @@ function filterProfanity(text) {
       return wrapper;
     }
 
-    /* ==========================================================================
-       2. MOCK DATA BLOCK (Centralized)
-       ========================================================================== */
     const GAMES = [
       { id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'HOT', available: true },
       { id: 'chess', icon: '♟️', title: 'Chess', desc: 'Strategic 2D pieces', file: 'chess.html', tag: 'Soon', available: false },
@@ -638,19 +566,14 @@ function filterProfanity(text) {
       ]
     };
 
-    /* ==========================================================================
-       3. INITIALIZATION & PWA
-       ========================================================================== */
     let currentUser = null;
     let isEditingProfile = false;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // SW Registration
+    function initApp() {
       if ('serviceWorker' in navigator && location.protocol === 'https:') {
         navigator.serviceWorker.register('sw.js').catch(()=>{});
       }
 
-      // Cookie Notice
       if (!Storage.get('swiplay_cookies')) {
         setTimeout(() => document.getElementById('cookie-notice').classList.add('show'), 1000);
       }
@@ -659,9 +582,10 @@ function filterProfanity(text) {
         document.getElementById('cookie-notice').classList.remove('show');
       };
 
-      // Daily Streak logic
       const todayStr = new Date().toLocaleDateString();
-      let streak = Storage.get('swiplay_streak') || { count: 0, lastDate: '' };
+      let streak = Storage.get('swiplay_streak');
+      if (!streak || typeof streak !== 'object') streak = { count: 0, lastDate: '' };
+      
       if (streak.lastDate !== todayStr) {
         const yesterday = new Date(Date.now() - 86400000).toLocaleDateString();
         if (streak.lastDate === yesterday) streak.count++; else streak.count = 1;
@@ -670,7 +594,6 @@ function filterProfanity(text) {
       }
       document.getElementById('streak-count').textContent = streak.count;
 
-      // Check User
       currentUser = Storage.get('swiplay_user');
       if (currentUser && currentUser.name && currentUser.avatar) {
         initLobby();
@@ -678,7 +601,14 @@ function filterProfanity(text) {
       } else {
         initOnboarding();
       }
-    });
+    }
+
+    // Run initialization safely
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
 
     function checkJoinURL() {
       const params = new URLSearchParams(location.search);
@@ -692,14 +622,10 @@ function filterProfanity(text) {
             document.getElementById('join-room-input').value = parts[1];
           }
         }
-        // Clean URL
         window.history.replaceState({}, document.title, location.pathname);
       }
     }
 
-    /* ==========================================================================
-       4. ONBOARDING & CAMERA
-       ========================================================================== */
     let cameraStream = null;
 
     function stopCamera() {
@@ -725,7 +651,7 @@ function filterProfanity(text) {
         submitBtn.textContent = 'Save changes';
         guestBtn.style.display = 'none';
         cancelBtn.style.display = 'block';
-        obState = { ...currentUser };
+        obState = Object.assign({}, currentUser);
         nameInput.value = obState.name;
       } else {
         submitBtn.textContent = 'Enter Lounge';
@@ -733,7 +659,6 @@ function filterProfanity(text) {
         cancelBtn.style.display = 'none';
       }
 
-      // Emojis
       const emojis = ['🤖', '🦊', '⚡', '👑', '🐼', '🦁', '🐲', '🚀', '🎮', '👾'];
       const grid = document.getElementById('ob-emoji-grid');
       grid.innerHTML = '';
@@ -748,19 +673,17 @@ function filterProfanity(text) {
           avatarNodes.forEach(n => n.classList.remove('selected'));
           btn.classList.add('selected');
           camBtn.classList.remove('selected');
-          camBtn.innerHTML = '<span>📷</span><small>Use photo</small>'; // Restore camera button
+          camBtn.innerHTML = '<span>📷</span><small>Use photo</small>'; 
           obState.avatar = e; obState.avatarType = 'emoji'; checkValid();
         };
         grid.appendChild(btn); avatarNodes.push(btn);
       });
 
-      // Restore camera button if editing photo
       if (editing && obState.avatarType === 'photo') {
         camBtn.classList.add('selected');
         camBtn.innerHTML = `<img src="${obState.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
       }
 
-      // Gender
       const genderPills = document.querySelectorAll('.gender-pill');
       genderPills.forEach(pill => {
         pill.classList.toggle('selected', editing && obState.gender === pill.dataset.gender);
@@ -771,7 +694,6 @@ function filterProfanity(text) {
         };
       });
 
-      // Validation
       nameInput.oninput = () => {
         const val = nameInput.value.trim();
         if (val.length > 0 && val.length < 2) nameErr.textContent = 'Nickname too short (min 2)';
@@ -786,7 +708,6 @@ function filterProfanity(text) {
       }
       checkValid();
 
-      // Camera Handling
       const camModal = document.getElementById('camera-modal');
       const video = document.getElementById('camera-video');
       const preview = document.getElementById('camera-preview');
@@ -808,7 +729,7 @@ function filterProfanity(text) {
           video.srcObject = cameraStream;
         } catch (err) {
           video.style.display = 'none'; camErr.style.display = 'flex';
-          document.getElementById('cam-capture').style.display = 'none'; // Hide capture if no cam
+          document.getElementById('cam-capture').style.display = 'none';
         }
       };
 
@@ -861,14 +782,14 @@ function filterProfanity(text) {
 
       submitBtn.onclick = () => {
         currentUser = {
-          id: currentUser?.id || ('user_' + Math.random().toString(36).substr(2, 9)),
+          id: (currentUser && currentUser.id) ? currentUser.id : ('user_' + Math.random().toString(36).substr(2, 9)),
           name: obState.name, avatar: obState.avatar, avatarType: obState.avatarType, gender: obState.gender
         };
         Storage.set('swiplay_user', currentUser);
         trackEvent('profile_saved', { isEdit: isEditingProfile });
         
         if (isEditingProfile) { location.reload(); return; }
-obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; initLobby(); checkJoinURL(); }, 400);
+        obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; initLobby(); checkJoinURL(); }, 400);
       };
 
       guestBtn.onclick = () => {
@@ -882,9 +803,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       cancelBtn.onclick = () => { obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; }, 400); };
     }
 
-    /* ==========================================================================
-       5. LOBBY HEADER & SHARED LOGIC
-       ========================================================================== */
     function initLobby() {
       document.getElementById('lobby-container').style.display = 'flex';
       setTimeout(() => document.getElementById('lobby-container').style.opacity = '1', 50);
@@ -897,7 +815,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         guestBanner.style.display = 'none';
       }
 
-      // Profile Header
       const slot = document.getElementById('header-avatar-slot');
       slot.innerHTML = ''; slot.appendChild(renderAvatar(currentUser, 32));
       document.getElementById('header-name-display').textContent = currentUser.name;
@@ -913,7 +830,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       document.getElementById('btn-cancel-logout').onclick = () => logoutModal.style.display = 'none';
       document.getElementById('btn-confirm-logout').onclick = () => { Storage.remove('swiplay_user'); location.reload(); };
 
-      // Share Site
       document.getElementById('btn-share-site').onclick = async () => {
         trackEvent('share_click');
         const url = location.href.split('?')[0];
@@ -923,7 +839,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         } catch(e) {}
       };
 
-      // Desktop Center Tabs
       const centerTabs = document.querySelectorAll('.center-tab');
       centerTabs.forEach(tab => {
         tab.onclick = () => {
@@ -934,7 +849,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         };
       });
 
-      // Mobile Tabs
       const mTabs = document.querySelectorAll('.mobile-tab-bar .tab-btn');
       mTabs.forEach(tab => {
         tab.onclick = () => {
@@ -952,9 +866,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       initGameModal();
     }
 
-    /* ==========================================================================
-       6. GAMES GRID
-       ========================================================================== */
     let selectedGame = null;
     function renderGamesGrid() {
       const grid = document.getElementById('games-grid');
@@ -976,9 +887,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       });
     }
 
-    /* ==========================================================================
-       7. LEADERBOARD
-       ========================================================================== */
     function initLeaderboard() {
       const list = document.getElementById('leaderboard-list');
       const filters = document.querySelectorAll('#leaderboard-view .filter-chip');
@@ -987,14 +895,13 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         list.innerHTML = '';
         let data = [...(MOCK_LEADERBOARD[range] || [])];
         
-        // Inject user best
         const myBest = Storage.get('swiplay_best');
         if (myBest && !currentUser.isGuest) {
           data.push({ name: currentUser.name, avatar: currentUser.avatar, avatarType: currentUser.avatarType, gender: currentUser.gender, score: parseInt(myBest), isMe: true });
         }
         
         data.sort((a, b) => b.score - a.score);
-        data = data.slice(0, 10); // Top 10
+        data = data.slice(0, 10); 
 
         data.forEach((p, i) => {
           const row = document.createElement('div');
@@ -1023,9 +930,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       loadLeaderboard('today');
     }
 
-    /* ==========================================================================
-       8. CHAT & PLAYERS LIST (Mocks & Setup)
-       ========================================================================== */
     let lastChatTime = 0;
     function initChat() {
       const input = document.getElementById('chat-input');
@@ -1057,7 +961,7 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         
         header.append(name, time);
         const bubble = document.createElement('div'); bubble.className = 'msg-bubble';
-        bubble.textContent = filterProfanity(text); // SAFE RENDERING
+        bubble.textContent = filterProfanity(text);
         
         content.append(header, bubble); row.append(renderAvatar(user, 36), content);
         container.appendChild(row); container.scrollTop = container.scrollHeight;
@@ -1089,7 +993,7 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
         list.innerHTML = '';
         const q = search.value.toLowerCase();
         
-        if('all' === currentFilter || currentUser.gender === currentFilter) {
+        if('all' === currentFilter || currentUser.gender === currentFilter || currentUser.isGuest) {
           if(currentUser.name.toLowerCase().includes(q)) list.appendChild(createPlayerRow(currentUser, true));
         }
         if(DEMO_MODE) {
@@ -1111,12 +1015,10 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
 
         if(!isSelf) {
           const inv = document.createElement('button'); inv.className = 'invite-btn'; inv.textContent = 'Invite';
-          inv.onclick = () => sendInvite(p); row.appendChild(inv);
+          inv.onclick = () => { showToast(`Invite sent to ${p.name}!`); }; row.appendChild(inv);
         }
         return row;
       }
-      function sendInvite(p) { showToast(`Invite sent to ${p.name}!`); }
-
       search.addEventListener('input', updatePlayers);
       filters.forEach(f => {
         f.onclick = () => { filters.forEach(x => x.classList.remove('active')); f.classList.add('active'); currentFilter = f.dataset.filter; updatePlayers(); };
@@ -1124,9 +1026,6 @@ obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'
       updatePlayers();
     }
 
-    /* ==========================================================================
-       9. GAME MODAL LOGIC
-       ========================================================================== */
     let findingTimeout = null;
 
     function initGameModal() {
