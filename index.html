@@ -774,6 +774,7 @@
 
       currentUser = Storage.get('swiplay_user');
       if (currentUser && currentUser.name && currentUser.avatar) {
+        document.getElementById('onboarding-screen').style.display = 'none';
         initLobby();
         checkJoinURL();
         net.connect();
