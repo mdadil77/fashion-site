@@ -1,170 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#080a10">
-<title>Swiplay - Pro Arena</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg1: #1a2035; --bg2: #080a10;
-    --glass: rgba(22, 26, 43, 0.6);
-    --me: #00ff66; --opp: #ff0055; --gold: #ffcc00;
-    --muted: #8f96a3;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif;
-      user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
-  body {
-    background: radial-gradient(circle at center, var(--bg1) 0%, var(--bg2) 100%);
-    color: #fff; height: 100vh; height: 100dvh; overflow: hidden;
-    display: flex; flex-direction: column;
-    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
-    overscroll-behavior: none;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080a10">
+  <title>Swiplay - Pro Arena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+  <script>
+    const SERVER_URL = 'https://YOUR-SERVER.onrender.com';
+  </script>
 
-  /* TOP BAR */
-  .top-bar {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-    padding: 12px 18px; background: rgba(22,26,43,.4); backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,.05); z-index: 50;
-  }
-  .btn-ghost {
-    background: rgba(255,255,255,.1); color: #fff; text-decoration: none; border: 1px solid rgba(255,255,255,.1);
-    padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: .85rem; cursor: pointer; transition: .2s;
-  }
-  .btn-ghost:hover { background: rgba(255,255,255,.2); }
-  .room-info { display: flex; align-items: center; gap: 8px; }
-  .room-code {
-    background: rgba(0,255,102,.1); border: 1px solid var(--me); color: var(--me);
-    padding: 6px 12px; border-radius: 20px; font-family: ui-monospace, monospace; font-weight: 900;
-    letter-spacing: 2px; font-size: .85rem; text-shadow: 0 0 10px rgba(0,255,102,.5);
-  }
-  .share-btn {
-    background: linear-gradient(135deg, var(--me), #00cc52); color: #000; border: none;
-    padding: 8px 14px; border-radius: 20px; font-weight: 900; cursor: pointer; font-size: .85rem;
-    box-shadow: 0 4px 15px rgba(0,255,102,.3); transition: .2s;
-  }
-  .share-btn:active { transform: scale(.94); }
-  .icon-btn { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; font-size: 1rem; }
+  <style>
+    :root {
+      --bg1: #1a2035; --bg2: #080a10;
+      --glass: rgba(22, 26, 43, 0.6);
+      --me: #00ff66; --opp: #ff0055; --gold: #ffcc00;
+      --muted: #8f96a3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif;
+        user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      background: radial-gradient(circle at center, var(--bg1) 0%, var(--bg2) 100%);
+      color: #fff; height: 100vh; height: 100dvh; overflow: hidden;
+      display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+      overscroll-behavior: none;
+    }
 
-  /* TIMER BAR */
-  .timer-wrap { height: 6px; background: rgba(255,255,255,.06); position: relative; }
-  .timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--me), var(--gold)); transform-origin: left; transition: background .3s; }
-  .timer-fill.danger { background: linear-gradient(90deg, var(--opp), #ff7a00); }
-  .time-left {
-    text-align: center; font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--muted);
-    padding-top: 10px; font-variant-numeric: tabular-nums;
-  }
-  .time-left.danger { color: var(--opp); animation: tick .5s infinite alternate; }
-  @keyframes tick { to { transform: scale(1.15); } }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 18px; background: rgba(22,26,43,.4); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.05); z-index: 50; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; text-decoration: none; border: 1px solid rgba(255,255,255,.1); padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: .85rem; cursor: pointer; transition: .2s; }
+    .btn-ghost:hover { background: rgba(255,255,255,.2); }
+    .room-info { display: flex; align-items: center; gap: 8px; }
+    .room-code { background: rgba(0,255,102,.1); border: 1px solid var(--me); color: var(--me); padding: 6px 12px; border-radius: 20px; font-family: ui-monospace, monospace; font-weight: 900; letter-spacing: 2px; font-size: .85rem; text-shadow: 0 0 10px rgba(0,255,102,.5); }
+    .share-btn { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; border: none; padding: 8px 14px; border-radius: 20px; font-weight: 900; cursor: pointer; font-size: .85rem; box-shadow: 0 4px 15px rgba(0,255,102,.3); transition: .2s; }
+    .share-btn:active { transform: scale(.94); }
+    .icon-btn { width: 36px; height: 36px; padding: 0; display: grid; place-items: center; font-size: 1rem; }
+    .conn-status { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; display: none;}
+    .conn-status.online { background: var(--me); box-shadow: 0 0 8px var(--me); display: inline-block; }
+    .conn-status.offline { background: var(--opp); box-shadow: 0 0 8px var(--opp); display: inline-block; }
 
-  /* SCOREBOARD */
-  .scoreboard { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 14px 16px 6px; }
-  .score-card {
-    display: flex; flex-direction: column; align-items: center; background: var(--glass);
-    backdrop-filter: blur(12px); padding: 12px 22px; border-radius: 22px; min-width: 130px;
-    border: 1px solid rgba(255,255,255,.05); transition: .3s; position: relative;
-  }
-  .score-card.me  { border-bottom: 4px solid var(--me);  box-shadow: 0 10px 30px rgba(0,255,102,.15); }
-  .score-card.opp { border-bottom: 4px solid var(--opp); box-shadow: 0 10px 30px rgba(255,0,85,.15); }
-  .score-card.leading { transform: translateY(-4px) scale(1.04); }
-  .score-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px;
-                 max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .me .score-label { color: var(--me); } .opp .score-label { color: var(--opp); }
-  .score-value { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
-  .score-value.bump { animation: bump .25s ease; }
-  @keyframes bump { 50% { transform: scale(1.25); } }
-  .vs-badge { font-size: 1.1rem; font-weight: 900; font-style: italic; background: rgba(255,255,255,.1);
-              width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; }
+    .timer-wrap { height: 6px; background: rgba(255,255,255,.06); position: relative; }
+    .timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--me), var(--gold)); transform-origin: left; transition: background .3s; }
+    .timer-fill.danger { background: linear-gradient(90deg, var(--opp), #ff7a00); }
+    .time-left { text-align: center; font-weight: 900; font-size: 1rem; letter-spacing: 2px; color: var(--muted); padding-top: 10px; font-variant-numeric: tabular-nums; }
+    .time-left.danger { color: var(--opp); animation: tick .5s infinite alternate; }
+    @keyframes tick { to { transform: scale(1.15); } }
 
-  /* COMBO */
-  .combo { height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 900;
-           letter-spacing: 2px; color: var(--gold); text-shadow: 0 0 14px rgba(255,204,0,.6); opacity: 0; transition: opacity .2s; }
-  .combo.show { opacity: 1; }
-  .combo.pop span { display: inline-block; animation: bump .25s ease; }
+    .scoreboard { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 14px 16px 6px; }
+    .score-card { display: flex; flex-direction: column; align-items: center; background: var(--glass); backdrop-filter: blur(12px); padding: 12px 22px; border-radius: 22px; min-width: 130px; border: 1px solid rgba(255,255,255,.05); transition: .3s; position: relative; }
+    .score-card.me  { border-bottom: 4px solid var(--me);  box-shadow: 0 10px 30px rgba(0,255,102,.15); }
+    .score-card.opp { border-bottom: 4px solid var(--opp); box-shadow: 0 10px 30px rgba(255,0,85,.15); }
+    .score-card.leading { transform: translateY(-4px) scale(1.04); }
+    .score-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+    .me .score-label { color: var(--me); } .opp .score-label { color: var(--opp); }
+    .score-value { font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .score-value.bump { animation: bump .25s ease; }
+    @keyframes bump { 50% { transform: scale(1.25); } }
+    .vs-badge { font-size: 1.1rem; font-weight: 900; font-style: italic; background: rgba(255,255,255,.1); width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; }
 
-  /* ARENA */
-  .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
-           position: relative; touch-action: none; min-height: 0; }
-  .target-box {
-    background: rgba(22,26,43,.8); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,.1);
-    border-radius: 30px; width: min(260px, 62vw); aspect-ratio: 1; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; gap: 14px;
-    transition: transform .15s cubic-bezier(.175,.885,.32,1.275), border-color .15s, background .15s, box-shadow .15s;
-    box-shadow: 0 20px 50px rgba(0,0,0,.5); visibility: hidden;
-  }
-  .target-box.live { visibility: visible; }
-  .arrow { width: 38%; height: 38%; fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
-           filter: drop-shadow(0 0 12px rgba(255,255,255,.35)); transition: transform .12s ease; }
-  .target-text { font-size: clamp(1.1rem, 5vw, 1.6rem); font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
-  .target-box.pop { animation: enter .18s ease-out; }
-  @keyframes enter { from { transform: scale(.85); opacity: .4; } to { transform: scale(1); opacity: 1; } }
-  .correct { border-color: var(--me) !important; background: rgba(0,255,102,.15) !important; transform: scale(1.12);
-             box-shadow: 0 0 50px rgba(0,255,102,.4), inset 0 0 30px rgba(0,255,102,.2) !important; }
-  .wrong { border-color: var(--opp) !important; background: rgba(255,0,85,.15) !important;
-           box-shadow: 0 0 50px rgba(255,0,85,.4), inset 0 0 30px rgba(255,0,85,.2) !important;
-           animation: shake .3s cubic-bezier(.36,.07,.19,.97) both; }
-  @keyframes shake {
-    0%,100% { transform: translateX(0); } 20% { transform: translateX(-14px) rotate(-4deg); }
-    40% { transform: translateX(14px) rotate(4deg); } 60% { transform: translateX(-14px) rotate(-4deg); }
-    80% { transform: translateX(14px) rotate(4deg); }
-  }
-  .hint { margin-top: 22px; color: var(--muted); font-size: .8rem; letter-spacing: 1px; text-transform: uppercase; opacity: 0; transition: .3s; }
-  .hint.show { opacity: 1; }
+    .avatar-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); flex-shrink: 0; }
+    .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .gender-dot { position: absolute; bottom: -2%; right: -2%; width: 28%; height: 28%; border-radius: 50%; border: 1px solid var(--glass); z-index: 2; }
+    .gender-male { background: #4cc9f0; } .gender-female { background: #ff6bcb; } .gender-none { background: #8f96a3; display:none; }
 
-  /* FLOATING POINTS */
-  .float-pt { position: absolute; font-weight: 900; font-size: 1.6rem; pointer-events: none; animation: floatUp .8s ease-out forwards; z-index: 20; }
-  @keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-90px) scale(1.3); } }
+    .combo { height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 900; letter-spacing: 2px; color: var(--gold); text-shadow: 0 0 14px rgba(255,204,0,.6); opacity: 0; transition: opacity .2s; }
+    .combo.show { opacity: 1; }
+    .combo.pop span { display: inline-block; animation: bump .25s ease; }
 
-  /* OVERLAYS */
-  .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
-             gap: 18px; z-index: 30; text-align: center; padding: 20px; }
-  .overlay.hidden { display: none; }
-  .start-btn {
-    background: linear-gradient(135deg, var(--me), #00cc52); color: #000; font-size: 1.6rem; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 2px; border: none; padding: 18px 46px; border-radius: 40px; cursor: pointer;
-    box-shadow: 0 15px 35px rgba(0,255,102,.4); transition: .2s; animation: pulse 2s infinite;
-  }
-  .start-btn:active { transform: scale(.92) translateY(4px); }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,255,102,.7); } 70% { box-shadow: 0 0 0 20px rgba(0,255,102,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,102,0); } }
-  .diff { display: flex; gap: 8px; }
-  .diff button { padding: 8px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06);
-                 color: #fff; font-weight: 700; font-size: .8rem; cursor: pointer; transition: .2s; }
-  .diff button.active { background: var(--me); color: #000; border-color: var(--me); }
-  .best { color: var(--muted); font-size: .85rem; letter-spacing: 1px; }
-  .best b { color: var(--gold); }
+    .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; touch-action: none; min-height: 0; }
+    .target-box { background: rgba(22,26,43,.8); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,.1); border-radius: 30px; width: min(260px, 62vw); aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; transition: transform .15s cubic-bezier(.175,.885,.32,1.275), border-color .15s, background .15s, box-shadow .15s; box-shadow: 0 20px 50px rgba(0,0,0,.5); visibility: hidden; }
+    .target-box.live { visibility: visible; }
+    .arrow { width: 38%; height: 38%; fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 12px rgba(255,255,255,.35)); transition: transform .12s ease; }
+    .target-text { font-size: clamp(1.1rem, 5vw, 1.6rem); font-weight: 900; text-transform: uppercase; letter-spacing: 2px; }
+    .target-box.pop { animation: enter .18s ease-out; }
+    @keyframes enter { from { transform: scale(.85); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+    .correct { border-color: var(--me) !important; background: rgba(0,255,102,.15) !important; transform: scale(1.12); box-shadow: 0 0 50px rgba(0,255,102,.4), inset 0 0 30px rgba(0,255,102,.2) !important; }
+    .wrong { border-color: var(--opp) !important; background: rgba(255,0,85,.15) !important; box-shadow: 0 0 50px rgba(255,0,85,.4), inset 0 0 30px rgba(255,0,85,.2) !important; animation: shake .3s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-14px) rotate(-4deg); } 40% { transform: translateX(14px) rotate(4deg); } 60% { transform: translateX(-14px) rotate(-4deg); } 80% { transform: translateX(14px) rotate(4deg); } }
+    .hint { margin-top: 22px; color: var(--muted); font-size: .8rem; letter-spacing: 1px; text-transform: uppercase; opacity: 0; transition: .3s; }
+    .hint.show { opacity: 1; }
 
-  .countdown { font-size: 7rem; font-weight: 900; text-shadow: 0 0 40px rgba(0,255,102,.6); animation: bump .6s ease; }
+    .float-pt { position: absolute; font-weight: 900; font-size: 1.6rem; pointer-events: none; animation: floatUp .8s ease-out forwards; z-index: 20; }
+    @keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-90px) scale(1.3); } }
 
-  .result { background: rgba(8,10,16,.82); backdrop-filter: blur(8px); }
-  .result h2 { font-size: 2.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-  .result h2.win { color: var(--me); text-shadow: 0 0 30px rgba(0,255,102,.5); }
-  .result h2.lose { color: var(--opp); text-shadow: 0 0 30px rgba(255,0,85,.5); }
-  .result h2.draw { color: var(--gold); }
-  .stats { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 26px; background: var(--glass); padding: 16px 22px; border-radius: 20px; }
-  .stats div { display: flex; flex-direction: column; gap: 2px; }
-  .stats small { color: var(--muted); font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; }
-  .stats strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
-  .new-best { color: var(--gold); font-weight: 900; letter-spacing: 2px; animation: pulse2 1s infinite alternate; }
-  @keyframes pulse2 { to { transform: scale(1.1); } }
+    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; z-index: 30; text-align: center; padding: 20px; background: rgba(8,10,16,.6); backdrop-filter: blur(4px); }
+    .overlay.hidden { display: none; }
+    .start-btn { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; font-size: 1.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; border: none; padding: 18px 46px; border-radius: 40px; cursor: pointer; box-shadow: 0 15px 35px rgba(0,255,102,.4); transition: .2s; animation: pulse 2s infinite; }
+    .start-btn:active { transform: scale(.92) translateY(4px); }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,255,102,.7); } 70% { box-shadow: 0 0 0 20px rgba(0,255,102,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,102,0); } }
+    .diff { display: flex; gap: 8px; }
+    .diff button { padding: 8px 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: #fff; font-weight: 700; font-size: .8rem; cursor: pointer; transition: .2s; }
+    .diff button.active { background: var(--me); color: #000; border-color: var(--me); }
+    .best { color: var(--muted); font-size: .85rem; letter-spacing: 1px; }
+    .best b { color: var(--gold); }
 
-  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(30px); background: #fff; color: #000;
-           padding: 10px 20px; border-radius: 20px; font-weight: 700; opacity: 0; transition: .3s; z-index: 100; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .countdown { font-size: 7rem; font-weight: 900; text-shadow: 0 0 40px rgba(0,255,102,.6); animation: bump .6s ease; }
 
-  @media (max-height: 640px) { .score-value { font-size: 2rem; } .scoreboard { padding-top: 6px; } }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-</style>
+    .result { background: rgba(8,10,16,.82); backdrop-filter: blur(8px); }
+    .result h2 { font-size: 2.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+    .result h2.win { color: var(--me); text-shadow: 0 0 30px rgba(0,255,102,.5); }
+    .result h2.lose { color: var(--opp); text-shadow: 0 0 30px rgba(255,0,85,.5); }
+    .result h2.draw { color: var(--gold); }
+    .stats { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 26px; background: var(--glass); padding: 16px 22px; border-radius: 20px; }
+    .stats div { display: flex; flex-direction: column; gap: 2px; }
+    .stats small { color: var(--muted); font-size: .65rem; text-transform: uppercase; letter-spacing: 1px; }
+    .stats strong { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+    .new-best { color: var(--gold); font-weight: 900; letter-spacing: 2px; animation: pulse2 1s infinite alternate; }
+    @keyframes pulse2 { to { transform: scale(1.1); } }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(30px); background: #fff; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; opacity: 0; transition: .3s; z-index: 100; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-height: 640px) { .score-value { font-size: 2rem; } .scoreboard { padding-top: 6px; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
 </head>
 <body>
 
 <div class="top-bar">
-  <a href="index.html" class="btn-ghost">⬅ Lobby</a>
+  <a href="index.html" class="btn-ghost">⬅ Leave</a>
   <div class="room-info">
-    <div class="room-code" id="room-display">ROOM: ----</div>
-    <button class="share-btn" id="share-btn">Share</button>
+    <div id="conn-dot" class="conn-status"></div>
+    <div class="room-code" id="room-display">BOT MODE</div>
+    <button class="share-btn" id="share-btn" style="display:none;">Share</button>
     <button class="btn-ghost icon-btn" id="mute-btn" aria-label="Toggle sound">🔊</button>
   </div>
 </div>
@@ -174,12 +135,12 @@
 
 <div class="scoreboard">
   <div class="score-card me" id="card-me">
-    <div class="score-label" id="my-name">You</div>
+    <div class="score-label" id="my-name"></div>
     <div class="score-value" id="my-score">0</div>
   </div>
   <div class="vs-badge">VS</div>
   <div class="score-card opp" id="card-opp">
-    <div class="score-label" id="opp-name">Opponent</div>
+    <div class="score-label" id="opp-name"></div>
     <div class="score-value" id="opp-score">0</div>
   </div>
 </div>
@@ -203,11 +164,12 @@
       <button data-d="hard">Hard</button>
     </div>
     <button class="start-btn" id="start-btn">Fight!</button>
-    <div class="best">Best score: <b id="best-score">0</b></div>
+    <div class="best" id="best-display">Best score: <b id="best-score">0</b></div>
+    <div id="wait-msg" style="display:none; flex-direction:column; gap:10px; align-items:center; font-weight:800; font-size:1.5rem; text-transform:uppercase;">Waiting for opponent...</div>
   </div>
 
   <!-- COUNTDOWN -->
-  <div class="overlay hidden" id="count-overlay"><div class="countdown" id="countdown">3</div></div>
+  <div class="overlay hidden" id="count-overlay" style="background:transparent;"><div class="countdown" id="countdown">3</div></div>
 
   <!-- RESULT -->
   <div class="overlay result hidden" id="result-overlay">
@@ -221,7 +183,11 @@
       <div><small>Hits</small><strong id="st-hits">0</strong></div>
       <div><small>Misses</small><strong id="st-miss">0</strong></div>
     </div>
-    <button class="start-btn" id="again-btn">Rematch</button>
+    <div style="display:flex; gap:10px;">
+      <button class="start-btn" id="again-btn">Rematch</button>
+      <button class="btn-ghost" onclick="location.href='index.html'" style="font-size:1.2rem;">Leave</button>
+    </div>
+    <div id="rematch-wait" style="display:none; color:var(--gold); margin-top:10px; font-weight:700;">Waiting for opponent...</div>
   </div>
 </main>
 
@@ -231,9 +197,8 @@
 (() => {
   'use strict';
 
-  /* ---------- CONFIG ---------- */
   const ROUND_SECONDS = 30;
-  const SWIPE_MIN = 36;                       // px needed to count as a swipe
+  const SWIPE_MIN = 36;
   const DIRS = {
     UP:    { text: 'Swipe Up',    rot: 0   },
     RIGHT: { text: 'Swipe Right', rot: 90  },
@@ -241,21 +206,12 @@
     LEFT:  { text: 'Swipe Left',  rot: 270 }
   };
   const DIR_KEYS = Object.keys(DIRS);
-  const BOTS = {                              // reaction window (ms) and accuracy
-    easy:   { min: 1100, max: 2000, acc: 0.80 },
-    normal: { min: 750,  max: 1400, acc: 0.88 },
-    hard:   { min: 480,  max: 900,  acc: 0.94 }
-  };
+  const BOTS = { easy: { min: 1100, max: 2000, acc: 0.80 }, normal: { min: 750, max: 1400, acc: 0.88 }, hard: { min: 480, max: 900, acc: 0.94 } };
 
-  /* ---------- HELPERS ---------- */
   const $ = id => document.getElementById(id);
-  const store = {
-    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch {} }
-  };
+  const store = { get(k, d) { try { const v = localStorage.getItem(k); return v===null?d:v; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
   const rand = (a, b) => a + Math.random() * (b - a);
 
-  /* ---------- ELEMENTS ---------- */
   const el = {
     box: $('target-box'), arrow: $('arrow'), text: $('target-text'), arena: $('arena'),
     myScore: $('my-score'), oppScore: $('opp-score'), cardMe: $('card-me'), cardOpp: $('card-opp'),
@@ -264,41 +220,95 @@
     hint: $('hint'), toast: $('toast'), mute: $('mute-btn')
   };
 
-  /* ---------- PLAYER + ROOM ---------- */
-  let userName = 'You';
-  try {
-    const u = JSON.parse(store.get('swiplay_user', 'null'));
-    if (u && typeof u.name === 'string' && u.name.trim()) userName = u.name.trim().slice(0, 14);
-  } catch {}
-  $('my-name').textContent = userName;
+  function renderAvatar(user, sizePx = 20) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'avatar-wrapper';
+    wrapper.style.width = `${sizePx}px`; wrapper.style.height = `${sizePx}px`;
+    
+    if (user.avatarType === 'photo' && user.avatar && user.avatar.startsWith('data:image/')) {
+      const img = document.createElement('img'); img.src = user.avatar; wrapper.appendChild(img);
+    } else {
+      const txt = document.createElement('div');
+      txt.textContent = (user.avatar || '🤖').substring(0, 8);
+      txt.style.fontSize = `${sizePx * 0.6}px`;
+      wrapper.appendChild(txt);
+    }
+    if (user.gender && user.gender !== 'none') {
+      const dot = document.createElement('div');
+      dot.className = `gender-dot gender-${user.gender}`;
+      wrapper.appendChild(dot);
+    }
+    return wrapper;
+  }
+
+  let currentUser = { id: 'local', name: 'You', avatar: '🤖', avatarType: 'emoji', gender: 'none' };
+  try { const u = JSON.parse(store.get('swiplay_user', 'null')); if (u && u.name) currentUser = u; } catch {}
+  
+  const myLbl = $('my-name');
+  myLbl.innerHTML = '';
+  myLbl.appendChild(renderAvatar(currentUser, 16));
+  const myNameNode = document.createElement('span'); myNameNode.textContent = currentUser.name;
+  myLbl.appendChild(myNameNode);
+
+  const oppLbl = $('opp-name');
+  oppLbl.innerHTML = '';
+  oppLbl.appendChild(renderAvatar({avatar:'🤖', avatarType:'emoji', gender:'none'}, 16));
+  const oppNameNode = document.createElement('span'); oppNameNode.textContent = 'Opponent';
+  oppLbl.appendChild(oppNameNode);
 
   const params = new URLSearchParams(location.search);
-  const roomCode = (params.get('room') || Math.random().toString(36).slice(2, 6)).toUpperCase().slice(0, 6);
-  $('room-display').textContent = 'ROOM: ' + roomCode;
+  const mode = params.get('mode') || 'bot';
+  const roomId = params.get('room') || '';
+  
+  const S = {
+    phase: 'idle', 
+    my: 0, opp: 0, combo: 0,
+    dir: '', endsAt: 0, raf: 0, botTimer: 0, lockUntil: 0,
+    clockOffset: 0, pendingTarget: null,
+    difficulty: store.get('swiplay_diff', 'normal'),
+    isLive: mode !== 'bot'
+  };
 
-  $('share-btn').addEventListener('click', async () => {
-    const url = new URL(location.href);
-    url.searchParams.set('room', roomCode);
-    const msg = `Join my Swiplay room! Code: ${roomCode}`;
+  const bestScore = () => parseInt(store.get('swiplay_best', '0'), 10) || 0;
+  $('best-score').textContent = bestScore();
+
+  if (S.isLive) {
+    $('diff').style.display = 'none';
+    $('best-display').style.display = 'none';
+    $('start-btn').style.display = 'none';
+    $('wait-msg').style.display = 'flex';
+    if(mode === 'friend') {
+      $('room-display').textContent = 'ROOM: ' + roomId;
+      $('share-btn').style.display = 'block';
+    } else {
+      $('room-display').textContent = 'MATCHMAKING';
+    }
+  } else {
+    $('room-display').textContent = 'PRACTICE';
+    const diffBtns = [...document.querySelectorAll('#diff button')];
+    const markDiff = () => diffBtns.forEach(b => b.classList.toggle('active', b.dataset.d === S.difficulty));
+    if (!BOTS[S.difficulty]) S.difficulty = 'normal';
+    markDiff();
+    diffBtns.forEach(b => b.addEventListener('click', () => { S.difficulty = b.dataset.d; store.set('swiplay_diff', S.difficulty); markDiff(); }));
+  }
+
+  $('share-btn').onclick = async () => {
+    const link = new URL('index.html', location.href).href + '?join=swipe-' + roomId;
     try {
-      if (navigator.share) { await navigator.share({ title: 'Swiplay', text: msg, url: url.href }); return; }
-      await navigator.clipboard.writeText(`${msg} ${url.href}`);
-      toast('Invite copied to clipboard!');
-    } catch { toast('Room code: ' + roomCode); }
-  });
+      if (navigator.share) await navigator.share({ title: 'Join Swiplay', text: `Let's play Swipe Game!`, url: link });
+      else { await navigator.clipboard.writeText(link); toast('Link copied!'); }
+    } catch { toast('Code: ' + roomId); }
+  };
 
   function toast(m) {
     el.toast.textContent = m; el.toast.classList.add('show');
     clearTimeout(toast.t); toast.t = setTimeout(() => el.toast.classList.remove('show'), 1800);
   }
 
-  /* ---------- AUDIO (WebAudio, no files needed) ---------- */
+  // --- AUDIO ---
   let audioCtx = null, muted = store.get('swiplay_muted', '0') === '1';
   el.mute.textContent = muted ? '🔇' : '🔊';
-  el.mute.addEventListener('click', () => {
-    muted = !muted; store.set('swiplay_muted', muted ? '1' : '0');
-    el.mute.textContent = muted ? '🔇' : '🔊';
-  });
+  el.mute.addEventListener('click', () => { muted = !muted; store.set('swiplay_muted', muted ? '1' : '0'); el.mute.textContent = muted ? '🔇' : '🔊'; });
   function beep(freq, dur = 0.1, type = 'sine', vol = 0.15, slide = 0) {
     if (muted) return;
     try {
@@ -312,229 +322,291 @@
     } catch {}
   }
   const sfx = {
-    good:  combo => beep(520 + Math.min(combo, 12) * 40, 0.09, 'triangle', 0.16, 160),
-    bad:   () => beep(150, 0.22, 'sawtooth', 0.14, -60),
-    tick:  () => beep(660, 0.08, 'square', 0.08),
-    go:    () => beep(990, 0.25, 'square', 0.1),
-    win:   () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.18, 'triangle', 0.16), i * 110)),
-    lose:  () => [392, 330, 262].forEach((f, i) => setTimeout(() => beep(f, 0.25, 'sawtooth', 0.1), i * 150))
+    good: combo => beep(520 + Math.min(combo, 12) * 40, 0.09, 'triangle', 0.16, 160),
+    bad: () => beep(150, 0.22, 'sawtooth', 0.14, -60),
+    tick: () => beep(660, 0.08, 'square', 0.08), go: () => beep(990, 0.25, 'square', 0.1),
+    win: () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.18, 'triangle', 0.16), i * 110)),
+    lose: () => [392, 330, 262].forEach((f, i) => setTimeout(() => beep(f, 0.25, 'sawtooth', 0.1), i * 150))
   };
   const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
 
-  /* ---------- GAME STATE ---------- */
-  const S = {
-    phase: 'idle',            // idle | countdown | playing | over
-    my: 0, opp: 0,
-    dir: '', shownAt: 0,
-    combo: 0, bestCombo: 0, hits: 0, misses: 0, reactions: [],
-    endsAt: 0, raf: 0, botTimer: 0, nextTimer: 0, lockUntil: 0,
-    difficulty: store.get('swiplay_diff', 'normal')
-  };
-  const bestScore = () => parseInt(store.get('swiplay_best', '0'), 10) || 0;
-  $('best-score').textContent = bestScore();
+  // --- NETWORKING ---
+  let socket = null;
+  let liveMatchTimeout = null;
 
-  /* difficulty picker */
-  const diffBtns = [...document.querySelectorAll('#diff button')];
-  const markDiff = () => diffBtns.forEach(b => b.classList.toggle('active', b.dataset.d === S.difficulty));
-  if (!BOTS[S.difficulty]) S.difficulty = 'normal';
-  markDiff();
-  diffBtns.forEach(b => b.addEventListener('click', () => {
-    S.difficulty = b.dataset.d; store.set('swiplay_diff', S.difficulty); markDiff();
-  }));
+  if (S.isLive) {
+    const dot = $('conn-dot'); dot.className = 'conn-status offline';
+    
+    // Safety Net 45s
+    $('wait-msg').textContent = "Waking up server / Connecting...";
+    liveMatchTimeout = setTimeout(() => {
+      if (S.phase === 'idle' && (mode !== 'friend' || !socket || !socket.connected)) {
+        $('wait-msg').innerHTML = '';
+        const h3 = document.createElement('h3'); h3.textContent = "Could not connect to match.";
+        const bRow = document.createElement('div'); bRow.style.cssText = 'display:flex; gap:10px; margin-top:10px;';
+        const b1 = document.createElement('button'); b1.className = 'btn-ghost'; b1.textContent = "Back to Lobby"; b1.onclick = () => location.href = 'index.html';
+        const b2 = document.createElement('button'); b2.className = 'btn-primary'; b2.textContent = "Play vs Bot"; b2.onclick = () => location.href = location.pathname + '?mode=bot';
+        bRow.append(b1, b2);
+        $('wait-msg').append(h3, bRow);
+      }
+    }, 45000);
 
-  /* ---------- FLOW ---------- */
-  $('start-btn').addEventListener('click', beginCountdown);
-  $('again-btn').addEventListener('click', beginCountdown);
+    if (!SERVER_URL.includes('YOUR-SERVER')) {
+      socket = io(SERVER_URL);
+      socket.on('connect', () => { 
+        dot.className = 'conn-status online'; 
+        $('wait-msg').textContent = "Waiting for opponent...";
+        socket.emit('hello', currentUser);
+        socket.emit('game:ready', { roomId }); 
+      });
+      socket.on('disconnect', () => { dot.className = 'conn-status offline'; });
+      
+      socket.on('match:start', ({ startAt, profiles, serverNow }) => {
+        clearTimeout(liveMatchTimeout);
+        S.clockOffset = serverNow ? serverNow - Date.now() : 0;
+        
+        const opp = profiles.find(p => p.userId !== currentUser.id)?.profile || { name: 'Opponent', avatar: '🤖', avatarType: 'emoji', gender: 'none' };
+        
+        oppLbl.innerHTML = '';
+        oppLbl.appendChild(renderAvatar(opp, 16));
+        const nNode = document.createElement('span'); nNode.textContent = opp.name;
+        oppLbl.appendChild(nNode);
 
-  function beginCountdown() {
-    resetState();
+        syncCountdown(startAt);
+      });
+
+      socket.on('game:target', ({ dir }) => {
+        if (S.phase !== 'playing') { S.pendingTarget = dir; } 
+        else { showTarget(dir); }
+      });
+
+      socket.on('game:state', (states) => {
+        if (S.phase !== 'playing') return;
+        const mySt = states.find(p => p.userId === currentUser.id);
+        const oppSt = states.find(p => p.userId !== currentUser.id);
+        
+        if (mySt) {
+          if (mySt.score > S.my) {
+            el.box.classList.remove('correct', 'wrong'); void el.box.offsetWidth; el.box.classList.add('correct');
+            floatPoint('+' + (mySt.score - S.my), '#00ff66'); sfx.good(mySt.combo); buzz(15);
+          } else if (mySt.score < S.my || (mySt.combo === 0 && S.combo > 0)) {
+            el.box.classList.remove('correct', 'wrong'); void el.box.offsetWidth; el.box.classList.add('wrong');
+            floatPoint('-5', '#ff0055'); sfx.bad(); buzz([40,30,40]);
+          }
+          S.my = mySt.score; S.combo = mySt.combo;
+          setTimeout(() => el.box.classList.remove('correct', 'wrong'), 300);
+        }
+        if (oppSt) { S.opp = oppSt.score; }
+        render(true); setCombo(S.combo);
+      });
+
+      socket.on('match:end', ({ results, winnerId }) => {
+        S.phase = 'over';
+        cancelAnimationFrame(S.raf); el.box.classList.remove('live'); el.hint.classList.remove('show'); setCombo(0);
+        const myRes = results.find(p => p.userId === currentUser.id);
+        if(myRes) showEndScreen(myRes.score, myRes.hits, myRes.misses, myRes.bestCombo, myRes.avgReaction, winnerId === currentUser.id, winnerId === null);
+      });
+
+      socket.on('match:rematch_start', () => {
+        S.my = 0; S.opp = 0; S.combo = 0; render(); setCombo(0);
+        $('rematch-wait').style.display = 'none'; $('again-btn').style.display = 'block';
+        socket.emit('game:ready', { roomId });
+      });
+
+      socket.on('error:toast', (msg) => {
+        toast(msg);
+        const lower = msg.toLowerCase();
+        if (lower.includes('disconnected') || lower.includes('left')) {
+          S.opponentLeft = true;
+          if (S.phase === 'over') {
+            $('again-btn').style.display = 'none';
+            $('rematch-wait').style.display = 'block';
+            $('rematch-wait').textContent = "Opponent left the room.";
+          }
+        }
+      });
+    }
+  }
+
+  function showTarget(dir) {
+    S.dir = dir;
+    el.box.className = 'target-box live'; void el.box.offsetWidth; el.box.classList.add('pop');
+    el.arrow.style.transform = `rotate(${DIRS[dir].rot}deg)`;
+    el.text.textContent = DIRS[dir].text;
+  }
+
+  // --- FLOW ---
+  $('start-btn').addEventListener('click', () => { if(!S.isLive) startBotCountdown(); });
+  $('again-btn').addEventListener('click', () => {
+    if(S.isLive) {
+      socket.emit('match:rematch');
+      $('again-btn').style.display = 'none'; $('rematch-wait').style.display = 'block';
+    } else {
+      startBotCountdown();
+    }
+  });
+
+  function startBotCountdown() {
+    S.my = 0; S.opp = 0; S.combo = 0; S.botStats = { hits:0, misses:0, reactions:[], bestCombo:0 };
+    render(); setCombo(0);
+    el.timeLeft.textContent = ROUND_SECONDS; el.timeLeft.classList.remove('danger'); el.timerFill.style.transform = 'scaleX(1)';
     el.start.classList.add('hidden'); el.result.classList.add('hidden'); el.count.classList.remove('hidden');
-    el.box.classList.remove('live'); el.hint.classList.remove('show');
     S.phase = 'countdown';
     let n = 3;
     const step = () => {
-      if (S.phase !== 'countdown') return;
-      if (n > 0) {
-        el.countNum.textContent = n; el.countNum.style.animation = 'none'; void el.countNum.offsetWidth; el.countNum.style.animation = '';
-        sfx.tick(); n--; setTimeout(step, 700);
+      if (n > 0) { el.countNum.textContent = n; el.countNum.style.animation = 'none'; void el.countNum.offsetWidth; el.countNum.style.animation = ''; sfx.tick(); n--; setTimeout(step, 700); } 
+      else { el.countNum.textContent = 'GO!'; sfx.go(); setTimeout(() => { el.count.classList.add('hidden'); startBotPlaying(); }, 450); }
+    };
+    step();
+  }
+
+  function syncCountdown(startAt) {
+    el.start.classList.add('hidden'); el.result.classList.add('hidden'); el.count.classList.remove('hidden');
+    $('rematch-wait').style.display = 'none'; $('again-btn').style.display = 'block';
+    S.my = 0; S.opp = 0; S.combo = 0; render(); setCombo(0);
+    el.timeLeft.textContent = ROUND_SECONDS; el.timeLeft.classList.remove('danger'); el.timerFill.style.transform = 'scaleX(1)';
+    S.phase = 'countdown';
+    
+    const step = () => {
+      const left = startAt - (Date.now() + S.clockOffset);
+      if (left > 400) {
+        const n = Math.ceil(left / 1000);
+        if (el.countNum.textContent !== String(n)) { el.countNum.textContent = n; el.countNum.style.animation = 'none'; void el.countNum.offsetWidth; el.countNum.style.animation = ''; sfx.tick(); }
+        requestAnimationFrame(step);
       } else {
         el.countNum.textContent = 'GO!'; sfx.go();
-        setTimeout(() => { el.count.classList.add('hidden'); startPlaying(); }, 450);
+        setTimeout(() => { 
+          el.count.classList.add('hidden'); 
+          S.phase = 'playing'; S.endsAt = startAt + ROUND_SECONDS * 1000;
+          el.box.classList.add('live'); el.hint.classList.add('show');
+          if (S.pendingTarget) { showTarget(S.pendingTarget); S.pendingTarget = null; }
+          loop(); 
+        }, 400);
       }
     };
     step();
   }
 
-  function resetState() {
-    cancelAnimationFrame(S.raf); clearTimeout(S.botTimer); clearTimeout(S.nextTimer);
-    Object.assign(S, { my: 0, opp: 0, dir: '', combo: 0, bestCombo: 0, hits: 0, misses: 0, reactions: [], lockUntil: 0 });
-    render(); setCombo(0);
-    el.timeLeft.textContent = ROUND_SECONDS; el.timeLeft.classList.remove('danger');
-    el.timerFill.style.transform = 'scaleX(1)'; el.timerFill.classList.remove('danger');
-  }
-
-  function startPlaying() {
-    S.phase = 'playing';
-    S.endsAt = performance.now() + ROUND_SECONDS * 1000;
+  function startBotPlaying() {
+    S.phase = 'playing'; S.endsAt = Date.now() + ROUND_SECONDS * 1000;
     el.box.classList.add('live'); el.hint.classList.add('show');
-    nextTurn(); scheduleBot(); loop();
+    botNextTurn(); scheduleBot(); loop();
   }
 
   function loop() {
     if (S.phase !== 'playing') return;
-    const left = Math.max(0, S.endsAt - performance.now());
+    const now = S.isLive ? (Date.now() + S.clockOffset) : Date.now();
+    const left = Math.max(0, S.endsAt - now);
     el.timerFill.style.transform = `scaleX(${left / (ROUND_SECONDS * 1000)})`;
     const sec = Math.ceil(left / 1000);
-    if (el.timeLeft.textContent !== String(sec)) {
-      el.timeLeft.textContent = sec;
-      if (sec <= 5 && sec > 0) sfx.tick();
-    }
+    if (el.timeLeft.textContent !== String(sec)) { el.timeLeft.textContent = sec; if (sec <= 5 && sec > 0) sfx.tick(); }
     const danger = sec <= 5;
     el.timeLeft.classList.toggle('danger', danger); el.timerFill.classList.toggle('danger', danger);
-    if (left <= 0) return endGame();
+    if (left <= 0 && !S.isLive) return endBotMatch(); 
     S.raf = requestAnimationFrame(loop);
   }
 
-  function endGame() {
-    S.phase = 'over';
-    clearTimeout(S.botTimer); clearTimeout(S.nextTimer); cancelAnimationFrame(S.raf);
-    el.box.classList.remove('live'); el.hint.classList.remove('show'); setCombo(0);
-
-    const title = $('result-title');
-    const res = S.my > S.opp ? 'win' : S.my < S.opp ? 'lose' : 'draw';
-    title.className = res;
-    title.textContent = res === 'win' ? 'Victory!' : res === 'lose' ? 'Defeated' : 'Draw';
-    res === 'win' ? sfx.win() : res === 'lose' ? sfx.lose() : beep(440, 0.3);
-
-    const total = S.hits + S.misses;
-    $('st-score').textContent = S.my;
-    $('st-acc').textContent = total ? Math.round(S.hits / total * 100) + '%' : '0%';
-    $('st-combo').textContent = S.bestCombo;
-    $('st-react').textContent = S.reactions.length
-      ? Math.round(S.reactions.reduce((a, b) => a + b, 0) / S.reactions.length) + ' ms' : '-';
-    $('st-hits').textContent = S.hits; $('st-miss').textContent = S.misses;
-
-    const isBest = S.my > bestScore();
-    if (isBest) { store.set('swiplay_best', String(S.my)); $('best-score').textContent = S.my; }
-    $('new-best').classList.toggle('hidden', !isBest);
-    el.result.classList.remove('hidden');
-  }
-
-  /* ---------- TURNS ---------- */
-  function nextTurn() {
+  function botNextTurn() {
     if (S.phase !== 'playing') return;
-    let d; do { d = DIR_KEYS[(Math.random() * 4) | 0]; } while (d === S.dir && Math.random() < 0.7); // fewer repeats
-    S.dir = d; S.shownAt = performance.now();
-    el.box.className = 'target-box live';
-    void el.box.offsetWidth; el.box.classList.add('pop');
-    el.arrow.style.transform = `rotate(${DIRS[d].rot}deg)`;
-    el.text.textContent = DIRS[d].text;
+    let d; do { d = DIR_KEYS[(Math.random() * 4) | 0]; } while (d === S.dir && Math.random() < 0.7);
+    S.botShownAt = Date.now();
+    showTarget(d);
   }
 
-  function handleInput(swipe) {
-    if (S.phase !== 'playing' || !S.dir) return;
-    if (performance.now() < S.lockUntil) return;
-
-    if (swipe === S.dir) {
-      const rt = performance.now() - S.shownAt;
-      S.reactions.push(rt);
-      S.hits++; S.combo++; S.bestCombo = Math.max(S.bestCombo, S.combo);
-      const speed = rt < 400 ? 4 : rt < 700 ? 2 : 0;
-      const gain = 10 + Math.min(S.combo - 1, 10) * 2 + speed;
-      S.my += gain;
-      S.dir = '';
-      el.box.className = 'target-box live correct';
-      el.arrow.style.transform += ' scale(1.1)';
-      floatPoint('+' + gain, '#00ff66');
-      sfx.good(S.combo); buzz(15);
-      setCombo(S.combo); render('me');
-      S.nextTimer = setTimeout(nextTurn, 220);
-    } else {
-      S.misses++; S.combo = 0; S.my = Math.max(0, S.my - 5);
-      S.lockUntil = performance.now() + 250;       // brief penalty so spamming doesn't pay
-      el.box.classList.remove('wrong'); void el.box.offsetWidth; el.box.classList.add('wrong');
-      floatPoint('-5', '#ff0055');
-      sfx.bad(); buzz([40, 30, 40]);
-      setCombo(0); render('me');
-      setTimeout(() => el.box.classList.remove('wrong'), 300);
-    }
-  }
-
-  /* ---------- BOT OPPONENT ---------- */
   function scheduleBot() {
     const b = BOTS[S.difficulty];
-    // bot speeds up slightly as the clock runs down
-    const progress = 1 - Math.max(0, S.endsAt - performance.now()) / (ROUND_SECONDS * 1000);
-    const speedUp = 1 - progress * 0.2;
+    const speedUp = 1 - (1 - Math.max(0, S.endsAt - Date.now()) / 30000) * 0.2;
     S.botTimer = setTimeout(() => {
       if (S.phase !== 'playing') return;
-      if (Math.random() < b.acc) { S.opp += 10 + (Math.random() < 0.3 ? 4 : 0); }
-      else { S.opp = Math.max(0, S.opp - 5); }
+      if (Math.random() < b.acc) S.opp += 10 + (Math.random() < 0.3 ? 4 : 0); else S.opp = Math.max(0, S.opp - 5);
       render('opp'); scheduleBot();
     }, rand(b.min, b.max) * speedUp);
   }
 
-  /* ---------- UI HELPERS ---------- */
-  function render(bump) {
-    el.myScore.textContent = S.my; el.oppScore.textContent = S.opp;
-    el.cardMe.classList.toggle('leading', S.my > S.opp);
-    el.cardOpp.classList.toggle('leading', S.opp > S.my);
-    if (bump) {
-      const t = bump === 'me' ? el.myScore : el.oppScore;
-      t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump');
-    }
-  }
-  function setCombo(n) {
-    if (n >= 3) {
-      el.comboText.textContent = `🔥 ${n} COMBO`;
-      el.combo.classList.add('show'); el.combo.classList.remove('pop'); void el.combo.offsetWidth; el.combo.classList.add('pop');
-    } else el.combo.classList.remove('show');
-  }
-  function floatPoint(txt, color) {
-    const p = document.createElement('div');
-    p.className = 'float-pt'; p.textContent = txt; p.style.color = color;
-    p.style.left = `calc(50% + ${rand(-40, 40)}px)`; p.style.top = '30%';
-    el.arena.appendChild(p); setTimeout(() => p.remove(), 800);
+  function endBotMatch() {
+    S.phase = 'over'; clearTimeout(S.botTimer); cancelAnimationFrame(S.raf);
+    el.box.classList.remove('live'); el.hint.classList.remove('show'); setCombo(0);
+    const avgRt = S.botStats.reactions.length ? Math.round(S.botStats.reactions.reduce((a,b)=>a+b,0)/S.botStats.reactions.length) : 0;
+    showEndScreen(S.my, S.botStats.hits, S.botStats.misses, S.botStats.bestCombo, avgRt, S.my > S.opp, S.my === S.opp);
   }
 
-  /* ---------- INPUT: pointer (touch + mouse) swipe ---------- */
+  function showEndScreen(score, hits, misses, bCombo, avgRt, isWin, isDraw) {
+    const title = $('result-title');
+    const res = isDraw ? 'draw' : isWin ? 'win' : 'lose';
+    title.className = res; title.textContent = res === 'win' ? 'Victory!' : res === 'lose' ? 'Defeated' : 'Draw';
+    res === 'win' ? sfx.win() : res === 'lose' ? sfx.lose() : beep(440, 0.3);
+
+    $('st-score').textContent = score;
+    $('st-acc').textContent = (hits+misses) ? Math.round(hits / (hits+misses) * 100) + '%' : '0%';
+    $('st-combo').textContent = bCombo; $('st-react').textContent = avgRt ? avgRt + ' ms' : '-';
+    $('st-hits').textContent = hits; $('st-miss').textContent = misses;
+
+    const isBest = score > bestScore();
+    if(isBest && !currentUser.isGuest) { store.set('swiplay_best', String(score)); $('best-score').textContent = score; }
+    $('new-best').classList.toggle('hidden', !(isBest && !currentUser.isGuest));
+    if (S.opponentLeft) { $('again-btn').style.display = 'none'; $('rematch-wait').style.display = 'block'; $('rematch-wait').textContent = 'Opponent left the room.'; }
+    el.result.classList.remove('hidden');
+  }
+
+  // --- INPUT & UI ---
+  function handleInput(swipe) {
+    if (S.phase !== 'playing' || !S.dir || Date.now() < S.lockUntil) return;
+    
+    if (S.isLive) {
+      socket.emit('game:swipe', { dir: swipe });
+    } else {
+      if (swipe === S.dir) {
+        const rt = Date.now() - S.botShownAt; S.botStats.reactions.push(rt); S.botStats.hits++;
+        S.combo++; S.botStats.bestCombo = Math.max(S.botStats.bestCombo, S.combo);
+        const gain = 10 + Math.min(Math.max(0, S.combo - 1), 10) * 2 + (rt < 400 ? 4 : rt < 700 ? 2 : 0);
+        S.my += gain;
+        S.dir = ''; el.box.className = 'target-box live correct'; el.arrow.style.transform += ' scale(1.1)'; floatPoint('+' + gain, '#00ff66');
+        sfx.good(S.combo); buzz(15); setCombo(S.combo); render('me'); setTimeout(botNextTurn, 220);
+      } else {
+        S.botStats.misses++; S.combo = 0; S.my = Math.max(0, S.my - 5); S.lockUntil = Date.now() + 250;
+        el.box.classList.remove('wrong'); void el.box.offsetWidth; el.box.classList.add('wrong'); floatPoint('-5', '#ff0055');
+        sfx.bad(); buzz([40,30,40]); setCombo(0); render('me'); setTimeout(() => el.box.classList.remove('wrong'), 300);
+      }
+    }
+  }
+
+  function render(bump) {
+    el.myScore.textContent = S.my; el.oppScore.textContent = S.opp;
+    el.cardMe.classList.toggle('leading', S.my > S.opp); el.cardOpp.classList.toggle('leading', S.opp > S.my);
+    if (bump) { const t = bump === 'opp' ? el.oppScore : el.myScore; t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump'); }
+  }
+  function setCombo(n) {
+    if (n >= 3) { el.comboText.textContent = `🔥 ${n} COMBO`; el.combo.classList.add('show'); el.combo.classList.remove('pop'); void el.combo.offsetWidth; el.combo.classList.add('pop'); } 
+    else el.combo.classList.remove('show');
+  }
+  function floatPoint(txt, color) {
+    const p = document.createElement('div'); p.className = 'float-pt'; p.textContent = txt; p.style.color = color;
+    p.style.left = `calc(50% + ${rand(-40, 40)}px)`; p.style.top = '30%'; el.arena.appendChild(p); setTimeout(() => p.remove(), 800);
+  }
+
   let startX = 0, startY = 0, tracking = false, fired = false;
-  el.arena.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return;
-    tracking = true; fired = false; startX = e.clientX; startY = e.clientY;
-    try { el.arena.setPointerCapture(e.pointerId); } catch {}
-  });
+  el.arena.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; tracking = true; fired = false; startX = e.clientX; startY = e.clientY; try { el.arena.setPointerCapture(e.pointerId); } catch {} });
   el.arena.addEventListener('pointermove', e => {
     if (!tracking || fired) return;
     const dx = e.clientX - startX, dy = e.clientY - startY;
-    if (Math.hypot(dx, dy) >= SWIPE_MIN) {             // fire as soon as the threshold is crossed = snappier
-      fired = true; handleInput(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'RIGHT' : 'LEFT') : (dy > 0 ? 'DOWN' : 'UP'));
-    }
+    if (Math.hypot(dx, dy) >= SWIPE_MIN) { fired = true; handleInput(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'RIGHT' : 'LEFT') : (dy > 0 ? 'DOWN' : 'UP')); }
   });
   const endTrack = () => { tracking = false; };
-  el.arena.addEventListener('pointerup', endTrack);
-  el.arena.addEventListener('pointercancel', endTrack);
+  el.arena.addEventListener('pointerup', endTrack); el.arena.addEventListener('pointercancel', endTrack);
 
-  /* ---------- INPUT: keyboard ---------- */
-  const KEYMAP = { ArrowUp: 'UP', w: 'UP', W: 'UP', ArrowDown: 'DOWN', s: 'DOWN', S: 'DOWN',
-                   ArrowLeft: 'LEFT', a: 'LEFT', A: 'LEFT', ArrowRight: 'RIGHT', d: 'RIGHT', D: 'RIGHT' };
+  const KEYMAP = { ArrowUp: 'UP', w: 'UP', W: 'UP', ArrowDown: 'DOWN', s: 'DOWN', S: 'DOWN', ArrowLeft: 'LEFT', a: 'LEFT', A: 'LEFT', ArrowRight: 'RIGHT', d: 'RIGHT', D: 'RIGHT' };
   window.addEventListener('keydown', e => {
-    if (e.repeat) return;
-    const d = KEYMAP[e.key];
-    if (d) { e.preventDefault(); handleInput(d); }
-    else if ((e.key === 'Enter' || e.key === ' ') && (S.phase === 'idle' || S.phase === 'over')) {
-      e.preventDefault(); beginCountdown();
+    if (e.repeat) return; const d = KEYMAP[e.key]; if (d) { e.preventDefault(); handleInput(d); }
+    else if ((e.key === 'Enter' || e.key === ' ') && (S.phase === 'idle' || S.phase === 'over')) { 
+      e.preventDefault(); 
+      if (!el.start.classList.contains('hidden')) $('start-btn').click();
+      else if (!el.result.classList.contains('hidden')) $('again-btn').click();
     }
   });
 
-  /* ---------- Fairness: end the round if the tab is hidden mid-game ---------- */
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && S.phase === 'playing') {
-      S.phase = 'idle';
-      cancelAnimationFrame(S.raf); clearTimeout(S.botTimer); clearTimeout(S.nextTimer);
-      el.box.classList.remove('live'); el.hint.classList.remove('show');
-      el.start.classList.remove('hidden');
-      toast('Round cancelled - tab was hidden');
+    if (document.hidden && S.phase === 'playing' && !S.isLive) {
+      S.phase = 'idle'; cancelAnimationFrame(S.raf); clearTimeout(S.botTimer); el.box.classList.remove('live'); el.start.classList.remove('hidden'); toast('Round cancelled - tab was hidden');
     }
   });
 })();
