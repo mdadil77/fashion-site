@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   
   <title>Swiplay Gaming Lounge | The Ultimate Arcade Experience</title>
   <meta name="description" content="Play fast-paced multiplayer arcade games including Swipe Game, Chess, Ludo, and WordRush. Chat globally, challenge friends, and climb the leaderboard!">
@@ -25,9 +25,14 @@
   <link rel="manifest" href="manifest.json">
 
   <!-- <script defer data-domain="YOUR-SITE-URL.com" src="https://plausible.io/js/script.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   
+  <script>
+    const SERVER_URL = 'https://YOUR-SERVER.onrender.com';
+  </script>
+
   <style>
     :root {
       --bg-dark: #080a10; --bg-light: #1a2035;
@@ -61,6 +66,11 @@
 
     .demo-badge { display: none; background: rgba(255,204,0,0.2); color: var(--gold); font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-left: 6px; border: 1px solid var(--gold); }
     body.demo-mode .demo-badge { display: inline-block; }
+
+    .conn-status { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; transition: 0.3s; }
+    .conn-status.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .conn-status.reconnecting { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulseGlow 1s infinite; }
+    .conn-status.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
 
     .avatar-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); aspect-ratio: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0; user-select: none; }
     .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
@@ -127,7 +137,7 @@
     .guest-banner:hover { background: rgba(255,204,0,0.2); }
 
     header { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: rgba(8, 10, 16, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); z-index: 10; padding-top: max(12px, var(--sat)); }
-    .header-logo { font-size: 1.5rem; font-weight: 900; }
+    .header-logo { display: flex; align-items: center; font-size: 1.5rem; font-weight: 900; }
     .header-logo span { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
     
     .header-actions { display: flex; align-items: center; gap: 12px; }
@@ -193,12 +203,14 @@
     .leaderboard-container { flex: 1; overflow-y: auto; padding: 24px; display: none; }
     .leaderboard-container.active { display: block; animation: fadeIn 0.3s; }
     .lb-filters { display: flex; gap: 10px; margin-bottom: 20px; }
+    .lb-best-text { font-size: 0.85rem; font-weight: 700; color: var(--accent); margin-bottom: 10px; display: none; }
     .lb-row { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; transition: 0.2s; }
     .lb-row:hover { background: rgba(255,255,255,0.06); }
     .lb-row.highlight { border: 1px solid var(--accent); background: rgba(0,255,102,0.05); }
     .lb-rank { font-weight: 900; font-size: 1.2rem; width: 30px; color: var(--text-muted); text-align: center; }
     .lb-rank.gold { color: var(--gold); } .lb-rank.silver { color: var(--silver); } .lb-rank.bronze { color: var(--bronze); }
     .lb-score { margin-left: auto; font-weight: 900; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+    .lb-empty { color: var(--text-muted); font-size: 0.9rem; font-style: italic; }
 
     .players-panel { width: 300px; border-left: 1px solid var(--glass-border); background: rgba(8, 10, 16, 0.4); display: flex; flex-direction: column; }
     .live-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); animation: pulseGlow 2s infinite; }
@@ -232,12 +244,13 @@
     .room-actions { display: none; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); margin-top: -10px; animation: fadeIn 0.3s; }
     .room-actions.active { display: flex; }
     .code-box { flex: 1; background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 1.2rem; font-weight: 800; letter-spacing: 4px; color: var(--accent); }
-    .finding-state, .coming-soon-state { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
+    
+    .finding-state, .coming-soon-state, .empty-lobby-state { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 3000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-    .toast { background: rgba(255,255,255,0.95); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: fadeSlideUp 0.3s ease-out forwards; }
+    .toast { background: rgba(255,255,255,0.95); color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: fadeSlideUp 0.3s ease-out forwards; pointer-events: auto; }
     @keyframes fadeOutDown { to { opacity: 0; transform: translateY(20px); } }
 
     .cookie-notice { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-light); border-top: 1px solid var(--glass-border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 2500; font-size: 0.85rem; transform: translateY(100%); transition: 0.4s; }
@@ -265,6 +278,7 @@
 </head>
 <body>
 
+  <!-- ONBOARDING -->
   <div id="onboarding-screen">
     <div class="glass onboarding-card">
       <h1 class="brand-title">Swi<span>play</span></h1>
@@ -303,9 +317,12 @@
       <div class="video-container">
         <video id="camera-video" autoplay playsinline muted></video>
         <img id="camera-preview" alt="Preview">
-        <div id="camera-error" class="camera-error-msg">Camera access denied.</div>
+        <div id="camera-error" class="camera-error-msg">
+          Camera access denied.<br><br>
+          <button class="btn-secondary" onclick="document.getElementById('cam-upload').click()" style="width:auto;font-size:0.8rem;">Upload a photo instead</button>
+        </div>
       </div>
-      <p class="privacy-note">🔒 Your photo stays on your device.</p>
+      <p class="privacy-note">🔒 Your name, avatar and scores are sent to our game server so multiplayer works. We don't store them permanently.</p>
       
       <div class="camera-actions" id="camera-action-capture">
         <button class="btn-secondary" id="cam-cancel">Cancel</button>
@@ -319,7 +336,7 @@
       </div>
     </div>
   </div>
-  <canvas id="camera-canvas" width="128" height="128" style="display: none;"></canvas>
+  <canvas id="camera-canvas" width="64" height="64" style="display: none;"></canvas>
 
   <div id="logout-modal" class="modal-overlay">
     <div class="glass modal-content" style="max-width: 300px; padding: 24px;">
@@ -332,11 +349,15 @@
     </div>
   </div>
 
+  <!-- MAIN LOBBY -->
   <div id="lobby-container">
-    <div class="guest-banner" id="guest-banner">Playing as guest. Finish your profile to chat and rank! ➔</div>
+    <div class="guest-banner" id="guest-banner">Playing as guest. Create a profile to appear on the leaderboard. ➔</div>
     
     <header>
-      <div class="header-logo">Swi<span>play</span></div>
+      <div class="header-logo">
+        <div id="conn-status" class="conn-status offline" title="Offline"></div>
+        Swi<span>play</span>
+      </div>
       <div class="header-actions">
         <div class="streak-chip" id="streak-chip" title="Daily Streak">🔥 <span id="streak-count">1</span></div>
         <button class="action-icon-btn" id="btn-share-site" title="Share Swiplay">🔗</button>
@@ -387,6 +408,7 @@
             <button class="filter-chip" data-lbf="week">This Week</button>
             <button class="filter-chip" data-lbf="all">All Time</button>
           </div>
+          <div id="lb-best-text" class="lb-best-text"></div>
           <div id="leaderboard-list"></div>
         </div>
       </section>
@@ -395,7 +417,7 @@
         <div class="panel-header">
           <div class="panel-title">Active Players<span class="demo-badge">Demo</span></div>
           <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">
-            <div class="live-dot"></div> <span id="online-count">0</span>
+            <div class="live-dot" id="live-dot" style="display:none;"></div> <span id="online-count">0</span>
           </div>
         </div>
         <div class="players-filter">
@@ -413,7 +435,7 @@
     <div class="desktop-footer">
       <span>© Swiplay Lounge</span>
       <a href="mailto:support@swiplay.com" onclick="trackEvent('mailto_click')">Report a problem</a>
-      <span>Privacy: Photos and names stay on your device until multiplayer launches.</span>
+      <span>Privacy: Your name, avatar and scores are sent to our game server so multiplayer works. We don't store them permanently.</span>
     </div>
 
     <nav class="mobile-tab-bar">
@@ -423,6 +445,7 @@
     </nav>
   </div>
 
+  <!-- GAME LAUNCH MODAL -->
   <div id="game-modal" class="modal-overlay">
     <div class="glass modal-content">
       <button class="modal-close" id="btn-close-modal">×</button>
@@ -431,6 +454,16 @@
         <div class="spinner"></div>
         <h3 style="font-weight: 800;">Finding opponent...</h3>
         <button class="btn-ghost" id="btn-cancel-finding">Cancel</button>
+      </div>
+
+      <div class="empty-lobby-state" id="empty-lobby-state">
+        <div class="modal-icon">👀</div>
+        <h3 style="font-weight: 800;">No players found</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">The lobby is quiet right now.</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; margin-top: 10px;">
+          <button class="btn-primary" id="btn-keep-waiting">Keep Waiting</button>
+          <button class="btn-secondary" id="btn-play-bot">Play vs Practice Bot</button>
+        </div>
       </div>
 
       <div class="coming-soon-state" id="coming-soon-state">
@@ -462,12 +495,12 @@
             </div>
           </div>
           <div id="created-room-display" style="display: none; flex-direction: column; gap: 8px; margin-top: 10px;">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">Share this code:</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">Your friend joins with this code. You'll both start together.</span>
             <div style="display: flex; gap: 8px;">
               <div class="code-box" id="new-room-code">----</div>
               <button class="btn-secondary" id="btn-copy-invite" style="width: auto; padding: 10px;">Copy Link</button>
             </div>
-            <button class="btn-primary" id="btn-enter-created" style="margin-top: 4px;">Enter Arena</button>
+            <button class="btn-primary" id="btn-enter-created" style="margin-top: 4px;">Enter Arena &amp; wait for friend</button>
           </div>
         </div>
       </div>
@@ -482,8 +515,14 @@
   </div>
 
   <script>
-    const DEMO_MODE = true; 
-    if (DEMO_MODE) document.body.classList.add('demo-mode');
+    // --- NETWORKING & STATE ---
+    let DEMO_MODE = true; 
+    let currentUser = null;
+    let isEditingProfile = false;
+    let realPlayers = [];
+    let realLeaderboard = { swipe: { today: [], week: [], all: [] } };
+    let selectedGame = null;
+    let pendingGame = null;
 
     const Storage = {
       get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } },
@@ -491,39 +530,85 @@
       remove(key) { try { localStorage.removeItem(key); } catch(e) {} }
     };
 
+    if (!SERVER_URL.includes('YOUR-SERVER')) {
+      fetch(SERVER_URL + '/health', {mode:'no-cors'}).catch(()=>{});
+    }
+
     function showToast(msg) {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      toast.className = 'toast'; toast.textContent = msg;
+      toast.className = 'toast'; 
+      toast.textContent = msg;
       container.appendChild(toast);
       setTimeout(() => {
         toast.style.animation = 'fadeOutDown 0.3s ease-in forwards';
         setTimeout(() => toast.remove(), 300);
       }, 3000);
+      return toast;
+    }
+
+    function showInviteToast(fromName, gameId, inviteId) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      
+      const nameNode = document.createElement('strong');
+      nameNode.textContent = fromName;
+      toast.appendChild(nameNode);
+      
+      const gameTitle = GAMES.find(g => g.id === gameId)?.title || 'a game';
+      toast.appendChild(document.createTextNode(` invited you to ${gameTitle}! `));
+      
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'margin-top:10px; display:flex; gap:10px;';
+      
+      const btnAcc = document.createElement('button');
+      btnAcc.className = 'btn-primary'; btnAcc.style.cssText = 'padding:6px; font-size:0.8rem;';
+      btnAcc.textContent = 'Accept';
+      
+      const btnDec = document.createElement('button');
+      btnDec.className = 'btn-secondary'; btnDec.style.cssText = 'padding:6px; font-size:0.8rem;';
+      btnDec.textContent = 'Decline';
+      
+      btnRow.append(btnAcc, btnDec);
+      toast.appendChild(btnRow);
+      container.appendChild(toast);
+      
+      let expired = false;
+      const expireTimer = setTimeout(() => {
+        expired = true;
+        toast.style.animation = 'fadeOutDown 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 30000);
+
+      btnAcc.onclick = () => {
+        if(expired) return;
+        clearTimeout(expireTimer);
+        pendingGame = GAMES.find(g => g.id === gameId);
+        net.socket.emit('invite:accept', { fromUserId: inviteId.split('-')[0] || inviteId, gameId });
+        toast.remove();
+      };
+      btnDec.onclick = () => { if(!expired) { clearTimeout(expireTimer); toast.remove(); } };
     }
 
     function trackEvent(eventName, props = {}) {
-      try {
-        if (window.plausible) window.plausible(eventName, { props });
-      } catch(e) {}
+      try { if (window.plausible) window.plausible(eventName, { props }); } catch(e) {}
     }
 
     function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-    
-    const BAD_WORDS = ['fuck', 'shit', 'bitch', 'dick', 'cunt', 'bastard'];
-    function filterProfanity(text) {
-      return BAD_WORDS.reduce((t, w) => t.replace(new RegExp(`\\b${w}\\b`, 'gi'), '***'), text);
-    }
 
     function renderAvatar(user, sizePx = 40) {
       const wrapper = document.createElement('div');
       wrapper.className = 'avatar-wrapper';
       wrapper.style.width = `${sizePx}px`; wrapper.style.height = `${sizePx}px`;
       
-      if (user.avatarType === 'photo') {
+      if (user.avatarType === 'photo' && user.avatar && user.avatar.startsWith('data:image/')) {
         const img = document.createElement('img'); img.src = user.avatar; wrapper.appendChild(img);
       } else {
-        wrapper.textContent = user.avatar || '🤖'; wrapper.style.fontSize = `${sizePx * 0.6}px`;
+        const txt = document.createElement('div');
+        txt.textContent = (user.avatar || '🤖').substring(0, 8);
+        txt.style.fontSize = `${sizePx * 0.6}px`;
+        wrapper.appendChild(txt);
       }
       if (user.gender && user.gender !== 'none') {
         const dot = document.createElement('div');
@@ -531,6 +616,12 @@
         wrapper.appendChild(dot);
       }
       return wrapper;
+    }
+
+    const BAD_WORDS = ['fuck', 'shit', 'bitch', 'dick', 'cunt', 'bastard'];
+    function isProfane(text) {
+      const norm = text.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return BAD_WORDS.some(w => norm.includes(w));
     }
 
     const GAMES = [
@@ -566,8 +657,95 @@
       ]
     };
 
-    let currentUser = null;
-    let isEditingProfile = false;
+    let connTimeout = null;
+
+    const net = {
+      socket: null,
+      connected: false,
+      connect() {
+        if (!SERVER_URL.includes('YOUR-SERVER')) {
+          const statusDot = document.getElementById('conn-status');
+          statusDot.className = 'conn-status reconnecting';
+          
+          let wokeToastShown = false;
+          let wakeToast = setTimeout(() => {
+            if(!this.connected) { showToast("Waking up the server, this can take ~30 seconds..."); wokeToastShown = true; }
+          }, 2000);
+
+          connTimeout = setTimeout(() => {
+            if(!this.connected) {
+              showToast("Server unreachable, playing in demo mode");
+              DEMO_MODE = true; document.body.classList.add('demo-mode');
+            }
+          }, 45000);
+
+          this.socket = io(SERVER_URL);
+          
+          this.socket.on('connect', () => {
+            clearTimeout(wakeToast); clearTimeout(connTimeout);
+            this.connected = true;
+            DEMO_MODE = false;
+            document.body.classList.remove('demo-mode');
+            statusDot.className = 'conn-status online';
+            document.getElementById('live-dot').style.display = 'block';
+            document.getElementById('chat-messages').innerHTML = ''; 
+            
+            this.socket.emit('hello', currentUser);
+          });
+
+          this.socket.on('disconnect', () => {
+            this.connected = false;
+            DEMO_MODE = true;
+            document.body.classList.add('demo-mode');
+            statusDot.className = 'conn-status offline';
+            document.getElementById('live-dot').style.display = 'none';
+          });
+
+          this.socket.on('players:update', (players) => {
+            realPlayers = players;
+            if(!DEMO_MODE) updatePlayers();
+          });
+
+          this.socket.on('chat:history', (msgs) => {
+            document.getElementById('chat-messages').innerHTML = '';
+            msgs.forEach(m => addMessage(m.user, m.text, m.user.id === currentUser.id));
+          });
+
+          this.socket.on('chat:message', (msg) => {
+            addMessage(msg.user, msg.text, msg.user.id === currentUser.id);
+          });
+
+          this.socket.on('leaderboard:update', (lb) => {
+            if (lb && lb.swipe) realLeaderboard = lb;
+            if(!DEMO_MODE) loadLeaderboard(document.querySelector('#leaderboard-view .filter-chip.active').dataset.lbf);
+          });
+
+          this.socket.on('error:toast', (msg) => showToast(msg));
+          this.socket.on('toast', (msg) => showToast(msg));
+
+          this.socket.on('match:found', ({ room }) => {
+            clearTimeout(findingTimeout); clearTimeout(fallbackTimeout);
+            const tg = pendingGame || selectedGame || GAMES.find(g => g.id === 'swipe');
+            location.href = `${tg.file}?mode=random&room=${room}`;
+          });
+
+          this.socket.on('room:created', (code) => {
+            document.getElementById('new-room-code').textContent = code;
+            document.getElementById('created-room-display').style.display = 'flex';
+          });
+
+          this.socket.on('invite:receive', ({ from, gameId, inviteId }) => {
+            showInviteToast(from.name, gameId, from.id);
+          });
+        }
+      },
+      sendChat(txt) { if(this.connected) this.socket.emit('chat:send', txt); },
+      findMatch(gameId) { if(this.connected) this.socket.emit('match:find', { gameId }); },
+      cancelMatch() { if(this.connected) this.socket.emit('match:cancel'); },
+      createRoom() { if(this.connected) this.socket.emit('room:create'); },
+      joinRoom(code) { if(this.connected) this.socket.emit('room:join', code); },
+      sendInvite(userId, gameId) { if(this.connected) this.socket.emit('invite:send', { toUserId: userId, gameId }); }
+    };
 
     function initApp() {
       if ('serviceWorker' in navigator && location.protocol === 'https:') {
@@ -598,17 +776,14 @@
       if (currentUser && currentUser.name && currentUser.avatar) {
         initLobby();
         checkJoinURL();
+        net.connect();
       } else {
         initOnboarding();
       }
     }
 
-    // Run initialization safely
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      initApp();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+    else initApp();
 
     function checkJoinURL() {
       const params = new URLSearchParams(location.search);
@@ -627,17 +802,17 @@
     }
 
     let cameraStream = null;
-
     function stopCamera() {
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       document.getElementById('camera-video').srcObject = null;
     }
 
+    window.addEventListener('beforeunload', stopCamera);
+
     function initOnboarding(editing = false) {
       isEditingProfile = editing;
       const obScreen = document.getElementById('onboarding-screen');
-      obScreen.style.display = 'flex';
-      obScreen.style.opacity = '1';
+      obScreen.style.display = 'flex'; obScreen.style.opacity = '1';
       
       let obState = { name: '', avatar: null, avatarType: 'emoji', gender: null };
       
@@ -649,14 +824,11 @@
       
       if (editing) {
         submitBtn.textContent = 'Save changes';
-        guestBtn.style.display = 'none';
-        cancelBtn.style.display = 'block';
-        obState = Object.assign({}, currentUser);
-        nameInput.value = obState.name;
+        guestBtn.style.display = 'none'; cancelBtn.style.display = 'block';
+        obState = Object.assign({}, currentUser); nameInput.value = obState.name;
       } else {
         submitBtn.textContent = 'Enter Lounge';
-        guestBtn.style.display = 'block';
-        cancelBtn.style.display = 'none';
+        guestBtn.style.display = 'block'; cancelBtn.style.display = 'none';
       }
 
       const emojis = ['🤖', '🦊', '⚡', '👑', '🐼', '🦁', '🐲', '🚀', '🎮', '👾'];
@@ -673,15 +845,21 @@
           avatarNodes.forEach(n => n.classList.remove('selected'));
           btn.classList.add('selected');
           camBtn.classList.remove('selected');
-          camBtn.innerHTML = '<span>📷</span><small>Use photo</small>'; 
+          camBtn.innerHTML = '';
+          const s = document.createElement('span'); s.textContent = '📷';
+          const sm = document.createElement('small'); sm.textContent = 'Use photo';
+          camBtn.append(s, sm);
           obState.avatar = e; obState.avatarType = 'emoji'; checkValid();
         };
         grid.appendChild(btn); avatarNodes.push(btn);
       });
 
-      if (editing && obState.avatarType === 'photo') {
+      if (editing && obState.avatarType === 'photo' && obState.avatar.startsWith('data:image/')) {
         camBtn.classList.add('selected');
-        camBtn.innerHTML = `<img src="${obState.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+        camBtn.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = obState.avatar; img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+        camBtn.appendChild(img);
       }
 
       const genderPills = document.querySelectorAll('.gender-pill');
@@ -696,16 +874,14 @@
 
       nameInput.oninput = () => {
         const val = nameInput.value.trim();
-        if (val.length > 0 && val.length < 2) nameErr.textContent = 'Nickname too short (min 2)';
-        else if (val.length > 14) nameErr.textContent = 'Nickname too long (max 14)';
-        else nameErr.textContent = '';
-        obState.name = val; checkValid();
+        if (val.length > 0 && val.length < 2) { nameErr.textContent = 'Nickname too short (min 2)'; obState.name=''; }
+        else if (val.length > 14) { nameErr.textContent = 'Nickname too long (max 14)'; obState.name=''; }
+        else if (isProfane(val)) { nameErr.textContent = 'Please choose a different nickname.'; obState.name=''; }
+        else { nameErr.textContent = ''; obState.name = val; }
+        checkValid();
       };
 
-      function checkValid() {
-        const n = obState.name.length;
-        submitBtn.disabled = !((n >= 2 && n <= 14) && obState.avatar && obState.gender);
-      }
+      function checkValid() { submitBtn.disabled = !((obState.name.length >= 2 && obState.name.length <= 14) && obState.avatar && obState.gender); }
       checkValid();
 
       const camModal = document.getElementById('camera-modal');
@@ -716,20 +892,15 @@
       const ctx = canvas.getContext('2d');
       let tempPhoto = null;
 
-      const actCapture = document.getElementById('camera-action-capture');
-      const actConfirm = document.getElementById('camera-action-confirm');
-      const fileInput = document.getElementById('ob-file-input');
-
       camBtn.onclick = async () => {
         camModal.style.display = 'flex'; preview.style.display = 'none'; camErr.style.display = 'none';
-        video.style.display = 'block'; actCapture.style.display = 'flex'; actConfirm.style.display = 'none';
+        video.style.display = 'block'; document.getElementById('camera-action-capture').style.display = 'flex'; document.getElementById('camera-action-confirm').style.display = 'none';
         document.getElementById('cam-capture').style.display = 'block';
         try {
           cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
           video.srcObject = cameraStream;
         } catch (err) {
-          video.style.display = 'none'; camErr.style.display = 'flex';
-          document.getElementById('cam-capture').style.display = 'none';
+          video.style.display = 'none'; camErr.style.display = 'flex'; document.getElementById('cam-capture').style.display = 'none';
         }
       };
 
@@ -738,36 +909,32 @@
       camModal.onclick = (e) => { if (e.target === camModal) closeCam(); };
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && camModal.style.display==='flex') closeCam(); });
       
+      const fileInput = document.getElementById('ob-file-input');
       document.getElementById('cam-upload').onclick = () => { stopCamera(); fileInput.click(); };
       fileInput.onchange = (e) => {
         const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
-        reader.onload = (ev) => {
-          const img = new Image(); img.onload = () => processImageToCanvas(img); img.src = ev.target.result;
-        };
+        reader.onload = (ev) => { const img = new Image(); img.onload = () => processImageToCanvas(img); img.src = ev.target.result; };
         reader.readAsDataURL(file);
       };
 
       document.getElementById('cam-capture').onclick = () => { if (cameraStream) processImageToCanvas(video, true); };
 
       function processImageToCanvas(source, isVideo = false) {
-        const sw = isVideo ? source.videoWidth : source.width;
-        const sh = isVideo ? source.videoHeight : source.height;
-        const size = Math.min(sw, sh);
-        const sx = (sw - size) / 2; const sy = (sh - size) / 2;
-        ctx.clearRect(0, 0, 128, 128);
-        ctx.drawImage(source, sx, sy, size, size, 0, 0, 128, 128);
-        tempPhoto = canvas.toDataURL('image/jpeg', 0.8);
+        const sw = isVideo ? source.videoWidth : source.width; const sh = isVideo ? source.videoHeight : source.height;
+        const size = Math.min(sw, sh); const sx = (sw - size) / 2; const sy = (sh - size) / 2;
+        ctx.clearRect(0, 0, 64, 64); ctx.drawImage(source, sx, sy, size, size, 0, 0, 64, 64);
+        tempPhoto = canvas.toDataURL('image/jpeg', 0.6);
         
         preview.src = tempPhoto; preview.style.display = 'block';
         video.style.display = 'none'; camErr.style.display = 'none';
-        actCapture.style.display = 'none'; actConfirm.style.display = 'flex';
+        document.getElementById('camera-action-capture').style.display = 'none'; document.getElementById('camera-action-confirm').style.display = 'flex';
         if(isVideo) stopCamera();
       }
 
       document.getElementById('cam-retake').onclick = async () => {
         preview.style.display = 'none'; video.style.display = 'block';
-        actCapture.style.display = 'flex'; actConfirm.style.display = 'none';
+        document.getElementById('camera-action-capture').style.display = 'flex'; document.getElementById('camera-action-confirm').style.display = 'none';
         try { cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }); video.srcObject = cameraStream; } 
         catch (err) { video.style.display = 'none'; camErr.style.display = 'flex'; }
       };
@@ -775,21 +942,22 @@
       document.getElementById('cam-use').onclick = () => {
         obState.avatar = tempPhoto; obState.avatarType = 'photo';
         avatarNodes.forEach(n => n.classList.remove('selected'));
-        camBtn.classList.add('selected');
-        camBtn.innerHTML = `<img src="${tempPhoto}" style="width:100%; height:100%; object-fit:cover;">`;
+        camBtn.classList.add('selected'); 
+        camBtn.innerHTML = '';
+        const img = document.createElement('img'); img.src = tempPhoto; img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+        camBtn.appendChild(img);
         closeCam(); checkValid();
       };
 
       submitBtn.onclick = () => {
         currentUser = {
           id: (currentUser && currentUser.id) ? currentUser.id : ('user_' + Math.random().toString(36).substr(2, 9)),
-          name: obState.name, avatar: obState.avatar, avatarType: obState.avatarType, gender: obState.gender
+          name: obState.name, avatar: (obState.avatarType==='emoji' ? obState.avatar.substring(0,8) : obState.avatar), avatarType: obState.avatarType, gender: obState.gender, isGuest: false
         };
         Storage.set('swiplay_user', currentUser);
         trackEvent('profile_saved', { isEdit: isEditingProfile });
         
-        if (isEditingProfile) { location.reload(); return; }
-        obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; initLobby(); checkJoinURL(); }, 400);
+        if (isEditingProfile) { location.reload(); return; } obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; initLobby(); checkJoinURL(); net.connect(); }, 400);
       };
 
       guestBtn.onclick = () => {
@@ -797,7 +965,7 @@
         currentUser = { id: 'guest_' + num, name: 'Guest' + num, avatar: emojis[Math.floor(Math.random()*emojis.length)], avatarType: 'emoji', gender: 'none', isGuest: true };
         Storage.set('swiplay_user', currentUser);
         trackEvent('guest_play');
-        location.href = 'swipe-game.html?mode=random';
+        location.href = 'swipe-game.html?mode=bot';
       };
 
       cancelBtn.onclick = () => { obScreen.style.opacity = '0'; setTimeout(() => { obScreen.style.display = 'none'; }, 400); };
@@ -809,11 +977,8 @@
       
       const guestBanner = document.getElementById('guest-banner');
       if (currentUser.isGuest) {
-        guestBanner.style.display = 'block';
-        guestBanner.onclick = () => initOnboarding(true);
-      } else {
-        guestBanner.style.display = 'none';
-      }
+        guestBanner.style.display = 'block'; guestBanner.onclick = () => initOnboarding(true);
+      } else { guestBanner.style.display = 'none'; }
 
       const slot = document.getElementById('header-avatar-slot');
       slot.innerHTML = ''; slot.appendChild(renderAvatar(currentUser, 32));
@@ -831,8 +996,7 @@
       document.getElementById('btn-confirm-logout').onclick = () => { Storage.remove('swiplay_user'); location.reload(); };
 
       document.getElementById('btn-share-site').onclick = async () => {
-        trackEvent('share_click');
-        const url = location.href.split('?')[0];
+        trackEvent('share_click'); const url = location.href.split('?')[0];
         try {
           if (navigator.share) await navigator.share({ title: 'Swiplay Lounge', text: 'Come play multiplayer games with me on Swiplay!', url: url });
           else { await navigator.clipboard.writeText(url); showToast('Link copied!'); }
@@ -844,8 +1008,7 @@
         tab.onclick = () => {
           centerTabs.forEach(t => t.classList.remove('active'));
           document.querySelectorAll('#panel-center > div:not(.center-header)').forEach(v => v.classList.remove('active'));
-          tab.classList.add('active');
-          document.getElementById(tab.dataset.target).classList.add('active');
+          tab.classList.add('active'); document.getElementById(tab.dataset.target).classList.add('active');
         };
       });
 
@@ -854,8 +1017,7 @@
         tab.onclick = () => {
           mTabs.forEach(t => t.classList.remove('active'));
           document.querySelectorAll('.lobby-body > .panel').forEach(p => p.classList.remove('active'));
-          tab.classList.add('active');
-          document.getElementById(tab.dataset.target).classList.add('active');
+          tab.classList.add('active'); document.getElementById(tab.dataset.target).classList.add('active');
         };
       });
 
@@ -866,7 +1028,6 @@
       initGameModal();
     }
 
-    let selectedGame = null;
     function renderGamesGrid() {
       const grid = document.getElementById('games-grid');
       grid.innerHTML = '';
@@ -880,51 +1041,70 @@
         }
         const icon = document.createElement('div'); icon.className = 'game-icon'; icon.textContent = game.icon;
         const info = document.createElement('div'); info.className = 'game-info';
-        info.innerHTML = `<h3>${escapeHTML(game.title)}</h3><p>${escapeHTML(game.desc)}</p>`;
-        card.append(icon, info);
-        card.onclick = () => openGameModal(game);
-        grid.appendChild(card);
+        
+        const h3 = document.createElement('h3'); h3.textContent = game.title;
+        const pDesc = document.createElement('p'); pDesc.textContent = game.desc;
+        info.append(h3, pDesc);
+
+        card.append(icon, info); card.onclick = () => openGameModal(game); grid.appendChild(card);
+      });
+    }
+
+    function loadLeaderboard(range) {
+      const list = document.getElementById('leaderboard-list');
+      const bestTxt = document.getElementById('lb-best-text');
+      list.innerHTML = '';
+      
+      let data = [];
+      if (DEMO_MODE) {
+        data = [...(MOCK_LEADERBOARD[range] || [])];
+      } else {
+        data = [...(realLeaderboard?.swipe?.[range] || [])];
+      }
+      
+      const myBest = Storage.get('swiplay_best');
+      if (myBest && !currentUser.isGuest) {
+        bestTxt.style.display = 'block';
+        bestTxt.textContent = `Your best: ${myBest}`;
+        if (DEMO_MODE) {
+          data.push({ name: currentUser.name, avatar: currentUser.avatar, avatarType: currentUser.avatarType, gender: currentUser.gender, score: parseInt(myBest), isMe: true });
+        }
+      } else {
+        bestTxt.style.display = 'none';
+      }
+      
+      let unique = [];
+      data.sort((a, b) => b.score - a.score).forEach(p => {
+        if (!unique.find(u => u.name === p.name && !p.isMe)) unique.push(p);
+      });
+      unique = unique.slice(0, 10);
+
+      if (unique.length === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'lb-empty'; emptyMsg.textContent = "No scores yet, be the first!";
+        list.appendChild(emptyMsg);
+        return;
+      }
+
+      unique.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = `lb-row ${p.isMe ? 'highlight' : ''}`;
+        const rank = document.createElement('div');
+        rank.className = `lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}`;
+        rank.textContent = `#${i+1}`;
+        const score = document.createElement('div');
+        score.className = 'lb-score'; score.textContent = p.score;
+        row.append(rank, renderAvatar(p, 36), document.createTextNode(p.isMe ? p.name + ' (You)' : p.name), score);
+        list.appendChild(row);
       });
     }
 
     function initLeaderboard() {
-      const list = document.getElementById('leaderboard-list');
       const filters = document.querySelectorAll('#leaderboard-view .filter-chip');
-      
-      function loadLeaderboard(range) {
-        list.innerHTML = '';
-        let data = [...(MOCK_LEADERBOARD[range] || [])];
-        
-        const myBest = Storage.get('swiplay_best');
-        if (myBest && !currentUser.isGuest) {
-          data.push({ name: currentUser.name, avatar: currentUser.avatar, avatarType: currentUser.avatarType, gender: currentUser.gender, score: parseInt(myBest), isMe: true });
-        }
-        
-        data.sort((a, b) => b.score - a.score);
-        data = data.slice(0, 10); 
-
-        data.forEach((p, i) => {
-          const row = document.createElement('div');
-          row.className = `lb-row ${p.isMe ? 'highlight' : ''}`;
-          
-          const rank = document.createElement('div');
-          rank.className = `lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}`;
-          rank.textContent = `#${i+1}`;
-
-          const score = document.createElement('div');
-          score.className = 'lb-score';
-          score.textContent = p.score;
-
-          row.append(rank, renderAvatar(p, 36), document.createTextNode(p.isMe ? p.name + ' (You)' : p.name), score);
-          list.appendChild(row);
-        });
-      }
-
       filters.forEach(f => {
         f.onclick = () => {
           filters.forEach(x => x.classList.remove('active'));
-          f.classList.add('active');
-          loadLeaderboard(f.dataset.lbf);
+          f.classList.add('active'); loadLeaderboard(f.dataset.lbf);
         };
       });
       loadLeaderboard('today');
@@ -948,113 +1128,131 @@
       emojiBtn.onclick = (e) => { e.stopPropagation(); emojiPicker.classList.toggle('active'); };
       document.addEventListener('click', (e) => { if(!e.target.closest('.chat-input-area')) emojiPicker.classList.remove('active'); });
 
-      function addMessage(user, text, isOwn, isDemo = false) {
+      function addMessage(user, text, isOwn) {
         const row = document.createElement('div'); row.className = `chat-msg-row ${isOwn ? 'own' : ''}`;
         const content = document.createElement('div'); content.className = 'msg-content';
         const header = document.createElement('div'); header.className = 'msg-header';
         
         const name = document.createElement('span'); name.className = 'msg-name';
-        name.textContent = user.name + (isDemo && DEMO_MODE ? ' (Bot)' : '');
+        name.textContent = user.name + (DEMO_MODE && !isOwn ? ' (Bot)' : '');
         
         const time = document.createElement('span'); time.className = 'msg-time';
         const d = new Date(); time.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
         
         header.append(name, time);
         const bubble = document.createElement('div'); bubble.className = 'msg-bubble';
-        bubble.textContent = filterProfanity(text);
+        bubble.textContent = text; // Safe textContent
         
         content.append(header, bubble); row.append(renderAvatar(user, 36), content);
         container.appendChild(row); container.scrollTop = container.scrollHeight;
       }
 
-      function sendChatMessage() {
+      function sendClientChat() {
         const text = input.value.trim(); if(!text) return;
-        const now = Date.now();
-        if(now - lastChatTime < 1000) { showToast('Please wait a second before sending.'); return; }
         
-        addMessage(currentUser, text, true); input.value = ''; lastChatTime = now;
-        if (DEMO_MODE) setTimeout(() => { if(Math.random() > 0.5) addMessage(MOCK_PLAYERS[0], 'gg bro 🔥', false, true); }, 2000);
+        if (DEMO_MODE) {
+          addMessage(currentUser, text, true); input.value = '';
+          setTimeout(() => { if(Math.random() > 0.5) addMessage(MOCK_PLAYERS[0], 'gg bro 🔥', false); }, 2000);
+        } else {
+          net.sendChat(text); input.value = '';
+        }
       }
+      window.addMessage = addMessage;
+      sendBtn.onclick = sendClientChat;
+      input.onkeypress = (e) => { if(e.key === 'Enter') sendClientChat(); };
+      
+      setTimeout(() => {
+        if(DEMO_MODE) addMessage(MOCK_PLAYERS[3], 'Anyone for Swipe Game?', false);
+      }, 1000);
+    }
 
-      sendBtn.onclick = sendChatMessage;
-      input.onkeypress = (e) => { if(e.key === 'Enter') sendChatMessage(); };
-      if(DEMO_MODE) setTimeout(() => addMessage(MOCK_PLAYERS[3], 'Anyone for Swipe Game?', false, true), 1000);
+    function updatePlayers() {
+      const list = document.getElementById('players-list');
+      const search = document.getElementById('player-search');
+      const currentFilter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
+
+      const dataSource = DEMO_MODE ? MOCK_PLAYERS : realPlayers;
+      document.getElementById('online-count').textContent = DEMO_MODE ? MOCK_PLAYERS.length + 124 : Math.max(1, dataSource.length);
+
+      list.innerHTML = '';
+      const q = search.value.toLowerCase();
+      
+      if('all' === currentFilter || currentUser.gender === currentFilter || currentUser.isGuest) {
+        if(currentUser.name.toLowerCase().includes(q)) list.appendChild(createPlayerRow(currentUser, true));
+      }
+      
+      dataSource.forEach(p => {
+        if (p.id === currentUser.id) return;
+        if(currentFilter !== 'all' && p.gender !== currentFilter) return;
+        if(!p.name.toLowerCase().includes(q)) return;
+        list.appendChild(createPlayerRow(p, false));
+      });
+    }
+
+    function createPlayerRow(p, isSelf) {
+      const row = document.createElement('div'); row.className = 'player-row';
+      const info = document.createElement('div'); info.className = 'player-info'; info.appendChild(renderAvatar(p, 40));
+      const det = document.createElement('div'); det.className = 'player-details';
+      const name = document.createElement('span'); name.className = 'player-name'; name.textContent = isSelf ? p.name + ' (You)' : p.name;
+      const status = document.createElement('span'); status.className = `player-status ${(p.status||'online').replace(' ','').toLowerCase()}`; status.textContent = isSelf ? 'Online' : p.status;
+      det.append(name, status); info.appendChild(det); row.appendChild(info);
+
+      if(!isSelf && p.status !== 'in-game') {
+        const inv = document.createElement('button'); inv.className = 'invite-btn'; inv.textContent = 'Invite';
+        inv.onclick = () => {
+          const avail = GAMES.filter(g => g.available);
+          if (DEMO_MODE) return showToast(`Invite sent to ${p.name}!`);
+          if (avail.length === 1) {
+            net.sendInvite(p.id, avail[0].id);
+            showToast(`Invite sent to ${p.name}!`);
+          } else if (avail.length > 1) {
+            net.sendInvite(p.id, avail[0].id); 
+            showToast(`Invite sent to ${p.name}!`);
+          }
+        };
+        row.appendChild(inv);
+      }
+      return row;
     }
 
     function initPlayersList() {
-      const list = document.getElementById('players-list');
       const search = document.getElementById('player-search');
       const filters = document.querySelectorAll('#panel-players .filter-chip');
-      let currentFilter = 'all';
-
-      document.getElementById('online-count').textContent = DEMO_MODE ? MOCK_PLAYERS.length + 124 : 1;
-
-      function updatePlayers() {
-        list.innerHTML = '';
-        const q = search.value.toLowerCase();
-        
-        if('all' === currentFilter || currentUser.gender === currentFilter || currentUser.isGuest) {
-          if(currentUser.name.toLowerCase().includes(q)) list.appendChild(createPlayerRow(currentUser, true));
-        }
-        if(DEMO_MODE) {
-          MOCK_PLAYERS.forEach(p => {
-            if(currentFilter !== 'all' && p.gender !== currentFilter) return;
-            if(!p.name.toLowerCase().includes(q)) return;
-            list.appendChild(createPlayerRow(p, false));
-          });
-        }
-      }
-
-      function createPlayerRow(p, isSelf) {
-        const row = document.createElement('div'); row.className = 'player-row';
-        const info = document.createElement('div'); info.className = 'player-info'; info.appendChild(renderAvatar(p, 40));
-        const det = document.createElement('div'); det.className = 'player-details';
-        const name = document.createElement('span'); name.className = 'player-name'; name.textContent = isSelf ? p.name + ' (You)' : p.name;
-        const status = document.createElement('span'); status.className = `player-status ${(p.status||'online').replace(' ','').toLowerCase()}`; status.textContent = isSelf ? 'Online' : p.status;
-        det.append(name, status); info.appendChild(det); row.appendChild(info);
-
-        if(!isSelf) {
-          const inv = document.createElement('button'); inv.className = 'invite-btn'; inv.textContent = 'Invite';
-          inv.onclick = () => { showToast(`Invite sent to ${p.name}!`); }; row.appendChild(inv);
-        }
-        return row;
-      }
       search.addEventListener('input', updatePlayers);
       filters.forEach(f => {
-        f.onclick = () => { filters.forEach(x => x.classList.remove('active')); f.classList.add('active'); currentFilter = f.dataset.filter; updatePlayers(); };
+        f.onclick = () => { filters.forEach(x => x.classList.remove('active')); f.classList.add('active'); updatePlayers(); };
       });
       updatePlayers();
     }
 
     let findingTimeout = null;
+    let fallbackTimeout = null;
 
     function initGameModal() {
       const modal = document.getElementById('game-modal');
       const mainView = document.getElementById('modal-main-view');
       const findingView = document.getElementById('finding-state');
+      const emptyView = document.getElementById('empty-lobby-state');
       const soonView = document.getElementById('coming-soon-state');
       const roomActions = document.getElementById('room-actions');
       const codeDisp = document.getElementById('created-room-display');
       const joinErr = document.getElementById('join-error');
 
       function resetModal() {
-        clearTimeout(findingTimeout);
-        findingView.style.display = 'none';
-        roomActions.classList.remove('active');
-        codeDisp.style.display = 'none';
-        document.getElementById('join-room-input').value = '';
-        joinErr.textContent = '';
+        clearTimeout(findingTimeout); clearTimeout(fallbackTimeout);
+        if(!DEMO_MODE) net.cancelMatch();
+        findingView.style.display = 'none'; emptyView.style.display = 'none';
+        roomActions.classList.remove('active'); codeDisp.style.display = 'none';
+        document.getElementById('join-room-input').value = ''; joinErr.textContent = '';
         
         if (selectedGame && !selectedGame.available) {
-          mainView.style.display = 'none';
-          soonView.style.display = 'flex';
+          mainView.style.display = 'none'; soonView.style.display = 'flex';
         } else {
-          mainView.style.display = 'block';
-          soonView.style.display = 'none';
+          mainView.style.display = 'block'; soonView.style.display = 'none';
         }
       }
 
-      const closeModal = () => { modal.style.display = 'none'; clearTimeout(findingTimeout); };
+      const closeModal = () => { modal.style.display = 'none'; resetModal(); };
       document.getElementById('btn-close-modal').onclick = closeModal;
       modal.onclick = (e) => { if(e.target === modal) closeModal(); };
       document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
@@ -1066,8 +1264,7 @@
         document.getElementById('modal-g-icon').textContent = game.icon;
         document.getElementById('modal-g-title').textContent = game.title;
         document.getElementById('modal-g-desc').textContent = game.desc;
-        resetModal();
-        modal.style.display = 'flex';
+        resetModal(); modal.style.display = 'flex';
       };
 
       document.getElementById('btn-notify-me').onclick = () => {
@@ -1076,37 +1273,63 @@
         showToast("We'll let you know!"); closeModal();
       };
 
+      function startMatchmaking() {
+        mainView.style.display = 'none'; emptyView.style.display = 'none'; findingView.style.display = 'flex';
+        
+        if (DEMO_MODE) {
+          findingTimeout = setTimeout(() => { location.href = `${selectedGame.file}?mode=random`; }, 1500);
+        } else {
+          net.findMatch(selectedGame.id);
+          fallbackTimeout = setTimeout(() => {
+            findingView.style.display = 'none';
+            emptyView.style.display = 'flex';
+            net.cancelMatch();
+          }, 10000);
+        }
+      }
+
       document.getElementById('btn-play-random').onclick = () => {
         trackEvent('play_random', { game_id: selectedGame.id });
-        mainView.style.display = 'none'; findingView.style.display = 'flex';
-        findingTimeout = setTimeout(() => { location.href = `${selectedGame.file}?mode=random`; }, 1500);
+        startMatchmaking();
       };
+      
+      document.getElementById('btn-keep-waiting').onclick = startMatchmaking;
+      document.getElementById('btn-play-bot').onclick = () => { location.href = `${selectedGame.file}?mode=bot`; };
 
       document.getElementById('btn-play-friend').onclick = () => { roomActions.classList.toggle('active'); };
 
       let currentRoomCode = '';
       document.getElementById('btn-create-room').onclick = () => {
         trackEvent('create_room', { game_id: selectedGame.id });
-        currentRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-        document.getElementById('new-room-code').textContent = currentRoomCode;
-        codeDisp.style.display = 'flex';
+        if (DEMO_MODE) {
+          currentRoomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+          document.getElementById('new-room-code').textContent = currentRoomCode;
+          codeDisp.style.display = 'flex';
+        } else {
+          net.createRoom(); 
+        }
       };
 
       document.getElementById('btn-copy-invite').onclick = async () => {
-        const link = `${location.href.split('?')[0]}?join=${selectedGame.id}-${currentRoomCode}`;
+        const code = document.getElementById('new-room-code').textContent;
+        const link = `${location.href.split('?')[0]}?join=${selectedGame.id}-${code}`;
         try {
           if (navigator.share) await navigator.share({ title: 'Join my Swiplay Room', text: `Let's play ${selectedGame.title}!`, url: link });
           else { await navigator.clipboard.writeText(link); showToast('Link copied!'); }
         } catch(e) {}
       };
 
-      document.getElementById('btn-enter-created').onclick = () => { location.href = `${selectedGame.file}?mode=friend&room=${currentRoomCode}`; };
+      document.getElementById('btn-enter-created').onclick = () => { 
+        const code = document.getElementById('new-room-code').textContent;
+        location.href = `${selectedGame.file}?mode=friend&room=${code}`; 
+      };
 
       document.getElementById('btn-join-room').onclick = () => {
         const code = document.getElementById('join-room-input').value.trim().toUpperCase();
         if(!/^[A-Z0-9]{4}$/.test(code)) { joinErr.textContent = 'Code must be 4 letters/numbers.'; return; }
         trackEvent('join_room', { game_id: selectedGame.id });
-        location.href = `${selectedGame.file}?mode=friend&room=${code}`;
+        if (DEMO_MODE) location.href = `${selectedGame.file}?mode=friend&room=${code}`;
+        else net.joinRoom(code);
       };
     }
   </script>
