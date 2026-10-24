@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#080a10">
   <title>Swiplay - Pro Chess Arena</title>
-  
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-  
+
+  <!-- Sockets and Chess Logic -->
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
   <script>
-    const SERVER_URL = 'https://YOUR-SERVER.onrender.com'; // CHANGE TO YOUR RENDER URL
+    const SERVER_URL = 'https://YOUR-SERVER.onrender.com'; // CHANGE THIS TO YOUR RENDER URL
   </script>
 
   <style>
@@ -25,6 +26,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; user-select: none; }
     html, body { height: 100%; height: 100dvh; background: radial-gradient(circle at center, var(--bg1) 0%, var(--bg2) 100%); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
 
+    /* TOP BAR */
     .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 18px; background: rgba(22,26,43,.4); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.05); z-index: 50; }
     .btn-ghost { background: var(--glass-light); color: #fff; text-decoration: none; border: 1px solid var(--glass-light); padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: .85rem; cursor: pointer; transition: .2s; }
     .btn-ghost:hover { background: rgba(255,255,255,.2); }
@@ -36,6 +38,7 @@
     .conn-status.online { background: var(--me); box-shadow: 0 0 8px var(--me); display: inline-block; }
     .conn-status.offline { background: var(--opp); box-shadow: 0 0 8px var(--opp); display: inline-block; }
 
+    /* SCOREBOARD / TIMERS */
     .scoreboard { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; width: 100%; max-width: 500px; margin: 0 auto; }
     .score-card { display: flex; align-items: center; gap: 12px; background: var(--glass); backdrop-filter: blur(12px); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,.05); min-width: 140px; }
     .score-card.me { border-bottom: 3px solid var(--me); box-shadow: 0 5px 20px rgba(0,255,102,0.1); flex-direction: row; }
@@ -48,34 +51,39 @@
 
     @keyframes pulse { to { transform: scale(1.05); } }
 
+    /* ARENA & CHESSBOARD */
     .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 10px; gap: 15px; }
-    
+
     .board-container {
-      width: min(400px, 92vw); height: min(400px, 92vw);
-      display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
-      border: 4px solid #161a2b; border-radius: 8px;
+      width: min(400px, 92vw);
+      height: min(400px, 92vw);
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      border: 4px solid #161a2b;
+      border-radius: 8px;
       box-shadow: 0 25px 60px rgba(0,0,0,0.7), inset 0 0 20px rgba(0,0,0,0.5);
-      position: relative; touch-action: none;
+      position: relative;
     }
 
     .square { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s ease; }
     .square.light { background: var(--board-light); }
     .square.dark { background: var(--board-dark); }
-    
+
     .square.selected { background: rgba(0, 255, 102, 0.5) !important; box-shadow: inset 0 0 15px rgba(0,255,102,0.6); }
     .square.last-move { background: rgba(255, 204, 0, 0.45) !important; }
-    
+
     .square.legal-move::after { content: ''; position: absolute; width: 25%; height: 25%; background: rgba(0, 255, 102, 0.7); border-radius: 50%; box-shadow: 0 0 10px rgba(0,255,102,0.9); z-index: 5; }
     .square.legal-capture::after { content: ''; position: absolute; inset: 4px; border: 4px solid rgba(255, 0, 85, 0.8); border-radius: 50%; box-shadow: 0 0 10px rgba(255,0,85,0.6); z-index: 5; }
 
     .piece { position: absolute; font-size: min(3.2rem, 10vw); line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; transition: transform 0.1s ease; z-index: 10; }
     .white-piece { color: #ffffff; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.6)); }
-    /* Added strong white drop-shadow for black piece contrast on dark squares */
-    .black-piece { color: #111111; filter: drop-shadow(0 0 3px rgba(255,255,255,0.7)) drop-shadow(0 4px 6px rgba(0,0,0,0.8)); }
+    .black-piece { color: #111111; filter: drop-shadow(0 1px 2px rgba(255,255,255,0.2)) drop-shadow(0 4px 6px rgba(0,0,0,0.8)); }
     .square:hover .piece { transform: scale(1.15); }
 
     .status-text { font-weight: 900; font-size: 1.1rem; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; text-shadow: 0 0 15px rgba(255,204,0,0.4); text-align: center; min-height: 1.5rem; }
 
+    /* IN-GAME CHAT OVERLAY */
     .game-actions { display: flex; gap: 10px; margin-top: 5px; width: min(400px, 92vw); justify-content: space-between;}
     .chat-container { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: min(380px, 90vw); background: rgba(8,10,16,0.9); backdrop-filter: blur(10px); border: 1px solid var(--glass-light); border-radius: 16px; display: none; flex-direction: column; z-index: 100; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
     .chat-container.active { display: flex; animation: fadeSlideUp 0.2s ease-out; }
@@ -88,20 +96,22 @@
     .chat-input-area input { flex: 1; background: transparent; color: #fff; padding: 10px; }
     .chat-input-area button { background: var(--me); color: #000; font-weight: bold; padding: 0 15px; }
 
+    /* OVERLAYS */
     .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; z-index: 200; text-align: center; padding: 20px; background: rgba(8,10,16,.85); backdrop-filter: blur(8px); }
     .overlay.hidden { display: none; }
     .start-btn { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; font-size: 1.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; border: none; padding: 18px 46px; border-radius: 40px; cursor: pointer; box-shadow: 0 15px 35px rgba(0,255,102,.4); transition: .2s; }
     .start-btn:active { transform: scale(.92); }
-    
+
     .countdown { font-size: 7rem; font-weight: 900; text-shadow: 0 0 40px rgba(0,255,102,.6); }
     .result h2 { font-size: 2.6rem; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
     .result h2.win { color: var(--me); text-shadow: 0 0 30px rgba(0,255,102,.5); }
     .result h2.lose { color: var(--opp); text-shadow: 0 0 30px rgba(255,0,85,.5); }
     .result h2.draw { color: var(--gold); }
-    
+
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(30px); background: #fff; color: #000; padding: 10px 20px; border-radius: 20px; font-weight: 700; opacity: 0; transition: .3s; z-index: 300; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* AVATAR SYSTEM */
     .avatar-wrapper { position: relative; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.05); width: 34px; height: 34px; flex-shrink: 0; }
     .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .gender-dot { position: absolute; bottom: -2%; right: -2%; width: 30%; height: 30%; border-radius: 50%; border: 1px solid var(--glass); z-index: 2; }
@@ -126,22 +136,22 @@
       <div id="my-avatar-slot"></div>
       <div class="player-details">
         <div class="player-name" id="my-name">You</div>
-        <div class="timer-display" id="my-timer">05:00</div>
+        <div class="timer-display" id="my-timer">10:00</div>
       </div>
     </div>
-    
+
     <div class="score-card opp" id="card-opp">
       <div id="opp-avatar-slot"></div>
       <div class="player-details">
         <div class="player-name" id="opp-name">Opponent</div>
-        <div class="timer-display" id="opp-timer">05:00</div>
+        <div class="timer-display" id="opp-timer">10:00</div>
       </div>
     </div>
   </div>
 
   <main class="arena" id="arena">
     <div class="status-text" id="game-status">Waiting...</div>
-    
+
     <div class="board-container" id="chessboard"></div>
 
     <div class="game-actions">
@@ -175,25 +185,18 @@
       </div>
       <div id="rematch-wait" style="display:none; color:var(--gold); margin-top:10px; font-weight:700;">Waiting for opponent...</div>
     </div>
-    
-    <!-- PROMOTION MODAL -->
-    <div class="overlay hidden" id="promo-modal" style="background:rgba(8,10,16,.9); z-index:300;">
-      <h3 style="margin-bottom: 10px; font-weight: 900;">Promote Pawn</h3>
-      <div style="display:flex; gap:10px;">
-        <button class="promo-piece" data-p="q" style="font-size:3rem; padding:10px; background:var(--glass); border-radius:12px; border:1px solid var(--me); color:#fff; cursor:pointer;">♛</button>
-        <button class="promo-piece" data-p="r" style="font-size:3rem; padding:10px; background:var(--glass); border-radius:12px; border:1px solid transparent; color:#fff; cursor:pointer;">♜</button>
-        <button class="promo-piece" data-p="b" style="font-size:3rem; padding:10px; background:var(--glass); border-radius:12px; border:1px solid transparent; color:#fff; cursor:pointer;">♝</button>
-        <button class="promo-piece" data-p="n" style="font-size:3rem; padding:10px; background:var(--glass); border-radius:12px; border:1px solid transparent; color:#fff; cursor:pointer;">♞</button>
-      </div>
-    </div>
   </main>
 
   <div class="toast" id="toast"></div>
 
   <script>
+  (() => {
     // --- 1. SETUP & UTILS ---
     const $ = id => document.getElementById(id);
-    const store = { get(k, d) { try { const v = localStorage.getItem(k); return v===null?d:v; } catch { return d; } } };
+    const store = { get(k, d) { try { const v = localStorage.getItem(k); return v===null?d:v; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+    // Silent SFX stub (fixes ReferenceError). Replace with real audio if desired.
+    const sfx = { tick() {}, go() {} };
 
     function renderAvatar(user, sizePx = 34) {
       const wrapper = document.createElement('div');
@@ -229,16 +232,16 @@
     // --- 2. GAME STATE ---
     const S = {
       isLive: mode !== 'bot',
-      phase: 'idle', 
+      phase: 'idle', // idle, countdown, playing, over
       game: new Chess(),
       myColor: 'w',
       selected: null,
       legalMoves: [],
       lastMove: null,
-      clocks: { w: 300000, b: 300000 }, 
-      lastServerTime: Date.now(),
-      clockOffset: 0,
-      clockInterval: null
+      clocks: { w: 300000, b: 300000 }, // 5 mins in ms
+      clockInterval: null,
+      lastTick: 0,
+      countdownRAF: null
     };
 
     const solidPieces = { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' };
@@ -258,12 +261,12 @@
 
           const square = document.createElement('div');
           square.className = `square ${(r + c) % 2 === 1 ? 'dark' : 'light'}`;
-          
+
           const squareCoord = getSquareAlgebraic(r, c);
-          
+
           if (S.lastMove && (squareCoord === S.lastMove.from || squareCoord === S.lastMove.to)) square.classList.add('last-move');
           if (S.selected === squareCoord) square.classList.add('selected');
-          
+
           const moveInfo = S.legalMoves.find(m => m.to === squareCoord);
           if (moveInfo) square.classList.add(moveInfo.captured ? 'legal-capture' : 'legal-move');
 
@@ -289,7 +292,7 @@
     }
 
     function formatTime(ms) {
-      if (ms <= 0) return "00:00";
+      if (!ms || ms <= 0) return "00:00";
       const totalSec = Math.floor(ms / 1000);
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
@@ -299,10 +302,10 @@
     function renderClocks(wTime, bTime) {
       const myTime = S.myColor === 'w' ? wTime : bTime;
       const oppTime = S.myColor === 'w' ? bTime : wTime;
-      
+
       const myT = $('my-timer');
       const oppT = $('opp-timer');
-      
+
       myT.textContent = formatTime(myTime);
       oppT.textContent = formatTime(oppTime);
 
@@ -337,25 +340,27 @@
       if (S.selected === clickedCoord) {
         S.selected = null; S.legalMoves = [];
       } else if (S.selected) {
-        const moveAttempt = { from: S.selected, to: clickedCoord };
-        
-        // Promotion check
-        const piece = S.game.get(S.selected);
-        const isPromo = piece && piece.type === 'p' && 
-                        ((piece.color === 'w' && clickedCoord[1] === '8') || 
-                         (piece.color === 'b' && clickedCoord[1] === '1'));
+        const moveAttempt = { from: S.selected, to: clickedCoord, promotion: 'q' };
 
-        if (isPromo) {
-           $('promo-modal').classList.remove('hidden');
-           document.querySelectorAll('.promo-piece').forEach(btn => {
-             btn.onclick = () => {
-               $('promo-modal').classList.add('hidden');
-               executeMove({ ...moveAttempt, promotion: btn.dataset.p });
-             };
-           });
-           return;
+        const moveRegex = S.game.moves({ verbose: true }).find(m => m.from === moveAttempt.from && m.to === moveAttempt.to);
+
+        if (moveRegex) {
+          S.selected = null; S.legalMoves = [];
+
+          if (S.isLive) {
+            socket.emit('chess:move', moveAttempt);
+          } else {
+            S.game.move(moveAttempt);
+            S.lastMove = { from: moveAttempt.from, to: moveAttempt.to };
+            renderBoard();
+            if (!S.game.game_over()) setTimeout(makeBotMove, 500);
+            else endMatchLocal();
+          }
         } else {
-           executeMove(moveAttempt);
+          const piece = S.game.get(clickedCoord);
+          if (piece && piece.color === S.myColor) {
+            S.selected = clickedCoord; S.legalMoves = S.game.moves({ square: clickedCoord, verbose: true });
+          } else { S.selected = null; S.legalMoves = []; }
         }
       } else {
         const piece = S.game.get(clickedCoord);
@@ -366,55 +371,40 @@
       renderBoard();
     }
 
-    function executeMove(moveObj) {
-      const moveRegex = S.game.moves({ verbose: true }).find(m => m.from === moveObj.from && m.to === moveObj.to && (!moveObj.promotion || m.promotion === moveObj.promotion));
-      
-      if (moveRegex) {
-        S.selected = null; S.legalMoves = [];
-        
-        if (S.isLive) {
-          socket.emit('chess:move', moveObj);
-        } else {
-          S.game.move(moveObj);
-          S.lastMove = { from: moveObj.from, to: moveObj.to };
-          renderBoard();
-          if(!S.game.game_over()) setTimeout(makeBotMove, 500);
-          else endMatchLocal(S.myColor, 'checkmate');
-        }
-      } else {
-        const piece = S.game.get(moveObj.to);
-        if (piece && piece.color === S.myColor) {
-          S.selected = moveObj.to; S.legalMoves = S.game.moves({ square: moveObj.to, verbose: true });
-        } else { S.selected = null; S.legalMoves = []; }
-      }
-      renderBoard();
-    }
-
     function makeBotMove() {
       if (S.game.game_over() || S.phase !== 'playing') return;
+      if (S.game.turn() === S.myColor) return; // safety: don't play for the human
       const moves = S.game.moves({ verbose: true });
+      if (!moves.length) { endMatchLocal(); return; }
       const move = moves[Math.floor(Math.random() * moves.length)];
       S.game.move(move);
       S.lastMove = { from: move.from, to: move.to };
       renderBoard();
-      if(S.game.game_over()) endMatchLocal(S.myColor === 'w' ? 'b' : 'w', 'checkmate');
+      if (S.game.game_over()) endMatchLocal();
     }
 
-    function endMatchLocal(winnerColor = null, reason = "abandonment") {
+    function endMatchLocal(reasonOverride) {
+      if (S.phase === 'over') return;
       S.phase = 'over'; clearInterval(S.clockInterval);
-      let resTitle = "Draw Game"; let colorCls = "draw"; let desc = `Game drawn by ${reason}.`;
-      
-      if (S.game.in_checkmate()) {
-        winnerColor = S.game.turn() === 'w' ? 'b' : 'w';
-        reason = "checkmate";
-      }
+      let resTitle = "Game Over"; let colorCls = "draw"; let desc = "Game drawn.";
 
-      if (winnerColor) {
-        const win = winnerColor === S.myColor;
+      if (reasonOverride === 'resign') {
+        resTitle = "Defeat!"; colorCls = "lose"; desc = "You resigned the game.";
+      } else if (reasonOverride === 'timeout') {
+        // Determine who ran out based on which clock hit zero
+        const iRanOut = (S.myColor === 'w' && S.clocks.w <= 0) || (S.myColor === 'b' && S.clocks.b <= 0);
+        if (iRanOut) { resTitle = "Defeat!"; colorCls = "lose"; desc = "You ran out of time."; }
+        else { resTitle = "Victory!"; colorCls = "win"; desc = "Opponent ran out of time."; }
+      } else if (S.game.in_checkmate()) {
+        const win = S.game.turn() !== S.myColor;
         resTitle = win ? "Victory!" : "Defeat!";
         colorCls = win ? "win" : "lose";
-        desc = win ? `You won by ${reason}.` : `You lost by ${reason}.`;
-      }
+        desc = win ? "You checkmated the bot." : "You were checkmated.";
+      } else if (S.game.in_stalemate()) { resTitle = "Draw"; colorCls = "draw"; desc = "Stalemate."; }
+      else if (S.game.in_threefold_repetition()) { resTitle = "Draw"; colorCls = "draw"; desc = "Threefold repetition."; }
+      else if (S.game.insufficient_material()) { resTitle = "Draw"; colorCls = "draw"; desc = "Insufficient material."; }
+      else if (S.game.in_draw()) { resTitle = "Draw"; colorCls = "draw"; desc = "Game drawn."; }
+
       showResult(resTitle, colorCls, desc);
     }
 
@@ -426,60 +416,99 @@
     }
 
     // --- 5. NETWORKING & LIVE PLAY ---
+    let socket = null;
     let liveTimeout = null;
+
+    function setupBotMode() {
+      $('start-btn').style.display = 'block';
+      $('wait-msg').style.display = 'none';
+      $('start-overlay').classList.remove('hidden');
+      $('btn-resign').onclick = () => {
+        if (S.phase === 'playing') endMatchLocal('resign');
+      };
+      if (!$('start-btn').dataset.bound) {
+        $('start-btn').addEventListener('click', startBotCountdown);
+        $('start-btn').dataset.bound = '1';
+      }
+    }
 
     if (S.isLive) {
       $('start-btn').style.display = 'none'; $('wait-msg').style.display = 'flex';
       $('btn-toggle-chat').style.display = 'block';
-      if(mode === 'friend') { $('room-display').textContent = 'ROOM: ' + roomId; $('share-btn').style.display = 'block'; } 
-      else { $('room-display').textContent = 'MATCHMAKING'; }
+      if (mode === 'friend') {
+        $('room-display').textContent = 'ROOM: ' + roomId;
+        $('share-btn').style.display = 'block';
+        $('share-btn').onclick = () => {
+          const url = location.origin + location.pathname + '?mode=friend&room=' + encodeURIComponent(roomId);
+          if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('Link copied!')).catch(() => toast(url));
+          else toast(url);
+        };
+      } else {
+        $('room-display').textContent = 'MATCHMAKING';
+      }
 
-      if (!SERVER_URL.includes('YOUR-SERVER')) {
+      // If server URL is placeholder, immediately offer bot play instead of waiting 45s
+      if (SERVER_URL.includes('YOUR-SERVER')) {
+        $('wait-msg').innerHTML = '';
+        const h3 = document.createElement('h3'); h3.textContent = "Live server not configured.";
+        const b2 = document.createElement('button'); b2.className = 'btn-primary'; b2.textContent = "Play vs Bot"; b2.style.marginTop = '12px';
+        b2.onclick = () => location.href = location.pathname + '?mode=bot';
+        $('wait-msg').append(h3, b2);
+        // Also wire resign so it isn't dead
+        $('btn-resign').onclick = () => { if (S.phase === 'playing') endMatchLocal('resign'); };
+      } else {
         const dot = $('conn-dot'); dot.className = 'conn-status offline';
         socket = io(SERVER_URL);
-        
+
         liveTimeout = setTimeout(() => {
           if (S.phase === 'idle') {
             $('wait-msg').innerHTML = '';
             const h3 = document.createElement('h3'); h3.textContent = "Could not connect to match.";
-            const b2 = document.createElement('button'); b2.className = 'btn-primary'; b2.textContent = "Play vs Bot"; b2.onclick = () => location.href = location.pathname + '?mode=bot';
+            const b2 = document.createElement('button'); b2.className = 'btn-primary'; b2.textContent = "Play vs Bot"; b2.style.marginTop = '12px';
+            b2.onclick = () => location.href = location.pathname + '?mode=bot';
             $('wait-msg').append(h3, b2);
           }
         }, 45000);
 
-        socket.on('connect', () => { 
+        socket.on('connect', () => {
           dot.className = 'conn-status online'; $('wait-msg').textContent = "Waiting for opponent...";
-          socket.emit('hello', currentUser); socket.emit('game:ready', { roomId }); 
+          socket.emit('hello', currentUser); socket.emit('game:ready', { roomId });
         });
         socket.on('disconnect', () => { dot.className = 'conn-status offline'; });
-        
-        socket.on('match:start', ({ startAt, profiles, serverNow, fen, clocks }) => {
+
+        socket.on('match:start', (payload = {}) => {
           clearTimeout(liveTimeout);
+          const { startAt, profiles = [], serverNow, fen, clocks } = payload;
           S.clockOffset = serverNow ? serverNow - Date.now() : 0;
-          
-          const opp = profiles.find(p => p.userId !== currentUser.id) || { profile: {name:'Opponent', avatar:'🤖', gender:'none'}, color: 'b' };
+          S.clockOffset = S.clockOffset || 0;
+
           const me = profiles.find(p => p.userId === currentUser.id);
-          S.myColor = me.color;
+          S.myColor = me && me.color ? me.color : 'w';
+          const opp = profiles.find(p => p.userId !== currentUser.id) || { profile: {name:'Opponent', avatar:'🤖', gender:'none'} };
 
           oppSlot.innerHTML = ''; oppSlot.appendChild(renderAvatar(opp.profile, 34));
           $('opp-name').textContent = opp.profile.name;
-          
-          S.game.load(fen); S.clocks = clocks; S.lastMove = null; S.selected = null; S.legalMoves = [];
+
+          if (fen) S.game.load(fen); else S.game.reset();
+          S.clocks = clocks || { w: 300000, b: 300000 };
+          S.lastMove = null; S.selected = null; S.legalMoves = [];
           renderBoard(); renderClocks(S.clocks.w, S.clocks.b);
 
-          syncCountdown(startAt);
+          if (startAt) syncCountdown(startAt);
+          else { // fallback: start immediately
+            $('start-overlay').classList.add('hidden');
+            S.phase = 'playing'; startClockTicker(); updateStatus();
+          }
         });
 
-        socket.on('chess:state', ({ fen, clocks, lastMove, lastMoveTime }) => {
-          S.game.load(fen);
-          S.clocks = clocks;
-          S.lastMove = lastMove;
-          // Synchronize local ticker anchor directly with provided state payload
-          S.lastServerTime = Date.now();
+        socket.on('chess:state', ({ fen, clocks, lastMove } = {}) => {
+          if (fen) S.game.load(fen);
+          if (clocks) S.clocks = clocks;
+          S.lastMove = lastMove || null;
           renderBoard(); renderClocks(S.clocks.w, S.clocks.b);
         });
 
-        socket.on('match:end', ({ winnerId, reason }) => {
+        socket.on('match:end', ({ winnerId, reason } = {}) => {
           S.phase = 'over'; clearInterval(S.clockInterval);
           let title = "Draw Game"; let cls = "draw"; let desc = "The match ended in a draw.";
           if (winnerId) {
@@ -497,67 +526,82 @@
 
         socket.on('error:toast', (msg) => {
           toast(msg);
-          const lower = msg.toLowerCase();
+          const lower = (msg || '').toLowerCase();
           if (lower.includes('disconnected') || lower.includes('left')) {
             if (S.phase === 'over') { $('again-btn').style.display = 'none'; $('rematch-wait').style.display = 'block'; $('rematch-wait').textContent = "Opponent left."; }
           }
         });
 
-        socket.on('game:chat_receive', ({ name, text, senderId }) => {
-          addInGameChat(name, text, senderId === currentUser.id);
+        socket.on('game:chat_receive', ({ name, text, senderId } = {}) => {
+          addInGameChat(name || 'Opponent', text || '', senderId === currentUser.id);
         });
 
-        $('btn-resign').onclick = () => { if(S.phase === 'playing') socket.emit('chess:resign'); };
+        $('btn-resign').onclick = () => { if (S.phase === 'playing') socket.emit('chess:resign'); };
       }
     } else {
-      $('btn-resign').onclick = () => endMatchLocal(S.myColor === 'w' ? 'b' : 'w', 'resign');
-      $('start-btn').addEventListener('click', startBotCountdown);
       $('share-btn').style.display = 'none';
+      setupBotMode();
     }
 
     $('again-btn').addEventListener('click', () => {
-      if(S.isLive) { socket.emit('match:rematch'); $('again-btn').style.display = 'none'; $('rematch-wait').style.display = 'block'; } 
-      else { startBotCountdown(); }
+      if (S.isLive && socket) {
+        socket.emit('match:rematch');
+        $('again-btn').style.display = 'none'; $('rematch-wait').style.display = 'block';
+      } else {
+        startBotCountdown();
+      }
     });
-    
-    $('share-btn').onclick = async () => {
-      const link = `${location.href.split('?')[0]}?join=chess-${roomId}`;
-      try {
-        if (navigator.share) await navigator.share({ title: 'Join Swiplay', text: `Let's play Chess!`, url: link });
-        else { await navigator.clipboard.writeText(link); toast('Link copied!'); }
-      } catch { toast('Code: ' + roomId); }
-    };
 
     // --- 6. TIMERS & SYNC ---
     function startBotCountdown() {
+      clearInterval(S.clockInterval);
+      if (S.countdownRAF) { cancelAnimationFrame(S.countdownRAF); S.countdownRAF = null; }
       S.game.reset(); S.myColor = 'w'; S.lastMove = null; S.selected = null; S.legalMoves = [];
       S.clocks = { w: 300000, b: 300000 };
-      renderBoard(); renderClocks(S.clocks.w, S.clocks.b);
-      
-      $('start-overlay').classList.add('hidden'); $('result-overlay').classList.add('hidden'); $('count-overlay').classList.remove('hidden');
       S.phase = 'countdown';
+      renderBoard(); renderClocks(S.clocks.w, S.clocks.b);
+
+      $('start-overlay').classList.add('hidden'); $('result-overlay').classList.add('hidden'); $('count-overlay').classList.remove('hidden');
       let n = 3;
       const step = () => {
-        if (n > 0) { $('countdown').textContent = n; $('countdown').style.animation = 'none'; void $('countdown').offsetWidth; $('countdown').style.animation = ''; n--; setTimeout(step, 700); } 
-        else { $('countdown').textContent = 'GO!'; setTimeout(() => { $('count-overlay').classList.add('hidden'); S.phase = 'playing'; startClockTicker(); updateStatus(); }, 400); }
+        if (n > 0) {
+          $('countdown').textContent = n;
+          $('countdown').style.animation = 'none'; void $('countdown').offsetWidth; $('countdown').style.animation = '';
+          sfx.tick(); n--; setTimeout(step, 700);
+        } else {
+          $('countdown').textContent = 'GO!'; sfx.go();
+          setTimeout(() => {
+            $('count-overlay').classList.add('hidden');
+            S.phase = 'playing'; startClockTicker(); updateStatus();
+          }, 400);
+        }
       };
       step();
     }
 
     function syncCountdown(startAt) {
+      if (S.countdownRAF) { cancelAnimationFrame(S.countdownRAF); S.countdownRAF = null; }
       $('start-overlay').classList.add('hidden'); $('result-overlay').classList.add('hidden'); $('count-overlay').classList.remove('hidden');
       $('rematch-wait').style.display = 'none'; $('again-btn').style.display = 'block';
       S.phase = 'countdown';
-      
+
       const step = () => {
+        if (S.phase !== 'countdown') return;
         const left = startAt - (Date.now() + S.clockOffset);
         if (left > 400) {
           const n = Math.ceil(left / 1000);
-          if ($('countdown').textContent !== String(n)) { $('countdown').textContent = n; $('countdown').style.animation = 'none'; void $('countdown').offsetWidth; $('countdown').style.animation = ''; }
-          requestAnimationFrame(step);
+          if ($('countdown').textContent !== String(n)) {
+            $('countdown').textContent = n;
+            $('countdown').style.animation = 'none'; void $('countdown').offsetWidth; $('countdown').style.animation = '';
+            sfx.tick();
+          }
+          S.countdownRAF = requestAnimationFrame(step);
         } else {
-          $('countdown').textContent = 'GO!';
-          setTimeout(() => { $('count-overlay').classList.add('hidden'); S.phase = 'playing'; startClockTicker(); updateStatus(); }, 400);
+          $('countdown').textContent = 'GO!'; sfx.go();
+          setTimeout(() => {
+            $('count-overlay').classList.add('hidden');
+            S.phase = 'playing'; startClockTicker(); updateStatus();
+          }, 400);
         }
       };
       step();
@@ -565,22 +609,20 @@
 
     function startClockTicker() {
       clearInterval(S.clockInterval);
-      S.lastServerTime = Date.now();
+      S.lastTick = Date.now();
       S.clockInterval = setInterval(() => {
         if (S.phase !== 'playing') return;
         const now = Date.now();
-        const elapsed = now - S.lastServerTime;
-        S.lastServerTime = now;
-        
-        if (S.game.turn() === 'w') S.clocks.w = Math.max(0, S.clocks.w - elapsed);
-        else S.clocks.b = Math.max(0, S.clocks.b - elapsed);
-        
+        const dt = now - S.lastTick;
+        S.lastTick = now;
+
+        if (S.game.turn() === 'w') S.clocks.w = Math.max(0, S.clocks.w - dt);
+        else S.clocks.b = Math.max(0, S.clocks.b - dt);
+
         renderClocks(S.clocks.w, S.clocks.b);
 
-        if (!S.isLive && (S.clocks.w === 0 || S.clocks.b === 0)) {
-           const timeoutWinner = S.clocks.w === 0 ? 'b' : 'w';
-           endMatchLocal(timeoutWinner, 'timeout');
-        }
+        // Local timeout detection
+        if (!S.isLive && (S.clocks.w <= 0 || S.clocks.b <= 0)) endMatchLocal('timeout');
       }, 100);
     }
 
@@ -591,36 +633,35 @@
     const chatSend = $('btn-send-chat');
     const chatHist = $('chat-history');
 
-    chatBtn.onclick = (e) => { 
-      e.stopPropagation(); 
-      chatBox.classList.toggle('active'); 
-      if(chatBox.classList.contains('active')) chatInp.focus(); 
+    chatBtn.onclick = () => {
+      chatBox.classList.toggle('active');
+      if (chatBox.classList.contains('active')) chatInp.focus();
     };
-    
-    document.addEventListener('click', (e) => { 
-      if(!e.target.closest('#chat-container') && !e.target.closest('#btn-toggle-chat')) {
-        chatBox.classList.remove('active'); 
-      }
-    });
-    
+
     function addInGameChat(name, text, isMe) {
       const msg = document.createElement('div'); msg.className = `chat-msg ${isMe ? 'me' : ''}`;
       const b = document.createElement('b'); b.textContent = name;
       const t = document.createTextNode(text);
       msg.append(b, t); chatHist.appendChild(msg); chatHist.scrollTop = chatHist.scrollHeight;
-      if (!chatBox.classList.contains('active')) { chatBtn.style.color = 'var(--me)'; setTimeout(()=>chatBtn.style.color='', 2000); }
+      if (!chatBox.classList.contains('active')) {
+        chatBtn.style.color = 'var(--me)';
+        setTimeout(() => { chatBtn.style.color = ''; }, 2000);
+        sfx.tick();
+      }
     }
 
     function sendGameChat() {
-      const txt = chatInp.value.trim(); if(!txt) return;
+      const txt = chatInp.value.trim(); if (!txt) return;
       if (S.isLive && socket) socket.emit('game:chat', txt);
       else addInGameChat(currentUser.name, txt, true);
       chatInp.value = '';
     }
     chatSend.onclick = sendGameChat;
-    chatInp.onkeypress = (e) => { if(e.key==='Enter') sendGameChat(); };
+    chatInp.onkeypress = (e) => { if (e.key === 'Enter') sendGameChat(); };
 
+    // Initial render
     renderBoard(); renderClocks(S.clocks.w, S.clocks.b);
+  })();
   </script>
 </body>
 </html>
