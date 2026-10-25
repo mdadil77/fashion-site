@@ -1,4 +1,4 @@
-const CACHE_NAME = 'swiplay-cache-v2';
+const CACHE_NAME = 'swiplay-cache-v3';
 const ASSETS = ['./', './index.html', './swipe-game.html'];
 
 self.addEventListener('install', e => {
