@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#080a10">
+  <title>Swiplay - Ludo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+  <script>const SERVER_URL = 'https://swiplay-server.onrender.com';</script>
+  <style>
+    :root { --bg1: #1a2035; --bg2: #080a10; --me: #00ff66; --opp: #ff0055; --gold: #ffcc00; --muted: #8f96a3; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
+    html, body { height: 100%; background: radial-gradient(circle, var(--bg1), var(--bg2)); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
+    .top-bar { display: flex; justify-content: space-between; padding: 12px; background: rgba(22,26,43,.6); border-bottom: 1px solid rgba(255,255,255,.1); }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
+    .scoreboard { display: flex; justify-content: space-between; padding: 15px; max-width: 500px; width: 100%; margin: 0 auto; }
+    .player { background: rgba(255,255,255,.05); padding: 10px 15px; border-radius: 15px; border-bottom: 3px solid #555; text-align: center; width: 45%; }
+    .player.me { border-color: var(--me); } .player.opp { border-color: var(--opp); }
+    .player.active { background: rgba(255,255,255,.15); box-shadow: 0 0 15px rgba(255,255,255,.1); }
+    .arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; gap: 20px; }
+    
+    /* Simplified Ludo Track */
+    .board { width: min(350px, 90vw); display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #161a2b; padding: 10px; border-radius: 12px; }
+    .cell { aspect-ratio: 1; background: #2a3145; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; color: var(--muted); position: relative; }
+    .cell.active { background: rgba(255,204,0,0.2); border: 1px solid var(--gold); }
+    .token { width: 60%; height: 60%; border-radius: 50%; position: absolute; transition: 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
+    .token.me { background: var(--me); } .token.opp { background: var(--opp); }
+    
+    .controls { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .dice { width: 60px; height: 60px; background: #fff; color: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .btn-primary { background: var(--me); color: #000; padding: 12px 30px; border-radius: 30px; font-weight: 900; border: none; cursor: pointer; font-size: 1.1rem; }
+    .btn-primary:disabled { background: #555; color: #888; }
+    .overlay { position: absolute; inset: 0; background: rgba(8,10,16,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 100; text-align: center; padding: 20px; }
+    .overlay.hidden { display: none; }
+    .chat-container { position: absolute; bottom: 70px; width: 90%; max-width: 380px; background: #161a2b; border-radius: 12px; display: none; flex-direction: column; z-index: 50; }
+    .chat-container.active { display: flex; }
+    .chat-history { height: 120px; overflow-y: auto; padding: 10px; font-size: 0.8rem; }
+    .chat-input-area { display: flex; border-top: 1px solid rgba(255,255,255,.1); }
+    .chat-input-area input { flex: 1; padding: 10px; background: transparent; border: none; color: #fff; outline: none; }
+    .chat-input-area button { padding: 0 15px; background: var(--me); border: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a href="index.html" class="btn-ghost">⬅ Leave</a>
+    <div id="room-display" style="font-weight:bold; color:var(--me);">MATCHMAKING</div>
+    <button class="btn-ghost" id="toggle-chat" style="display:none;">💬</button>
+  </div>
+
+  <div class="scoreboard">
+    <div class="player me" id="card-me"><div>You</div><div style="font-size:1.2rem; font-weight:900;" id="my-pos">Start</div></div>
+    <div class="player opp" id="card-opp"><div>Opponent</div><div style="font-size:1.2rem; font-weight:900;" id="opp-pos">Start</div></div>
+  </div>
+
+  <div class="arena">
+    <div class="board" id="board"></div>
+    
+    <div class="controls">
+      <div class="dice" id="dice">?</div>
+      <button class="btn-primary" id="roll-btn">ROLL DICE</button>
+      <div style="color:var(--muted); font-size:0.8rem;" id="turn-text">Waiting to start...</div>
+    </div>
+
+    <div class="overlay" id="start-overlay">
+      <h2>Ludo Classic</h2>
+      <p style="color:var(--muted);">First to square 25 wins. 3 AFKs = Loss.</p>
+      <button class="btn-primary" id="start-btn" style="display:none;">Play vs Bot</button>
+      <div id="wait-msg" style="display:none; font-weight:800;">Waiting for opponent...</div>
+    </div>
+
+    <div class="overlay hidden" id="result-overlay">
+      <h1 id="res-title" style="color:var(--me);">Victory!</h1>
+      <button class="btn-primary" onclick="location.href='index.html'">Back to Lobby</button>
+    </div>
+    
+    <div class="chat-container" id="chat-box">
+      <div class="chat-history" id="chat-hist"></div>
+      <div class="chat-input-area"><input id="chat-inp" placeholder="Type..."><button id="chat-send">➤</button></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') || 'bot';
+    const roomId = params.get('room') || '';
+    const isLive = mode !== 'bot';
+    let currentUser = { id: 'local', name: 'You' };
+    try { const u = JSON.parse(localStorage.getItem('swiplay_user')); if(u) currentUser = u; } catch {}
+
+    const S = { myPos: 0, oppPos: 0, myTurn: true, canRoll: true, afkMisses: 0, phase: 'idle' };
+    const BOARD_SIZE = 25;
+
+    function renderBoard() {
+      const b = $('board'); b.innerHTML = '';
+      for (let i = 1; i <= BOARD_SIZE; i++) {
+        const c = document.createElement('div'); c.className = 'cell';
+        if(i === S.myPos || i === S.oppPos) c.classList.add('active');
+        c.textContent = i;
+        if(S.myPos === i) { const t = document.createElement('div'); t.className = 'token me'; c.appendChild(t); }
+        if(S.oppPos === i) { const t = document.createElement('div'); t.className = 'token opp'; t.style.transform = 'translateX(10px)'; c.appendChild(t); }
+        b.appendChild(c);
+      }
+      $('my-pos').textContent = S.myPos === 0 ? 'Start' : 'Pos ' + S.myPos;
+      $('opp-pos').textContent = S.oppPos === 0 ? 'Start' : 'Pos ' + S.oppPos;
+      
+      $('card-me').classList.toggle('active', S.myTurn && S.phase === 'playing');
+      $('card-opp').classList.toggle('active', !S.myTurn && S.phase === 'playing');
+      
+      const isMyTurn = (isLive ? S.myTurn : true) && S.phase === 'playing';
+      $('roll-btn').disabled = !isMyTurn || !S.canRoll;
+      $('turn-text').textContent = S.phase !== 'playing' ? "Waiting..." : (S.myTurn ? "Your Turn" : "Opponent's Turn");
+    }
+
+    function showResult(win) {
+      S.phase = 'over';
+      $('res-title').textContent = win ? "Victory!" : "Defeat!";
+      $('res-title').style.color = win ? "var(--me)" : "var(--opp)";
+      $('result-overlay').classList.remove('hidden');
+    }
+
+    // --- BOT MODE ---
+    if (!isLive) {
+      $('start-overlay').classList.add('hidden');
+      $('start-btn').style.display = 'inline-block';
+      $('start-btn').textContent = "Start Bot Game";
+      $('start-btn').onclick = () => {
+        $('start-overlay').classList.add('hidden');
+        S.phase = 'playing'; S.myPos = 0; S.oppPos = 0; S.myTurn = true; S.canRoll = true;
+        renderBoard();
+      };
+      
+      $('roll-btn').onclick = () => {
+        if(!S.canRoll || S.phase !== 'playing') return;
+        S.canRoll = false;
+        const roll = Math.floor(Math.random() * 6) + 1;
+        $('dice').textContent = roll;
+        S.myPos = Math.min(BOARD_SIZE, S.myPos + roll);
+        renderBoard();
+        if(S.myPos >= BOARD_SIZE) return showResult(true);
+        
+        setTimeout(() => {
+          S.myTurn = false; renderBoard();
+          setTimeout(() => {
+            const botRoll = Math.floor(Math.random() * 6) + 1;
+            $('dice').textContent = botRoll;
+            S.oppPos = Math.min(BOARD_SIZE, S.oppPos + botRoll);
+            renderBoard();
+            if(S.oppPos >= BOARD_SIZE) return showResult(false);
+            S.myTurn = true; S.canRoll = true; renderBoard();
+          }, 1000);
+        }, 500);
+      };
+    }
+
+    // --- LIVE MODE ---
+    let socket = null;
+    if (isLive) {
+      $('start-overlay').style.display = 'none';
+      $('wait-msg').style.display = 'block';
+      $('toggle-chat').style.display = 'block';
+      if(mode === 'friend') $('room-display').textContent = 'ROOM: ' + roomId;
+
+      socket = io(SERVER_URL);
+      socket.on('connect', () => { socket.emit('hello', currentUser); socket.emit('game:ready', { roomId }); });
+      
+      socket.on('match:start', (data) => {
+        $('start-overlay').classList.add('hidden');
+        S.phase = 'playing'; S.myPos = 0; S.oppPos = 0; S.myTurn = true; S.canRoll = true;
+        renderBoard();
+      });
+
+      socket.on('ludo:state', (data) => {
+        S.myPos = data.myPos; S.oppPos = data.oppPos; S.myTurn = data.turn === currentUser.id; S.canRoll = true;
+        renderBoard();
+        if(data.winner) showResult(data.winner === currentUser.id);
+      });
+
+      socket.on('game:chat_receive', (msg) => {
+        const d = document.createElement('div'); d.innerHTML = `<b style="color:var(--me)">${msg.name}:</b> ${msg.text}`;
+        $('chat-hist').appendChild(d); $('chat-hist').scrollTop = 9999;
+      });
+
+      $('roll-btn').onclick = () => {
+        if(!S.myTurn || !S.canRoll) return;
+        S.canRoll = false; socket.emit('ludo:roll');
+      };
+      
+      $('toggle-chat').onclick = () => $('chat-box').classList.toggle('active');
+      $('chat-send').onclick = () => { if($('chat-inp').value.trim()) { socket.emit('game:chat', $('chat-inp').value); $('chat-inp').value=''; } };
+    }
+    renderBoard();
+  </script>
+</body>
+</html>
