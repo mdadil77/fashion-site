@@ -624,14 +624,12 @@
       return BAD_WORDS.some(w => norm.includes(w));
     }
 
-    const GAMES = [
-      { id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'HOT', available: true },
-      { id: 'chess', icon: '♟️', title: 'Chess', desc: 'Strategic 2D pieces', file: 'chess.html', tag: 'New', available: true },
-      { id: 'ludo', icon: '🎲', title: 'Ludo Classic', desc: 'Roll the dice', file: 'ludo.html', tag: 'Soon', available: false },
-      { id: 'word', icon: '⌨️', title: 'WordRush', desc: 'Type to win', file: 'wordrush.html', tag: 'Soon', available: false },
-      { id: 'brawl', icon: '🥊', title: 'Swipe Brawl', desc: 'Jab, Hook, Block', file: 'brawl.html', tag: 'Soon', available: false },
-      { id: 'snake', icon: '🐍', title: 'Snakes & Ladders', desc: 'Climb to the top', file: 'snakes.html', tag: 'Soon', available: false },
-      { id: 'rps', icon: '✊', title: 'RPS: Clash', desc: 'Mind games', file: 'rps.html', tag: 'Soon', available: false }
+        const GAMES = [
+      { id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'Old', available: true },
+      { id: 'chess', icon: '♟️', title: 'Chess', desc: 'Strategic 2D pieces', file: 'chess.html', tag: 'NEW', available: true },
+      { id: 'ludo', icon: '🎲', title: 'Ludo Classic', desc: 'Roll the dice', file: 'ludo.html', tag: 'NEW', available: true },
+      { id: 'snake', icon: '🐍', title: 'Snakes & Ladders', desc: 'Climb to the top', file: 'snake.html', tag: 'NEW', available: true },
+      { id: 'word', icon: '⌨️', title: 'WordRush', desc: 'Type to win', file: 'wordrush.html', tag: 'NEW', available: true }
     ];
 
     const MOCK_PLAYERS = [
@@ -1274,7 +1272,7 @@
         showToast("We'll let you know!"); closeModal();
       };
 
-      function startMatchmaking() {
+            function startMatchmaking() {
         mainView.style.display = 'none'; emptyView.style.display = 'none'; findingView.style.display = 'flex';
         
         if (DEMO_MODE) {
