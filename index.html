@@ -630,31 +630,8 @@
       { id: 'ludo', icon: '🎲', title: 'Ludo Classic', desc: 'Roll the dice', file: 'ludo.html', tag: 'NEW', available: true },
       { id: 'snake', icon: '🐍', title: 'Snakes & Ladders', desc: 'Climb to the top', file: 'snake.html', tag: 'NEW', available: true },
       { id: 'word', icon: '⌨️', title: 'WordRush', desc: 'Type to win', file: 'wordrush.html', tag: 'NEW', available: true },
-      { id: 'brawl', icon: "(っ'-')╮=͟͟͞🍅)`-' )", title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'NEW', available: true }
+      { id: 'brawl', icon: '🥊', title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'NEW', available: true }
     ];
-
-    const MOCK_PLAYERS = [
-      { id: 'p1', name: 'Zack', avatar: '🦊', avatarType: 'emoji', gender: 'male', status: 'Online' },
-      { id: 'p2', name: 'Sarah', avatar: '⚡', avatarType: 'emoji', gender: 'female', status: 'In game' },
-      { id: 'p3', name: 'ViperX', avatar: '🐲', avatarType: 'emoji', gender: 'male', status: 'Online' },
-      { id: 'p4', name: 'Luna', avatar: '🐼', avatarType: 'emoji', gender: 'female', status: 'Online' }
-    ];
-
-    const MOCK_LEADERBOARD = {
-      today: [
-        { name: 'ViperX', avatar: '🐲', gender: 'male', score: 450 },
-        { name: 'Sarah', avatar: '⚡', gender: 'female', score: 380 },
-        { name: 'Zack', avatar: '🦊', gender: 'male', score: 310 }
-      ],
-      week: [
-        { name: 'Ghost', avatar: '👾', gender: 'male', score: 1200 },
-        { name: 'Luna', avatar: '🐼', gender: 'female', score: 1150 }
-      ],
-      all: [
-        { name: 'Aria', avatar: '👑', gender: 'female', score: 5400 },
-        { name: 'Leo', avatar: '🦁', gender: 'male', score: 4900 }
-      ]
-    };
 
     let connTimeout = null;
 
@@ -739,10 +716,10 @@
         }
       },
       sendChat(txt) { if(this.connected) this.socket.emit('chat:send', txt); },
-      findMatch(gameId) { if(this.connected) this.socket.emit('match:find', { gameId }); },
+            findMatch(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'random' }); },
       cancelMatch() { if(this.connected) this.socket.emit('match:cancel'); },
-      createRoom() { if(this.connected) this.socket.emit('room:create'); },
-      joinRoom(code) { if(this.connected) this.socket.emit('room:join', code); },
+      createRoom(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'code' }); },
+      joinRoom(code, gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'code', code: code }); },
       sendInvite(userId, gameId) { if(this.connected) this.socket.emit('invite:send', { toUserId: userId, gameId }); }
     };
 
@@ -1056,11 +1033,7 @@
       list.innerHTML = '';
       
       let data = [];
-      if (DEMO_MODE) {
-        data = [...(MOCK_LEADERBOARD[range] || [])];
-      } else {
-        data = [...(realLeaderboard?.swipe?.[range] || [])];
-      }
+            data = [...(realLeaderboard?.swipe?.[range] || [])];
       
       const myBest = Storage.get('swiplay_best');
       if (myBest && !currentUser.isGuest) {
@@ -1152,7 +1125,6 @@
         
         if (DEMO_MODE) {
           addMessage(currentUser, text, true); input.value = '';
-          setTimeout(() => { if(Math.random() > 0.5) addMessage(MOCK_PLAYERS[0], 'gg bro 🔥', false); }, 2000);
         } else {
           net.sendChat(text); input.value = '';
         }
@@ -1161,9 +1133,7 @@
       sendBtn.onclick = sendClientChat;
       input.onkeypress = (e) => { if(e.key === 'Enter') sendClientChat(); };
       
-      setTimeout(() => {
-        if(DEMO_MODE) addMessage(MOCK_PLAYERS[3], 'Anyone for Swipe Game?', false);
-      }, 1000);
+      
     }
 
     function updatePlayers() {
@@ -1171,7 +1141,7 @@
       const search = document.getElementById('player-search');
       const currentFilter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
 
-      const dataSource = DEMO_MODE ? MOCK_PLAYERS : realPlayers;
+      const dataSource = realPlayers;
       document.getElementById('online-count').textContent = DEMO_MODE ? MOCK_PLAYERS.length + 124 : Math.max(1, dataSource.length);
 
       list.innerHTML = '';
