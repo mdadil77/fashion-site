@@ -1366,15 +1366,12 @@
         }
       }
 
-      document.getElementById('btn-play-random').onclick = () => {
-        trackEvent('play_random', { game_id: selectedGame.id });
-        startMatchmaking();
-      };
+      
       
       document.getElementById('btn-keep-waiting').onclick = startMatchmaking;
       document.getElementById('btn-play-bot').onclick = () => { location.href = `${selectedGame.file}?mode=bot`; };
 
-      document.getElementById('btn-play-friend').onclick = () => { roomActions.classList.toggle('active'); };
+      
 
       let currentRoomCode = '';
       document.getElementById('btn-create-room').onclick = () => {
