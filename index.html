@@ -478,10 +478,7 @@
         <h2 class="modal-title" id="modal-g-title">Game Title</h2>
         <p class="modal-desc" id="modal-g-desc">Game description.</p>
         
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-          <button class="btn-primary" id="btn-play-random">🎲 Play with Random</button>
-          <button class="btn-secondary" id="btn-play-friend" style="color: #4cc9f0; border-color: rgba(76,201,240,0.3);">🔑 Play with Friend</button>
-        </div>
+                <div id="modal-actions-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;"></div>
 
         <div class="room-actions" id="room-actions">
           <div style="display: flex; gap: 10px;">
@@ -624,13 +621,31 @@
       return BAD_WORDS.some(w => norm.includes(w));
     }
 
-        const GAMES = [
-      { id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'Old', available: true },
-      { id: 'chess', icon: '♟️', title: 'Chess', desc: 'Strategic 2D pieces', file: 'chess.html', tag: 'NEW', available: true },
-      { id: 'ludo', icon: '🎲', title: 'Ludo Classic', desc: 'Roll the dice', file: 'ludo.html', tag: 'NEW', available: true },
-      { id: 'snake', icon: '🐍', title: 'Snakes & Ladders', desc: 'Climb to the top', file: 'snake.html', tag: 'NEW', available: true },
-      { id: 'word', icon: '⌨️', title: 'WordRush', desc: 'Type to win', file: 'wordrush.html', tag: 'NEW', available: true },
-      { id: 'brawl', icon: '🥊', title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'NEW', available: true }
+            const GAMES = [
+      { 
+        id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'HOT', available: true,
+        modes: { random: true, code: true, local: false, botLevels: ['normal'], chat: false } 
+      },
+      { 
+        id: 'chess', icon: '♟️', title: 'Chess', desc: 'Strategic 2D pieces', file: 'chess.html', tag: 'NEW', available: true,
+        modes: { random: true, code: true, local: true, botLevels: ['normal', 'high', 'extreme'], chat: true } 
+      },
+      { 
+        id: 'ludo', icon: '🎲', title: 'Ludo Classic', desc: 'Roll the dice', file: 'ludo.html', tag: 'NEW', available: true,
+        modes: { random: true, code: true, local: true, botLevels: ['normal', 'high', 'extreme'], chat: true } 
+      },
+      { 
+        id: 'snake', icon: '🐍', title: 'Snakes & Ladders', desc: 'Climb to the top', file: 'snake.html', tag: 'NEW', available: true,
+        modes: { random: true, code: true, local: true, botLevels: ['normal', 'high', 'extreme'], chat: true } 
+      },
+      { 
+        id: 'word', icon: '⌨️', title: 'WordRush', desc: 'Type to win', file: 'wordrush.html', tag: 'NEW', available: true,
+        modes: { random: true, code: true, local: false, botLevels: [], chat: false } 
+      },
+      { 
+        id: 'brawl', icon: '🥊', title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'NEW', available: true,
+        modes: { random: true, code: true, local: false, botLevels: ['normal'], chat: false } 
+      }
     ];
 
     let connTimeout = null;
@@ -1142,7 +1157,7 @@
       const currentFilter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
 
       const dataSource = realPlayers;
-      document.getElementById('online-count').textContent = DEMO_MODE ? MOCK_PLAYERS.length + 124 : Math.max(1, dataSource.length);
+      document.getElementById('online-count').textContent = Math.max(1, dataSource.length);
 
       list.innerHTML = '';
       const q = search.value.toLowerCase();
@@ -1167,18 +1182,36 @@
       const status = document.createElement('span'); status.className = `player-status ${(p.status||'online').replace(' ','').toLowerCase()}`; status.textContent = isSelf ? 'Online' : p.status;
       det.append(name, status); info.appendChild(det); row.appendChild(info);
 
-      if(!isSelf && p.status !== 'in-game') {
+      if(!isSelf && !/in.?game/i.test(p.status || '')) {
         const inv = document.createElement('button'); inv.className = 'invite-btn'; inv.textContent = 'Invite';
-        inv.onclick = () => {
+                inv.onclick = () => {
           const avail = GAMES.filter(g => g.available);
           if (DEMO_MODE) return showToast(`Invite sent to ${p.name}!`);
+          if (avail.length === 0) return showToast("No games available right now.");
+          
           if (avail.length === 1) {
             net.sendInvite(p.id, avail[0].id);
-            showToast(`Invite sent to ${p.name}!`);
-          } else if (avail.length > 1) {
-            net.sendInvite(p.id, avail[0].id); 
-            showToast(`Invite sent to ${p.name}!`);
+            return showToast(`Invite sent to ${p.name}!`);
           }
+          
+          // Show premium picker (using the existing modal style)
+          const pickerList = document.getElementById('games-grid'); // Temporary reuse or create a new modal
+          let html = `<div class="glass modal-content" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999;" id="temp-picker">
+            <h3 style="font-weight:800; margin-bottom:16px;">Choose a Game</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">`;
+            
+          avail.forEach(g => {
+            html += `<button class="btn-secondary" onclick="
+              pendingGame = GAMES.find(x => x.id === '${g.id}');
+              net.sendInvite('${p.id}', '${g.id}');
+              showToast('Invite sent to ${p.name}!');
+              document.getElementById('temp-picker').remove();
+            ">${g.icon} ${g.title}</button>`;
+          });
+          
+          html += `</div><button class="btn-ghost" onclick="document.getElementById('temp-picker').remove()" style="margin-top:10px;">Cancel</button></div>`;
+          
+          document.body.insertAdjacentHTML('beforeend', html);
         };
         row.appendChild(inv);
       }
@@ -1228,13 +1261,88 @@
       document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
       document.getElementById('btn-cancel-finding').onclick = resetModal;
 
-      window.openGameModal = (game) => {
+            window.openGameModal = (game) => {
         trackEvent('game_clicked', { game_id: game.id });
         selectedGame = game;
         document.getElementById('modal-g-icon').textContent = game.icon;
         document.getElementById('modal-g-title').textContent = game.title;
         document.getElementById('modal-g-desc').textContent = game.desc;
-        resetModal(); modal.style.display = 'flex';
+        resetModal(); 
+
+        // GENERATE DYNAMIC BUTTONS
+        const actionsContainer = document.getElementById('modal-actions-container');
+        actionsContainer.innerHTML = ''; 
+
+        if (game.available) {
+          // 1. Random
+          if (game.modes.random) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-primary';
+            btn.textContent = '🎲 Play with Random';
+            btn.onclick = () => { trackEvent('play_random', { game_id: game.id }); startMatchmaking(); };
+            actionsContainer.appendChild(btn);
+          }
+
+          // 2. Friend by Code
+          if (game.modes.code) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-secondary';
+            btn.style.color = '#4cc9f0';
+            btn.style.borderColor = 'rgba(76,201,240,0.3)';
+            btn.textContent = '🔑 Play with Friend (Code)';
+            btn.onclick = () => document.getElementById('room-actions').classList.toggle('active');
+            actionsContainer.appendChild(btn);
+          }
+
+          // 3. Same Phone (Local)
+          if (game.modes.local) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-secondary';
+            btn.style.color = '#ffcc00';
+            btn.style.borderColor = 'rgba(255,204,0,0.3)';
+            btn.textContent = '👥 Same Phone (Local)';
+            btn.onclick = () => { location.href = `${game.file}?mode=local`; };
+            actionsContainer.appendChild(btn);
+          }
+
+          // 4. Vs Bot
+          if (game.modes.botLevels && game.modes.botLevels.length > 0) {
+            if (game.modes.botLevels.length === 1) {
+              const btn = document.createElement('button');
+              btn.className = 'btn-secondary';
+              btn.textContent = '🤖 Practice Bot';
+              btn.onclick = () => { location.href = `${game.file}?mode=bot&level=${game.modes.botLevels[0]}`; };
+              actionsContainer.appendChild(btn);
+            } else {
+              const botDiv = document.createElement('div');
+              botDiv.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 12px; border-radius: 12px; display:flex; flex-direction:column; gap:8px; margin-top:8px;';
+              
+              const label = document.createElement('div');
+              label.style.cssText = 'font-size:0.8rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;';
+              label.textContent = 'Play vs Bot';
+              botDiv.appendChild(label);
+
+              const chipsRow = document.createElement('div');
+              chipsRow.style.cssText = 'display:flex; gap:8px;';
+
+              const levelNames = { normal: 'Normal', high: 'High', extreme: 'Extreme' };
+              const colors = { normal: 'var(--accent)', high: 'var(--gold)', extreme: 'var(--danger)' };
+
+              game.modes.botLevels.forEach(level => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-secondary';
+                btn.style.cssText = `flex:1; padding: 8px; font-size: 0.85rem; border-color: ${colors[level] || 'rgba(255,255,255,0.1)'}; color: ${colors[level] || '#fff'};`;
+                btn.textContent = levelNames[level] || level;
+                btn.onclick = () => { location.href = `${game.file}?mode=bot&level=${level}`; };
+                chipsRow.appendChild(btn);
+              });
+              botDiv.appendChild(chipsRow);
+              actionsContainer.appendChild(botDiv);
+            }
+          }
+        }
+        
+        modal.style.display = 'flex';
       };
 
       document.getElementById('btn-notify-me').onclick = () => {
@@ -1276,7 +1384,7 @@
           document.getElementById('new-room-code').textContent = currentRoomCode;
           codeDisp.style.display = 'flex';
         } else {
-          net.createRoom(); 
+          net.createRoom(selectedGame.id); 
         }
       };
 
@@ -1298,8 +1406,8 @@
         const code = document.getElementById('join-room-input').value.trim().toUpperCase();
         if(!/^[A-Z0-9]{4}$/.test(code)) { joinErr.textContent = 'Code must be 4 letters/numbers.'; return; }
         trackEvent('join_room', { game_id: selectedGame.id });
-        if (DEMO_MODE) location.href = `${selectedGame.file}?mode=friend&room=${code}`;
-        else net.joinRoom(code);
+                if (DEMO_MODE) location.href = `${selectedGame.file}?mode=friend&room=${code}`;
+        else net.joinRoom(code, selectedGame.id);
       };
     }
   </script>
