@@ -24,7 +24,6 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
 
-  <!-- <script defer data-domain="YOUR-SITE-URL.com" src="https://plausible.io/js/script.js"></script> -->
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -478,7 +477,7 @@
         <h2 class="modal-title" id="modal-g-title">Game Title</h2>
         <p class="modal-desc" id="modal-g-desc">Game description.</p>
         
-                <div id="modal-actions-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;"></div>
+        <div id="modal-actions-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;"></div>
 
         <div class="room-actions" id="room-actions">
           <div style="display: flex; gap: 10px;">
@@ -621,7 +620,7 @@
       return BAD_WORDS.some(w => norm.includes(w));
     }
 
-            const GAMES = [
+    const GAMES = [
       { 
         id: 'swipe', icon: '⚡', title: 'Swipe Game', desc: 'Reaction swiping', file: 'swipe-game.html', highlight: true, tag: 'HOT', available: true,
         modes: { random: true, code: true, local: false, botLevels: ['normal'], chat: false } 
@@ -643,7 +642,11 @@
         modes: { random: true, code: true, local: false, botLevels: [], chat: false } 
       },
       { 
-        id: 'brawl', icon: '🥊', title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'NEW', available: true,
+        id: 'rps', icon: '✊', title: 'RPS: Clash', desc: 'Rock, Paper, Scissors', file: 'rps.html', tag: 'Soon', available: false,
+        modes: { random: true, code: true, local: false, botLevels: [], chat: false } 
+      },
+      { 
+        id: 'brawl', icon: '🥊', title: 'fight_1v1', desc: 'Fight to win', file: 'brawl.html', tag: 'Soon', available: false,
         modes: { random: true, code: true, local: false, botLevels: ['normal'], chat: false } 
       }
     ];
@@ -717,7 +720,7 @@
           this.socket.on('match:found', ({ room }) => {
             clearTimeout(findingTimeout); clearTimeout(fallbackTimeout);
             const tg = pendingGame || selectedGame || GAMES.find(g => g.id === 'swipe');
-            location.href = `${tg.file}?mode=random&room=${room}`;
+            location.href = `${tg.file}?mode=friend&room=${room}`;
           });
 
           this.socket.on('room:created', (code) => {
@@ -731,7 +734,7 @@
         }
       },
       sendChat(txt) { if(this.connected) this.socket.emit('chat:send', txt); },
-            findMatch(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'random' }); },
+      findMatch(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'random' }); },
       cancelMatch() { if(this.connected) this.socket.emit('match:cancel'); },
       createRoom(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'code' }); },
       joinRoom(code, gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'code', code: code }); },
@@ -1048,7 +1051,7 @@
       list.innerHTML = '';
       
       let data = [];
-            data = [...(realLeaderboard?.swipe?.[range] || [])];
+      data = [...(realLeaderboard?.swipe?.[range] || [])];
       
       const myBest = Storage.get('swiplay_best');
       if (myBest && !currentUser.isGuest) {
@@ -1147,8 +1150,6 @@
       window.addMessage = addMessage;
       sendBtn.onclick = sendClientChat;
       input.onkeypress = (e) => { if(e.key === 'Enter') sendClientChat(); };
-      
-      
     }
 
     function updatePlayers() {
@@ -1184,7 +1185,7 @@
 
       if(!isSelf && !/in.?game/i.test(p.status || '')) {
         const inv = document.createElement('button'); inv.className = 'invite-btn'; inv.textContent = 'Invite';
-                inv.onclick = () => {
+        inv.onclick = () => {
           const avail = GAMES.filter(g => g.available);
           if (DEMO_MODE) return showToast(`Invite sent to ${p.name}!`);
           if (avail.length === 0) return showToast("No games available right now.");
@@ -1194,24 +1195,39 @@
             return showToast(`Invite sent to ${p.name}!`);
           }
           
-          // Show premium picker (using the existing modal style)
-          const pickerList = document.getElementById('games-grid'); // Temporary reuse or create a new modal
-          let html = `<div class="glass modal-content" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999;" id="temp-picker">
-            <h3 style="font-weight:800; margin-bottom:16px;">Choose a Game</h3>
-            <div style="display:flex; flex-direction:column; gap:10px;">`;
-            
+          // Create Secure Picker
+          const picker = document.createElement('div');
+          picker.className = 'glass modal-content';
+          picker.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999; width:90%; max-width:320px;';
+          
+          const title = document.createElement('h3');
+          title.style.cssText = 'font-weight:800; margin-bottom:16px;';
+          title.textContent = 'Choose a Game';
+          
+          const list = document.createElement('div');
+          list.style.cssText = 'display:flex; flex-direction:column; gap:10px;';
+          
           avail.forEach(g => {
-            html += `<button class="btn-secondary" onclick="
-              pendingGame = GAMES.find(x => x.id === '${g.id}');
-              net.sendInvite('${p.id}', '${g.id}');
-              showToast('Invite sent to ${p.name}!');
-              document.getElementById('temp-picker').remove();
-            ">${g.icon} ${g.title}</button>`;
+            const btn = document.createElement('button');
+            btn.className = 'btn-secondary';
+            btn.textContent = `${g.icon} ${g.title}`;
+            btn.onclick = () => {
+              pendingGame = g;
+              net.sendInvite(p.id, g.id);
+              showToast(`Invite sent to ${p.name}!`);
+              picker.remove();
+            };
+            list.appendChild(btn);
           });
           
-          html += `</div><button class="btn-ghost" onclick="document.getElementById('temp-picker').remove()" style="margin-top:10px;">Cancel</button></div>`;
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'btn-ghost';
+          cancelBtn.style.marginTop = '10px';
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.onclick = () => picker.remove();
           
-          document.body.insertAdjacentHTML('beforeend', html);
+          picker.append(title, list, cancelBtn);
+          document.body.appendChild(picker);
         };
         row.appendChild(inv);
       }
@@ -1261,7 +1277,7 @@
       document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && modal.style.display === 'flex') closeModal(); });
       document.getElementById('btn-cancel-finding').onclick = resetModal;
 
-            window.openGameModal = (game) => {
+      window.openGameModal = (game) => {
         trackEvent('game_clicked', { game_id: game.id });
         selectedGame = game;
         document.getElementById('modal-g-icon').textContent = game.icon;
@@ -1351,7 +1367,7 @@
         showToast("We'll let you know!"); closeModal();
       };
 
-            function startMatchmaking() {
+      function startMatchmaking() {
         mainView.style.display = 'none'; emptyView.style.display = 'none'; findingView.style.display = 'flex';
         
         if (DEMO_MODE) {
@@ -1366,12 +1382,8 @@
         }
       }
 
-      
-      
       document.getElementById('btn-keep-waiting').onclick = startMatchmaking;
       document.getElementById('btn-play-bot').onclick = () => { location.href = `${selectedGame.file}?mode=bot`; };
-
-      
 
       let currentRoomCode = '';
       document.getElementById('btn-create-room').onclick = () => {
@@ -1403,7 +1415,7 @@
         const code = document.getElementById('join-room-input').value.trim().toUpperCase();
         if(!/^[A-Z0-9]{4}$/.test(code)) { joinErr.textContent = 'Code must be 4 letters/numbers.'; return; }
         trackEvent('join_room', { game_id: selectedGame.id });
-                if (DEMO_MODE) location.href = `${selectedGame.file}?mode=friend&room=${code}`;
+        if (DEMO_MODE) location.href = `${selectedGame.file}?mode=friend&room=${code}`;
         else net.joinRoom(code, selectedGame.id);
       };
     }
