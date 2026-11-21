@@ -706,11 +706,12 @@
             document.getElementById('live-dot').style.display = 'none';
           });
 
-          this.socket.on('players:update', (players) => {
+                    this.socket.on('players:update', (players) => {
             realPlayers = players;
-            function rosterKey(p) { return (p && (p.userId || p.id)) || ''; }
+            updatePlayers(); // <-- Just call the function to update the UI
+          });
 
-function updatePlayers() {
+          
 
           this.socket.on('chat:history', (msgs) => {
             document.getElementById('chat-messages').innerHTML = '';
@@ -741,7 +742,7 @@ function updatePlayers() {
           });
 
           this.socket.on('invite:receive', ({ from, gameId, inviteId }) => {
-            showInviteToast(from.name, gameId, from.id);
+            showInviteToast(from.name, gameId, inviteId);
           });
         }
       },
@@ -1163,7 +1164,18 @@ function updatePlayers() {
       sendBtn.onclick = sendClientChat;
       input.onkeypress = (e) => { if(e.key === 'Enter') sendClientChat(); };
     }
+    // ADD THIS FUNCTION RIGHT ABOVE updatePlayers()
+function rosterKey(p) { 
+  return (p && (p.userId || p.id)) || ''; 
+}
 
+function updatePlayers() {
+  const list = document.getElementById('players-list');
+  const search = document.getElementById('player-search');
+  const filter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
+
+  const myKey = rosterKey(currentUser);
+  // ... rest of the function ...
     function updatePlayers() {
   const list = document.getElementById('players-list');
   const search = document.getElementById('player-search');
