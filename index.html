@@ -1169,13 +1169,7 @@ function rosterKey(p) {
   return (p && (p.userId || p.id)) || ''; 
 }
 
-function updatePlayers() {
-  const list = document.getElementById('players-list');
-  const search = document.getElementById('player-search');
-  const filter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
 
-  const myKey = rosterKey(currentUser);
-  // ... rest of the function ...
     function updatePlayers() {
   const list = document.getElementById('players-list');
   const search = document.getElementById('player-search');
