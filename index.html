@@ -709,8 +709,8 @@
           this.socket.on('players:update', (players) => {
             realPlayers = players;
             function rosterKey(p) { return (p && (p.userId || p.id)) || ''; }
-            if(!DEMO_MODE) updatePlayers();
-          });
+
+function updatePlayers() {
 
           this.socket.on('chat:history', (msgs) => {
             document.getElementById('chat-messages').innerHTML = '';
