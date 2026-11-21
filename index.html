@@ -594,25 +594,36 @@
     function escapeHTML(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
     function renderAvatar(user, sizePx = 40) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'avatar-wrapper';
-      wrapper.style.width = `${sizePx}px`; wrapper.style.height = `${sizePx}px`;
-      
-      if (user.avatarType === 'photo' && user.avatar && user.avatar.startsWith('data:image/')) {
-        const img = document.createElement('img'); img.src = user.avatar; wrapper.appendChild(img);
-      } else {
-        const txt = document.createElement('div');
-        txt.textContent = (user.avatar || '🤖').substring(0, 8);
-        txt.style.fontSize = `${sizePx * 0.6}px`;
-        wrapper.appendChild(txt);
-      }
-      if (user.gender && user.gender !== 'none') {
-        const dot = document.createElement('div');
-        dot.className = `gender-dot gender-${user.gender}`;
-        wrapper.appendChild(dot);
-      }
-      return wrapper;
-    }
+  const wrapper = document.createElement('div');
+  wrapper.className = 'avatar-wrapper';
+  wrapper.style.width = `${sizePx}px`;
+  wrapper.style.height = `${sizePx}px`;
+
+  const raw = user && user.avatar ? String(user.avatar) : '';
+  const isPhoto = !!raw && (user.avatarType === 'photo' || raw.startsWith('data:image/'));
+
+  const fallback = document.createElement('div');
+  fallback.textContent = (!raw || raw.startsWith('data:')) ? '🤖' : raw.substring(0, 8);
+  fallback.style.fontSize = `${sizePx * 0.6}px`;
+
+  if (isPhoto) {
+    const img = document.createElement('img');
+    img.src = raw;
+    img.alt = '';
+    img.decoding = 'async';
+    img.onerror = () => { img.remove(); wrapper.appendChild(fallback); };  // corrupt/short data URL
+    wrapper.appendChild(img);
+  } else {
+    wrapper.appendChild(fallback);
+  }
+
+  if (user && user.gender && user.gender !== 'none') {
+    const dot = document.createElement('div');
+    dot.className = `gender-dot gender-${user.gender}`;
+    wrapper.appendChild(dot);
+  }
+  return wrapper;
+}
 
     const BAD_WORDS = ['fuck', 'shit', 'bitch', 'dick', 'cunt', 'bastard'];
     function isProfane(text) {
@@ -697,6 +708,7 @@
 
           this.socket.on('players:update', (players) => {
             realPlayers = players;
+            function rosterKey(p) { return (p && (p.userId || p.id)) || ''; }
             if(!DEMO_MODE) updatePlayers();
           });
 
@@ -1153,34 +1165,48 @@
     }
 
     function updatePlayers() {
-      const list = document.getElementById('players-list');
-      const search = document.getElementById('player-search');
-      const currentFilter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
+  const list = document.getElementById('players-list');
+  const search = document.getElementById('player-search');
+  const filter = document.querySelector('#panel-players .filter-chip.active').dataset.filter;
 
-      const dataSource = realPlayers;
-      document.getElementById('online-count').textContent = Math.max(1, dataSource.length);
+  const myKey = rosterKey(currentUser);
+  const all = realPlayers.filter(p => rosterKey(p));
+  const seen = new Set([myKey]);
+  const others = [];
 
-      list.innerHTML = '';
-      const q = search.value.toLowerCase();
-      
-      if('all' === currentFilter || currentUser.gender === currentFilter || currentUser.isGuest) {
-        if(currentUser.name.toLowerCase().includes(q)) list.appendChild(createPlayerRow(currentUser, true));
-      }
-      
-      dataSource.forEach(p => {
-        if (p.id === currentUser.id) return;
-        if(currentFilter !== 'all' && p.gender !== currentFilter) return;
-        if(!p.name.toLowerCase().includes(q)) return;
-        list.appendChild(createPlayerRow(p, false));
-      });
-    }
+  for (const p of all) {
+    const k = rosterKey(p);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    if (filter !== 'all' && p.gender !== filter) continue;
+    others.push(p);
+  }
+
+  const q = search.value.trim().toLowerCase();
+  const filtered = q ? others.filter(p => (p.name || '').toLowerCase().includes(q)) : others;
+
+  document.getElementById('online-count').textContent = Math.max(1, seen.size);
+  list.innerHTML = '';
+  list.appendChild(createPlayerRow(currentUser, true));
+
+  filtered.forEach(p => list.appendChild(createPlayerRow(p, false)));
+
+  if (!filtered.length) {
+    const empty = document.createElement('div');
+    empty.className = 'lb-empty';
+    empty.style.padding = '20px';
+    empty.style.textAlign = 'center';
+    empty.textContent = DEMO_MODE ? 'Demo mode — connect the server to see players.' : 'Nobody else is here yet.';
+    list.appendChild(empty);
+  }
+}
 
     function createPlayerRow(p, isSelf) {
       const row = document.createElement('div'); row.className = 'player-row';
       const info = document.createElement('div'); info.className = 'player-info'; info.appendChild(renderAvatar(p, 40));
       const det = document.createElement('div'); det.className = 'player-details';
       const name = document.createElement('span'); name.className = 'player-name'; name.textContent = isSelf ? p.name + ' (You)' : p.name;
-      const status = document.createElement('span'); status.className = `player-status ${(p.status||'online').replace(' ','').toLowerCase()}`; status.textContent = isSelf ? 'Online' : p.status;
+      const statusText = isSelf ? 'online' : (p.status || 'online'); const status = document.createElement('span'); status.className = `player-status ${statusText.replace(/\s+/g, '').toLowerCase()}`; status.textContent = isSelf ? 'Online' : statusText;
       det.append(name, status); info.appendChild(det); row.appendChild(info);
 
       if(!isSelf && !/in.?game/i.test(p.status || '')) {
@@ -1191,7 +1217,7 @@
           if (avail.length === 0) return showToast("No games available right now.");
           
           if (avail.length === 1) {
-            net.sendInvite(p.id, avail[0].id);
+            net.sendInvite(p.userId || p.id, avail[0].id);
             return showToast(`Invite sent to ${p.name}!`);
           }
           
@@ -1213,7 +1239,7 @@
             btn.textContent = `${g.icon} ${g.title}`;
             btn.onclick = () => {
               pendingGame = g;
-              net.sendInvite(p.id, g.id);
+              net.sendInvite(p.userId || p.id, g.id);
               showToast(`Invite sent to ${p.name}!`);
               picker.remove();
             };
