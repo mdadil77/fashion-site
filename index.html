@@ -273,6 +273,18 @@
       .cookie-notice { padding-bottom: calc(16px + var(--sab) + 60px); flex-direction: column; gap: 10px; text-align: center; }
     }
     @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+    .msg-reply-preview { font-size: 0.75rem; background: rgba(0,0,0,0.25); border-left: 3px solid var(--accent); padding: 4px 8px; border-radius: 6px; margin-bottom: 4px; color: var(--text-muted); }
+    .msg-reply-preview strong { color: var(--accent); display: block; font-size: 0.7rem; }
+    .msg-edited { font-size: 0.65rem; color: var(--text-muted); margin-left: 6px; font-style: italic; }
+    .msg-actions { display: flex; gap: 6px; margin-top: 2px; opacity: 0.6; transition: 0.2s; }
+    .chat-msg-row:hover .msg-actions { opacity: 1; }
+    .msg-action-btn { font-size: 0.7rem; color: var(--text-muted); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); }
+    .msg-action-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    .msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .reaction-pill { font-size: 0.75rem; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.08); border: 1px solid transparent; cursor: pointer; }
+    .reaction-pill.mine { border-color: var(--accent); background: rgba(0,255,102,0.15); }
+    .reply-bar { display: none; align-items: center; justify-content: space-between; background: rgba(0,255,102,0.1); border-left: 3px solid var(--accent); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; margin-bottom: 4px; }
+    .reply-bar.active { display: flex; }
   </style>
 </head>
 <body>
@@ -715,12 +727,19 @@
 
           this.socket.on('chat:history', (msgs) => {
             document.getElementById('chat-messages').innerHTML = '';
-            msgs.forEach(m => addMessage(m.user, m.text, m.user.id === currentUser.id));
+            msgs.forEach(m => addMessage(m, m.user.id === currentUser.id));
           });
 
           this.socket.on('chat:message', (msg) => {
-            addMessage(msg.user, msg.text, msg.user.id === currentUser.id);
+            addMessage(msg, msg.user.id === currentUser.id);
           });
+
+          this.socket.on('chat:updated', (msg) => {
+            if (window.updateChatMessage) window.updateChatMessage(msg);
+          });
+          
+
+          
 
           this.socket.on('leaderboard:update', (lb) => {
             if (lb && lb.swipe) realLeaderboard = lb;
@@ -746,7 +765,9 @@
           });
         }
       },
-      sendChat(txt) { if(this.connected) this.socket.emit('chat:send', txt); },
+      sendChat(payload) { if(this.connected) this.socket.emit('chat:send', payload); },
+      editChat(id, text) { if(this.connected) this.socket.emit('chat:edit', { id, text }); },
+      reactChat(id, emoji) { if(this.connected) this.socket.emit('chat:react', { id, emoji }); },
       findMatch(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'random' }); },
       cancelMatch() { if(this.connected) this.socket.emit('match:cancel'); },
       createRoom(gameId) { if(this.connected) this.socket.emit('room:enter', { gameId, mode: 'code' }); },
@@ -1121,7 +1142,25 @@
       const container = document.getElementById('chat-messages');
       const emojiBtn = document.getElementById('btn-emoji-toggle');
       const emojiPicker = document.getElementById('emoji-picker');
-      
+      const inputArea = document.querySelector('.chat-input-area');
+
+      // Add Reply/Edit preview bar above the chat input
+      const replyBar = document.createElement('div');
+      replyBar.className = 'reply-bar';
+      replyBar.innerHTML = `<span id="reply-bar-text"></span><button id="reply-bar-cancel" style="color:var(--danger);font-weight:800;">✕</button>`;
+      inputArea.insertBefore(replyBar, inputArea.firstChild);
+
+      let replyingTo = null; // { id, name, text }
+      let editingMsgId = null;
+
+      function clearMode() {
+        replyingTo = null;
+        editingMsgId = null;
+        replyBar.classList.remove('active');
+        input.placeholder = 'Type a message...';
+      }
+      document.getElementById('reply-bar-cancel').onclick = clearMode;
+
       const chatEmojis = ['😀','😂','🔥','💀','❤️','👍','✨','😎','👀','🎮'];
       chatEmojis.forEach(e => {
         const b = document.createElement('button'); b.textContent = e;
@@ -1132,38 +1171,151 @@
       emojiBtn.onclick = (e) => { e.stopPropagation(); emojiPicker.classList.toggle('active'); };
       document.addEventListener('click', (e) => { if(!e.target.closest('.chat-input-area')) emojiPicker.classList.remove('active'); });
 
-      function addMessage(user, text, isOwn) {
-        const row = document.createElement('div'); row.className = `chat-msg-row ${isOwn ? 'own' : ''}`;
-        const content = document.createElement('div'); content.className = 'msg-content';
-        const header = document.createElement('div'); header.className = 'msg-header';
-        
-        const name = document.createElement('span'); name.className = 'msg-name';
-        name.textContent = user.name + (DEMO_MODE && !isOwn ? ' (Bot)' : '');
-        
-        const time = document.createElement('span'); time.className = 'msg-time';
-        const d = new Date(); time.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        
+      function renderMessageElement(msg, isOwn) {
+        const row = document.createElement('div');
+        row.className = `chat-msg-row ${isOwn ? 'own' : ''}`;
+        row.dataset.msgId = msg.id || '';
+
+        const content = document.createElement('div');
+        content.className = 'msg-content';
+
+        const header = document.createElement('div');
+        header.className = 'msg-header';
+        const name = document.createElement('span');
+        name.className = 'msg-name';
+        name.textContent = msg.user.name + (DEMO_MODE && !isOwn ? ' (Bot)' : '');
+        const time = document.createElement('span');
+        time.className = 'msg-time';
+        const d = new Date(msg.time || Date.now());
+        time.textContent = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
         header.append(name, time);
-        const bubble = document.createElement('div'); bubble.className = 'msg-bubble';
-        bubble.textContent = text; // Safe textContent
-        
-        content.append(header, bubble); row.append(renderAvatar(user, 36), content);
-        container.appendChild(row); container.scrollTop = container.scrollHeight;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+
+        // 1. Reply Quote Preview
+        if (msg.replyTo) {
+          const rep = document.createElement('div');
+          rep.className = 'msg-reply-preview';
+          const repName = document.createElement('strong');
+          repName.textContent = msg.replyTo.name;
+          const repTxt = document.createElement('span');
+          repTxt.textContent = msg.replyTo.text;
+          rep.append(repName, repTxt);
+          bubble.appendChild(rep);
+        }
+
+        const txtNode = document.createElement('span');
+        txtNode.textContent = msg.text;
+        bubble.appendChild(txtNode);
+
+        if (msg.edited) {
+          const ed = document.createElement('span');
+          ed.className = 'msg-edited';
+          ed.textContent = '(edited)';
+          bubble.appendChild(ed);
+        }
+
+        // 2. Reactions Row
+        const reactRow = document.createElement('div');
+        reactRow.className = 'msg-reactions';
+        if (msg.reactions) {
+          Object.entries(msg.reactions).forEach(([emoji, users]) => {
+            const pill = document.createElement('button');
+            pill.className = `reaction-pill ${users.includes(currentUser.id) ? 'mine' : ''}`;
+            pill.textContent = `${emoji} ${users.length}`;
+            pill.onclick = () => net.reactChat(msg.id, emoji);
+            reactRow.appendChild(pill);
+          });
+        }
+
+        // 3. Action Buttons (Reply, Quick React, 5-Min Edit)
+        const actions = document.createElement('div');
+        actions.className = 'msg-actions';
+
+        const btnReply = document.createElement('button');
+        btnReply.className = 'msg-action-btn';
+        btnReply.textContent = '↩ Reply';
+        btnReply.onclick = () => {
+          editingMsgId = null;
+          replyingTo = { id: msg.id, name: msg.user.name, text: msg.text };
+          document.getElementById('reply-bar-text').textContent = `Replying to ${msg.user.name}: "${msg.text.substring(0, 35)}"`;
+          replyBar.classList.add('active');
+          input.focus();
+        };
+        actions.appendChild(btnReply);
+
+        ['🔥', '😂', '❤️'].forEach(em => {
+          const rBtn = document.createElement('button');
+          rBtn.className = 'msg-action-btn';
+          rBtn.textContent = em;
+          rBtn.onclick = () => net.reactChat(msg.id, em);
+          actions.appendChild(rBtn);
+        });
+
+        // Show Edit button only if it's your message AND under 5 minutes old
+        if (isOwn && msg.id && (Date.now() - (msg.time || 0) < 300000)) {
+          const btnEdit = document.createElement('button');
+          btnEdit.className = 'msg-action-btn';
+          btnEdit.textContent = '✏️ Edit';
+          btnEdit.onclick = () => {
+            if (Date.now() - msg.time > 300000) return showToast('Edit window (5 mins) expired.');
+            replyingTo = null;
+            editingMsgId = msg.id;
+            input.value = msg.text;
+            document.getElementById('reply-bar-text').textContent = 'Editing message...';
+            replyBar.classList.add('active');
+            input.focus();
+          };
+          actions.appendChild(btnEdit);
+        }
+
+        content.append(header, bubble);
+        if (reactRow.children.length > 0) content.appendChild(reactRow);
+        if (msg.id) content.appendChild(actions);
+
+        row.append(renderAvatar(msg.user, 36), content);
+        return row;
+      }
+
+      function addMessage(msg, isOwn) {
+        // Fallback if called in Demo Mode with old arguments
+        if (!msg.user) msg = { id: 'demo_' + Date.now(), user: msg, text: isOwn, time: Date.now(), reactions: {} };
+        const row = renderMessageElement(msg, msg.user.id === currentUser.id);
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
+      }
+
+      function updateChatMessage(msg) {
+        const existing = container.querySelector(`[data-msg-id="${msg.id}"]`);
+        if (existing) {
+          existing.replaceWith(renderMessageElement(msg, msg.user.id === currentUser.id));
+        }
       }
 
       function sendClientChat() {
-        const text = input.value.trim(); if(!text) return;
-        
+        const text = input.value.trim();
+        if (!text) return;
+
         if (DEMO_MODE) {
-          addMessage(currentUser, text, true); input.value = '';
+          addMessage({ id: 'demo_' + Date.now(), user: currentUser, text, time: Date.now(), replyTo: replyingTo, reactions: {} }, true);
+        } else if (editingMsgId) {
+          net.editChat(editingMsgId, text);
         } else {
-          net.sendChat(text); input.value = '';
+          net.sendChat({ text, replyToId: replyingTo ? replyingTo.id : null });
         }
+
+        input.value = '';
+        clearMode();
       }
+
       window.addMessage = addMessage;
+      window.updateChatMessage = updateChatMessage;
       sendBtn.onclick = sendClientChat;
-      input.onkeypress = (e) => { if(e.key === 'Enter') sendClientChat(); };
+      input.onkeypress = (e) => { if (e.key === 'Enter') sendClientChat(); };
     }
+
+      
     // ADD THIS FUNCTION RIGHT ABOVE updatePlayers()
 function rosterKey(p) { 
   return (p && (p.userId || p.id)) || ''; 
