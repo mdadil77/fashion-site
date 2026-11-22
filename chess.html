@@ -13,8 +13,7 @@
   </script>
 
   <script>
-    // REPLACE THIS WITH YOUR ACTUAL RENDER URL
-    const SERVER_URL = 'https://swiplay-server.onrender.com'; 
+    const SERVER_URL = 'https://swiplay-server.onrender.com';
   </script>
 
   <style>
@@ -36,19 +35,20 @@
     a { text-decoration: none; color: inherit; }
     input { font: inherit; outline: none; border: none; background: transparent; color: inherit; }
 
-    .top-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(22,26,43,.4); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.05); z-index: 20; }
+    .top-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(22,26,43,.5); border-bottom: 1px solid rgba(255,255,255,.05); z-index: 20; }
     .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 6px 12px; border-radius: 16px; font-weight: 700; font-size: .85rem; border: 1px solid rgba(255,255,255,.1); }
     .btn-ghost:active { transform: scale(.96); }
     .mode-badge { background: rgba(0,255,102,.12); border: 1px solid var(--me); color: var(--me); padding: 5px 12px; border-radius: 16px; font-weight: 800; font-size: .75rem; letter-spacing: 1px; text-transform: uppercase; }
     .room-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: .85rem; letter-spacing: 2px; color: var(--gold); }
     .top-spacer { flex: 1; }
     .icon-btn { background: rgba(255,255,255,.08); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; border: 1px solid rgba(255,255,255,.1); }
+    .icon-btn:active { transform: scale(.92); }
 
-    .player-card { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--glass); backdrop-filter: blur(12px); border-bottom: 2px solid transparent; transition: .25s; }
+    .player-card { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 6px 14px; background: var(--glass); border-bottom: 2px solid transparent; transition: .25s; position: relative; z-index: 10; }
     .player-card.me { border-bottom-color: var(--me); }
     .player-card.opp { border-bottom-color: var(--opp); }
     .player-card.active { background: rgba(255,255,255,.08); box-shadow: 0 4px 16px rgba(0,0,0,.3); }
-    .pc-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.08); display: grid; place-items: center; font-size: 1.1rem; position: relative; flex-shrink: 0; overflow: hidden; }
+    .pc-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.08); display: grid; place-items: center; font-size: 1.1rem; position: relative; flex-shrink: 0; overflow: hidden; }
     .pc-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .pc-avatar .gender-dot { position: absolute; bottom: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg2); z-index: 2; }
     .gender-male { background: #4cc9f0; } .gender-female { background: #ff6bcb; } .gender-none { display: none; }
@@ -56,14 +56,15 @@
     .pc-name { font-weight: 800; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pc-captures { display: flex; gap: 1px; font-size: .75rem; color: var(--muted); line-height: 1; margin-top: 2px; min-height: 14px; flex-wrap: wrap; }
     .pc-material { color: var(--me); font-weight: 800; font-size: .7rem; margin-left: 4px; }
-    .pc-clock { font-size: 1.3rem; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 1px; padding: 4px 12px; background: rgba(0,0,0,.35); border-radius: 10px; transition: .2s; min-width: 80px; text-align: center; }
+    .pc-clock { font-size: 1.2rem; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 1px; padding: 4px 12px; background: rgba(0,0,0,.35); border-radius: 10px; transition: .2s; min-width: 76px; text-align: center; }
     .pc-clock.warning { color: var(--gold); animation: pulse 1s infinite alternate; }
     .pc-clock.danger { color: var(--opp); animation: pulse .5s infinite alternate; }
     @keyframes pulse { to { transform: scale(1.06); } }
 
-    .arena { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 8px; min-height: 0; position: relative; }
-    .board-wrap { width: min(92vw, 480px); aspect-ratio: 1; position: relative; }
-    .board { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); border: 3px solid #161a2b; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.7); }
+    /* Constrained arena so the board NEVER overlaps player cards */
+    .arena { flex: 1; display: flex; justify-content: center; align-items: center; padding: 8px; min-height: 0; overflow: hidden; position: relative; }
+    .board-wrap { height: 100%; max-height: 100%; max-width: 100%; aspect-ratio: 1 / 1; position: relative; container-type: inline-size; }
+    .board { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); border: 3px solid #161a2b; border-radius: 8px; overflow: hidden; box-shadow: 0 12px 35px rgba(0,0,0,.7); }
     .sq { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .12s; }
     .sq.light { background: var(--light); }
     .sq.dark { background: var(--dark); }
@@ -73,23 +74,23 @@
     @keyframes checkPulse { to { background: rgba(255,0,85,.75) !important; } }
     .sq.dot::after { content: ''; position: absolute; width: 28%; height: 28%; background: rgba(0,255,102,.55); border-radius: 50%; pointer-events: none; }
     .sq.capture-ring::before { content: ''; position: absolute; inset: 6%; border: 4px solid rgba(255,0,85,.65); border-radius: 50%; pointer-events: none; }
-    .piece { font-size: min(3.6rem, 12vw); line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; z-index: 2; transition: transform .1s; }
+    .piece { font-size: 9.5cqw; line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; z-index: 2; transition: transform .1s; }
     .piece.w { color: #fff; filter: drop-shadow(0 2px 3px rgba(0,0,0,.7)); }
     .piece.b { color: #0a0a0a; filter: drop-shadow(0 1px 1px rgba(255,255,255,.35)) drop-shadow(0 3px 4px rgba(0,0,0,.9)); }
     .sq:active .piece { transform: scale(1.1); }
 
-    .move-list { max-height: 70px; overflow-y: auto; padding: 6px 12px; background: rgba(0,0,0,.25); border-top: 1px solid rgba(255,255,255,.06); font-size: .75rem; font-family: ui-monospace, monospace; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 8px; line-height: 1.4; }
+    .move-list { flex-shrink: 0; max-height: 44px; overflow-y: auto; padding: 6px 12px; background: rgba(0,0,0,.25); border-top: 1px solid rgba(255,255,255,.06); font-size: .75rem; font-family: ui-monospace, monospace; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 8px; line-height: 1.4; position: relative; z-index: 10; }
     .move-list .num { color: #666; font-weight: 700; }
     .move-list .mv { color: #ddd; }
     .move-list .mv:last-child { color: var(--gold); font-weight: 800; }
 
-    .actions { display: flex; gap: 8px; padding: 8px 12px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); background: rgba(22,26,43,.5); border-top: 1px solid rgba(255,255,255,.06); }
+    .actions { flex-shrink: 0; display: flex; gap: 8px; padding: 8px 12px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); background: rgba(22,26,43,.5); border-top: 1px solid rgba(255,255,255,.06); position: relative; z-index: 10; }
     .actions button { flex: 1; padding: 10px; border-radius: 12px; background: rgba(255,255,255,.08); font-weight: 800; font-size: .8rem; transition: .2s; }
     .actions button:active { transform: scale(.96); }
     .actions button.danger { color: var(--opp); border: 1px solid rgba(255,0,85,.25); }
     .actions button.primary { background: var(--me); color: #000; }
 
-    .overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; z-index: 100; text-align: center; padding: 24px; background: rgba(8,10,16,.85); backdrop-filter: blur(8px); }
+    .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; z-index: 100; text-align: center; padding: 24px; background: rgba(8,10,16,.85); backdrop-filter: blur(8px); }
     .overlay.hidden { display: none; }
     .overlay h2 { font-size: 2rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
     .overlay h2.win { color: var(--me); text-shadow: 0 0 25px rgba(0,255,102,.5); }
@@ -121,7 +122,7 @@
     .promo-btn:active { transform: scale(.95); background: rgba(0,255,102,.2); border-color: var(--me); }
     .promo-btn.b { color: #111; }
 
-    .chat-panel { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: rgba(8,10,16,.96); backdrop-filter: blur(16px); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column; z-index: 150; transform: translateY(100%); transition: transform .3s ease; border-top: 1px solid rgba(255,255,255,.1); }
+    .chat-panel { position: fixed; left: 0; right: 0; bottom: 0; height: 60%; background: rgba(8,10,16,.96); backdrop-filter: blur(16px); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column; z-index: 150; transform: translateY(100%); transition: transform .3s ease; border-top: 1px solid rgba(255,255,255,.1); }
     .chat-panel.open { transform: translateY(0); }
     .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,.08); font-weight: 800; font-size: .9rem; }
     .chat-mute-btn { background: rgba(255,255,255,.08); padding: 5px 10px; border-radius: 14px; font-size: .7rem; font-weight: 700; }
@@ -152,6 +153,7 @@
   <div class="mode-badge" id="mode-badge">BOT</div>
   <div class="room-code" id="room-code" style="display:none"></div>
   <div class="top-spacer"></div>
+  <button class="icon-btn" id="btn-sound" title="Toggle sound">🔊</button>
   <button class="icon-btn" id="btn-flip" title="Flip board">⇅</button>
 </div>
 
@@ -199,10 +201,7 @@
       </div>
     </div>
 
-    <div class="auto-flip-row" id="setup-flip-row" style="display:none">
-      <span>Auto-flip board</span>
-      <div class="toggle on" id="auto-flip-toggle"></div>
-    </div>
+    
 
     <div style="margin-top:20px">
       <button class="btn-primary" id="setup-start" style="width:100%">Start Game</button>
@@ -238,6 +237,25 @@
   <div class="promo-grid" id="promo-grid"></div>
 </div>
 
+<!-- RESIGN CONFIRM OVERLAY -->
+<div class="overlay hidden" id="resign-overlay">
+  <h2 style="font-size:1.5rem" id="resign-title">Resign game?</h2>
+  <p id="resign-desc">You will forfeit this match.</p>
+  
+  <!-- Online / Bot Resign -->
+  <div style="display:flex;gap:10px" id="resign-single-actions">
+    <button class="btn-primary" id="resign-yes" style="background:var(--opp);color:#fff;box-shadow:0 10px 25px rgba(255,0,85,.3)">Resign</button>
+    <button class="btn-secondary" id="resign-no">Cancel</button>
+  </div>
+
+  <!-- Local Mode Resign -->
+  <div style="display:none;gap:10px;flex-wrap:wrap;justify-content:center" id="resign-local-actions">
+    <button class="btn-primary" id="resign-white" style="background:#fff;color:#000;">White Resigns</button>
+    <button class="btn-primary" id="resign-black" style="background:#111;color:#fff;border:1px solid #333;">Black Resigns</button>
+    <button class="btn-secondary" id="resign-cancel-local">Cancel</button>
+  </div>
+</div>
+
 <!-- CHAT -->
 <div class="chat-panel" id="chat-panel">
   <div class="chat-header">
@@ -266,6 +284,76 @@
 
 <script type="module">
   import { Chess } from 'chess.js';
+
+  // ============================================================
+  // WEB AUDIO SOUND ENGINE (Zero-lag synthesized chess SFX)
+  // ============================================================
+  const SFX = (() => {
+    let ctx = null;
+    let enabled = true;
+
+    function getCtx() {
+      if (!enabled) return null;
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      return ctx;
+    }
+
+    function tone(freq, dur, type = 'sine', vol = 0.15, delay = 0, freqEnd = null) {
+      const c = getCtx();
+      if (!c) return;
+      const now = c.currentTime + delay;
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, now + dur);
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + dur);
+    }
+
+    return {
+      get enabled() { return enabled; },
+      toggle() { enabled = !enabled; return enabled; },
+      move() { tone(240, 0.06, 'triangle', 0.18, 0, 110); },
+      capture() {
+        tone(180, 0.09, 'sawtooth', 0.16, 0, 70);
+        tone(420, 0.05, 'triangle', 0.12, 0.02, 160);
+      },
+      check() {
+        tone(660, 0.09, 'sine', 0.18, 0);
+        tone(880, 0.14, 'sine', 0.18, 0.1);
+      },
+      yourTurn() {
+        tone(520, 0.08, 'sine', 0.12, 0.08);
+        tone(660, 0.12, 'sine', 0.12, 0.15);
+      },
+      start() {
+        tone(440, 0.1, 'sine', 0.14, 0);
+        tone(554, 0.1, 'sine', 0.14, 0.09);
+        tone(659, 0.18, 'sine', 0.16, 0.18);
+      },
+      win() {
+        tone(523, 0.12, 'triangle', 0.18, 0);
+        tone(659, 0.12, 'triangle', 0.18, 0.12);
+        tone(784, 0.12, 'triangle', 0.18, 0.24);
+        tone(1046, 0.3, 'triangle', 0.2, 0.36);
+      },
+      lose() {
+        tone(392, 0.16, 'sawtooth', 0.12, 0);
+        tone(349, 0.16, 'sawtooth', 0.12, 0.16);
+        tone(294, 0.3, 'sawtooth', 0.12, 0.32);
+      },
+      draw() {
+        tone(440, 0.15, 'sine', 0.14, 0);
+        tone(440, 0.22, 'sine', 0.14, 0.18);
+      }
+    };
+  })();
 
   // ============================================================
   // WORKER CODE (BOT)
@@ -379,7 +467,6 @@
 
   const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
   const botWorker = new Worker(URL.createObjectURL(workerBlob), { type: 'module' });
-  
   botWorker.onerror = (e) => { showToast("Bot error: " + e.message); };
 
   // ============================================================
@@ -422,10 +509,10 @@
     legalMoves: [],
     lastMove: null,
     flipped: false,
-    autoFlip: true,
+    autoFlip: false, // Disabled by default so local mode doesn't rotate every move
     clockOffset: 0,
     clocks: { w: 180000, b: 180000 },
-    lastMoveTime: Date.now(), // <--- FIXED: Added initialization
+    lastMoveTime: Date.now(),
     interval: null,
     socket: null,
     matchId: null,
@@ -445,8 +532,7 @@
     const state = S.game.board();
     
     let isFlipped = S.flipped || S.myColor === 'b';
-    if (isLocal && S.autoFlip && S.game.turn() === 'b') isFlipped = true;
-    if (isLocal && S.autoFlip && S.game.turn() === 'w') isFlipped = false;
+    
 
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
@@ -488,37 +574,23 @@
   }
 
   function renderClocks(activeRemaining, activeTurn) {
-    if (isLive) {
-      const wMs = S.clocks.w;
-      const bMs = S.clocks.b;
-      const myMs = S.myColor === 'w' ? wMs : bMs;
-      const oppMs = S.myColor === 'w' ? bMs : wMs;
-      const fmt = (ms) => {
-        const s = Math.max(0, Math.floor(ms / 1000));
-        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-      };
-      $('my-clock').textContent = fmt(myMs);
-      $('opp-clock').textContent = fmt(oppMs);
-    } else {
-      let wMs = S.clocks.w;
-      let bMs = S.clocks.b;
-      if (activeTurn === 'w' && activeRemaining !== undefined) wMs = activeRemaining;
-      if (activeTurn === 'b' && activeRemaining !== undefined) bMs = activeRemaining;
+    let wMs = S.clocks.w;
+    let bMs = S.clocks.b;
+    if (activeTurn === 'w' && activeRemaining !== undefined) wMs = activeRemaining;
+    if (activeTurn === 'b' && activeRemaining !== undefined) bMs = activeRemaining;
 
-      const myMs = S.myColor === 'w' ? wMs : bMs;
-      const oppMs = S.myColor === 'w' ? bMs : wMs;
+    const myMs = S.myColor === 'w' ? wMs : bMs;
+    const oppMs = S.myColor === 'w' ? bMs : wMs;
 
-      const fmt = (ms) => {
-        const s = Math.max(0, Math.floor(ms / 1000));
-        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-      };
+    const fmt = (ms) => {
+      const s = Math.max(0, Math.floor(ms / 1000));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    };
 
-      $('my-clock').textContent = fmt(myMs);
-      $('opp-clock').textContent = fmt(oppMs);
-      
-      $('my-clock').className = `pc-clock ${myMs < 30000 ? 'danger' : myMs < 60000 ? 'warning' : ''}`;
-      $('opp-clock').className = `pc-clock ${oppMs < 30000 ? 'danger' : oppMs < 60000 ? 'warning' : ''}`;
-    }
+    $('my-clock').textContent = fmt(myMs);
+    $('opp-clock').textContent = fmt(oppMs);
+    $('my-clock').className = `pc-clock ${myMs < 30000 ? 'danger' : myMs < 60000 ? 'warning' : ''}`;
+    $('opp-clock').className = `pc-clock ${oppMs < 30000 ? 'danger' : oppMs < 60000 ? 'warning' : ''}`;
     
     if (S.phase === 'playing') {
       const turn = S.game.turn();
@@ -604,6 +676,7 @@
       S.selected = coord;
       S.legalMoves = S.game.moves({ square: coord, verbose: true });
     } else {
+      if (S.selected) SFX.illegal();
       S.selected = null; S.legalMoves = [];
     }
     renderBoard();
@@ -613,9 +686,10 @@
     $('promo-overlay').classList.remove('hidden');
     const grid = $('promo-grid');
     grid.innerHTML = '';
+    const turnColor = S.game.turn();
     ['q', 'r', 'n', 'b'].forEach(p => {
       const btn = document.createElement('button');
-      btn.className = `promo-btn ${S.myColor === 'b' ? 'b' : ''}`;
+      btn.className = `promo-btn ${turnColor === 'b' ? 'b' : ''}`;
       btn.textContent = SOLID[p];
       btn.onclick = () => {
         $('promo-overlay').classList.add('hidden');
@@ -633,7 +707,7 @@
 
     let result;
     try {
-      result = S.game.move(move); // <--- FIXED: Wrapped in try/catch
+      result = S.game.move(move);
     } catch (e) {
       S.selected = null; S.legalMoves = [];
       return renderBoard();
@@ -647,6 +721,16 @@
     const elapsed = now - S.lastMoveTime;
     S.clocks[result.color] = Math.max(0, S.clocks[result.color] - elapsed) + INCREMENT_MS;
     S.lastMoveTime = now;
+
+    // Play move SFX
+    if (S.game.inCheck()) SFX.check();
+    else if (result.captured) SFX.capture();
+    else SFX.move();
+
+    // Notify player when bot finishes its move
+    if (isBot && S.game.turn() === S.myColor && !S.game.isGameOver()) {
+      SFX.yourTurn();
+    }
     
     renderBoard();
     checkGameOver();
@@ -704,8 +788,13 @@
         S.clocks[turn] = 0;
         S.phase = 'over';
         stopClock();
-        const win = turn !== S.myColor;
-        showResult(win ? 'Victory!' : 'Defeat!', win ? 'win' : 'lose', 'Timeout');
+        if (isLocal) {
+          const winner = turn === 'w' ? 'Black' : 'White';
+          showResult(`${winner} wins`, 'win', 'Timeout');
+        } else {
+          const win = turn !== S.myColor;
+          showResult(win ? 'Victory!' : 'Defeat!', win ? 'win' : 'lose', 'Timeout');
+        }
       } else {
         renderClocks(remaining, turn);
       }
@@ -733,8 +822,6 @@
       connectOnline();
     } else {
       $('setup-bot-section').style.display = isBot ? 'block' : 'none';
-      $('setup-flip-row').style.display = isLocal ? 'flex' : 'none';
-      
       let selectedLevel = level;
       document.querySelectorAll('.lvl').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lvl === selectedLevel);
@@ -745,22 +832,18 @@
         });
       });
 
-      on('auto-flip-toggle', 'click', () => {
-        S.autoFlip = !S.autoFlip;
-        $('auto-flip-toggle').classList.toggle('on', S.autoFlip);
-      });
-
       on('setup-start', 'click', () => {
         $('setup-overlay').classList.add('hidden');
         if (isBot) {
           level = selectedLevel;
           $('mode-badge').textContent = 'VS BOT';
-        }
-        if (isLocal) $('mode-badge').textContent = 'LOCAL';
-
-        if (isBot) {
           S.myColor = 'w';
           $('opp-name').textContent = `Bot (${level})`;
+        }
+        if (isLocal) {
+          $('mode-badge').textContent = 'LOCAL';
+          $('my-name').textContent = 'White';
+          $('opp-name').textContent = 'Black';
         }
         
         S.phase = 'countdown';
@@ -773,7 +856,7 @@
             $('countdown-overlay').classList.add('hidden');
             startLocalMatch();
           }
-        }, 800);
+        }, 700);
       });
     }
   }
@@ -783,6 +866,7 @@
     S.clocks = { w: INITIAL_MS, b: INITIAL_MS };
     S.lastMove = null;
     S.phase = 'playing';
+    SFX.start();
     renderBoard();
     startClock();
   }
@@ -814,9 +898,23 @@
       
       const me = data.profiles.find(p => String(p.userId) === String(currentUser.id));
       S.myColor = me ? me.color : 'w';
+
+      const opp = data.profiles.find(p => String(p.userId) !== String(currentUser.id));
+      if (opp && opp.profile) {
+        const oppAvEl = $('opp-avatar');
+        oppAvEl.innerHTML = '';
+        if (opp.profile.avatarType === 'photo' && opp.profile.avatar && opp.profile.avatar.startsWith('data:image/')) {
+          const img = document.createElement('img');
+          img.src = opp.profile.avatar;
+          oppAvEl.appendChild(img);
+        } else {
+          oppAvEl.textContent = (opp.profile.avatar || '♟️').substring(0, 8);
+        }
+        $('opp-name').textContent = opp.profile.name || 'Opponent';
+      }
       
       try {
-        S.game.load(data.fen); // <--- FIXED: Wrapped in try/catch
+        S.game.load(data.fen);
       } catch (e) {
         console.error("Failed to load FEN", data.fen);
         return;
@@ -829,13 +927,15 @@
       
       $('waiting-overlay').classList.add('hidden');
       $('mode-badge').textContent = 'ONLINE';
+      SFX.start();
       renderBoard();
       startClock();
     });
 
     S.socket.on('chess:state', (data) => {
+      const prevHistLen = (S.history || []).length;
       try {
-        S.game.load(data.fen); // <--- FIXED: Wrapped in try/catch
+        S.game.load(data.fen);
       } catch (e) {
         return; 
       }
@@ -844,6 +944,20 @@
       S.history = data.history || [];
       S.lastMoveTime = (data.lastMoveTime || Date.now()) - S.clockOffset;
       S.selected = null;
+      S.legalMoves = [];
+
+      // Play SFX on new move
+      if (S.history.length > prevHistLen) {
+        const lastSan = S.history[S.history.length - 1] || '';
+        if (S.game.inCheck()) SFX.check();
+        else if (lastSan.includes('x')) SFX.capture();
+        else SFX.move();
+
+        if (S.game.turn() === S.myColor && !S.game.isGameOver()) {
+          SFX.yourTurn();
+        }
+      }
+
       renderBoard();
     });
 
@@ -875,22 +989,65 @@
   }
 
   // ============================================================
-  // ACTIONS
+  // ACTIONS (Sound, Flip, Resign, Rematch)
   // ============================================================
+  on('btn-sound', 'click', () => {
+    const isOn = SFX.toggle();
+    $('btn-sound').textContent = isOn ? '🔊' : '🔇';
+    showToast(isOn ? 'Sound ON' : 'Sound OFF');
+  });
+
   on('btn-flip', 'click', () => {
     S.flipped = !S.flipped;
     renderBoard();
   });
 
-  on('btn-resign', 'click', () => $('resign-overlay').classList.remove('hidden'));
+    on('btn-resign', 'click', () => {
+    if (S.phase !== 'playing') return;
+    
+    if (isLocal) {
+      $('resign-single-actions').style.display = 'none';
+      $('resign-local-actions').style.display = 'flex';
+      $('resign-title').textContent = 'Who resigns?';
+      $('resign-desc').textContent = 'Select which player forfeits the match.';
+    } else {
+      $('resign-single-actions').style.display = 'flex';
+      $('resign-local-actions').style.display = 'none';
+      $('resign-title').textContent = 'Resign game?';
+      $('resign-desc').textContent = 'You will forfeit this match.';
+    }
+    $('resign-overlay').classList.remove('hidden');
+  });
+
   on('resign-no', 'click', () => $('resign-overlay').classList.add('hidden'));
+  on('resign-cancel-local', 'click', () => $('resign-overlay').classList.add('hidden'));
+
   on('resign-yes', 'click', () => {
     $('resign-overlay').classList.add('hidden');
-    if (isLive) S.socket.emit('chess:resign');
-    else {
-      S.phase = 'over'; stopClock();
-      showResult(isLocal ? 'Opponent wins' : 'Defeat!', 'lose', 'You resigned.');
+    if (S.phase !== 'playing') return;
+    if (isLive) {
+      S.socket.emit('chess:resign');
+    } else {
+      S.phase = 'over';
+      stopClock();
+      showResult('Defeat!', 'lose', 'You resigned.');
     }
+  });
+
+  on('resign-white', 'click', () => {
+    $('resign-overlay').classList.add('hidden');
+    if (S.phase !== 'playing') return;
+    S.phase = 'over';
+    stopClock();
+    showResult('Black wins', 'win', 'White resigned.');
+  });
+
+  on('resign-black', 'click', () => {
+    $('resign-overlay').classList.add('hidden');
+    if (S.phase !== 'playing') return;
+    S.phase = 'over';
+    stopClock();
+    showResult('White wins', 'win', 'Black resigned.');
   });
 
   on('again-btn', 'click', () => {
@@ -982,6 +1139,9 @@
     $('result-title').className = cls;
     $('result-desc').textContent = desc;
     $('result-overlay').classList.remove('hidden');
+    if (cls === 'win') SFX.win();
+    else if (cls === 'lose') SFX.lose();
+    else SFX.draw();
   }
 
   function showToast(msg) {
@@ -1002,7 +1162,7 @@
   }
   $('my-name').textContent = currentUser.name;
 
-  S.lastMoveTime = Date.now(); // <--- Ensures it's set before initSetup
+  S.lastMoveTime = Date.now();
   initSetup();
 </script>
 </body>
