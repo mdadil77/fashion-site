@@ -331,6 +331,7 @@
       yourTurn() {
         tone(520, 0.08, 'sine', 0.12, 0.08);
         tone(660, 0.12, 'sine', 0.12, 0.15);
+        illegal() { tone(150, 0.15, 'square', 0.12, 0, 80); },
       },
       start() {
         tone(440, 0.1, 'sine', 0.14, 0);
@@ -882,7 +883,7 @@
       if (mode === 'friend') {
         S.socket.emit('game:ready', { roomId, minutes: 3 });
       } else if (mode === 'random') {
-        S.socket.emit('match:find', { gameId: 'chess' });
+        S.socket.emit('room:enter', { gameId: 'chess', mode: 'random' });
       }
     });
 
@@ -972,7 +973,7 @@
     S.socket.on('match:rematch_start', () => {
       $('result-overlay').classList.add('hidden');
       $('waiting-overlay').classList.remove('hidden');
-      S.socket.emit('game:ready', { roomId, minutes: 3 });
+      S.socket.emit('game:ready', { roomId: S.matchId || roomId, minutes: 3 });
     });
 
     S.socket.on('match:rematch_wait', () => {
