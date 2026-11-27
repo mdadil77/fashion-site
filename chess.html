@@ -389,10 +389,13 @@
       }
       return score;
     }
+    let deadline = 0;
+    let timedOut = false;
 
     function search(game, depth, alpha, beta) {
+      if (Date.now() > deadline) { timedOut = true; return 0; }
       if (depth === 0 || game.isGameOver()) {
-        if (game.isCheckmate()) return game.turn() === 'w' ? -99999 : 99999;
+        if (game.isCheckmate()) return game.turn() === 'w' ? -99999 - depth : 99999 + depth;
         if (game.isDraw() || game.isStalemate()) return 0;
         return evaluate(game);
       }
@@ -406,6 +409,7 @@
           game.move(m);
           const ev = search(game, depth - 1, alpha, beta);
           game.undo();
+          if (timedOut) return maxEval;
           maxEval = Math.max(maxEval, ev);
           alpha = Math.max(alpha, ev);
           if (beta <= alpha) break;
@@ -417,6 +421,7 @@
           game.move(m);
           const ev = search(game, depth - 1, alpha, beta);
           game.undo();
+          if (timedOut) return minEval;
           minEval = Math.min(minEval, ev);
           beta = Math.min(beta, ev);
           if (beta <= alpha) break;
@@ -432,6 +437,8 @@
         const moves = game.moves({ verbose: true });
         if (!moves.length) return;
 
+        // Sort captures first so the bot checks strong moves early
+        moves.sort((a, b) => (b.captured ? PIECE_VAL[b.captured] : 0) - (a.captured ? PIECE_VAL[a.captured] : 0));
         let bestMove = moves[Math.floor(Math.random() * moves.length)];
         
         if (level === 'normal') {
@@ -448,19 +455,32 @@
               }
             }
           }
-        } else {
-          const depth = level === 'high' ? 2 : 3;
-          let bestVal = game.turn() === 'w' ? -Infinity : Infinity;
-          for (const m of moves) {
-            game.move(m);
-            const val = search(game, depth, -Infinity, Infinity);
-            game.undo();
-            if (game.turn() === 'w') {
-              if (val > bestVal) { bestVal = val; bestMove = m; }
-            } else {
-              if (val < bestVal) { bestVal = val; bestMove = m; }
+        }
+        else {
+              const maxDepth = level === 'high' ? 3 : 4;
+              const maxTime = level === 'high' ? 700 : 1400;
+              deadline = Date.now() + maxTime;
+              timedOut = false;
+              const white = game.turn() === 'w';
+              let order = moves.slice();
+            
+              for (let d = 1; d <= maxDepth; d++) {
+                let alpha = -Infinity, beta = Infinity;
+                let bestVal = white ? -Infinity : Infinity;
+                let currentBest = null;
+                for (const m of order) {
+                  game.move(m);
+                  const val = search(game, d - 1, alpha, beta);
+                  game.undo();
+                  if (timedOut) break;
+                  if (white ? val > bestVal : val < bestVal) { bestVal = val; currentBest = m; }
+                  if (white) alpha = Math.max(alpha, val); else beta = Math.min(beta, val);
+                }
+                if (timedOut || !currentBest) break;
+                bestMove = currentBest;
+                order = [currentBest, ...order.filter(x => x !== currentBest)];
+              }
             }
-          }
         }
         self.postMessage(bestMove);
       } catch (err) {}
