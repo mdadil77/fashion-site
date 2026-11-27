@@ -29,31 +29,42 @@
     input { font: inherit; outline: none; border: none; background: transparent; color: inherit; }
 
     /* Top Bar */
-    .top-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(22,26,43,.6); border-bottom: 1px solid var(--border); z-index: 20; }
-    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 6px 12px; border-radius: 16px; font-weight: 700; font-size: .85rem; border: 1px solid var(--border); }
-    .mode-badge { background: rgba(0,255,102,.12); border: 1px solid var(--me); color: var(--me); padding: 4px 10px; border-radius: 14px; font-weight: 800; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
-    .room-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: .85rem; letter-spacing: 2px; color: var(--gold); }
+    .top-bar { flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: rgba(22,26,43,.6); border-bottom: 1px solid var(--border); z-index: 20; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 6px 12px; border-radius: 16px; font-weight: 700; font-size: .8rem; border: 1px solid var(--border); }
+    .btn-resign { background: rgba(255,0,85,.15); color: var(--opp); border: 1px solid rgba(255,0,85,.35); padding: 6px 10px; border-radius: 14px; font-weight: 800; font-size: .78rem; }
+    .mode-badge { background: rgba(0,255,102,.12); border: 1px solid var(--me); color: var(--me); padding: 4px 9px; border-radius: 14px; font-weight: 800; font-size: .7rem; letter-spacing: 1px; text-transform: uppercase; }
+    .room-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: .8rem; letter-spacing: 2px; color: var(--gold); }
     .spacer { flex: 1; }
-    .icon-btn { background: rgba(255,255,255,.08); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; border: 1px solid var(--border); }
+    .icon-btn { background: rgba(255,255,255,.08); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: .95rem; border: 1px solid var(--border); }
 
     /* Turn & Players Strip */
-    .players-bar { flex-shrink: 0; display: flex; justify-content: center; gap: 8px; padding: 6px 10px; background: rgba(8,10,16,.5); border-bottom: 1px solid var(--border); }
-    .p-chip { flex: 1; max-width: 120px; display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 12px; background: rgba(255,255,255,.04); border: 2px solid transparent; opacity: .55; transition: .25s; }
+    .players-bar { flex-shrink: 0; display: flex; justify-content: center; gap: 8px; padding: 5px 10px; background: rgba(8,10,16,.5); border-bottom: 1px solid var(--border); }
+    .p-chip { flex: 1; max-width: 120px; display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; background: rgba(255,255,255,.04); border: 2px solid transparent; opacity: .55; transition: .25s; }
     .p-chip.active { opacity: 1; background: rgba(255,255,255,.1); transform: scale(1.03); }
-    .p-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .p-name { font-size: .75rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-chip.out { opacity: .25; text-decoration: line-through; }
+    .p-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .p-name { font-size: .72rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .p-chip.c-0.active { border-color: var(--red); box-shadow: 0 0 12px rgba(255,59,92,.35); }
     .p-chip.c-1.active { border-color: var(--green); box-shadow: 0 0 12px rgba(0,230,118,.35); }
     .p-chip.c-2.active { border-color: var(--yellow); box-shadow: 0 0 12px rgba(255,202,40,.35); }
     .p-chip.c-3.active { border-color: var(--blue); box-shadow: 0 0 12px rgba(41,182,246,.35); }
 
+    /* Top Local Dock (Rotated 180° for Opposite Player in Same-Phone Mode) */
+    .top-local-dock {
+      display: none; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 8px 16px; background: var(--glass); border-bottom: 1px solid var(--border);
+      transform: rotate(180deg);
+    }
+    .top-local-dock.show { display: flex; }
+
     /* Arena & 15x15 Board */
-    .arena { flex: 1; display: flex; justify-content: center; align-items: center; padding: 8px; min-height: 0; overflow: hidden; position: relative; }
+    .arena { flex: 1; display: flex; justify-content: center; align-items: center; padding: 6px; min-height: 0; overflow: hidden; position: relative; }
     .board-wrap {
-      height: 100%; max-height: min(94vw, 500px); max-width: 94vw;
+      height: 100%; max-height: min(94vw, 480px); max-width: 94vw;
       aspect-ratio: 1 / 1; position: relative; container-type: inline-size;
       border-radius: 14px; padding: 4px; background: #141929;
       box-shadow: 0 16px 45px rgba(0,0,0,.75), 0 0 0 2px rgba(255,255,255,.08);
+      transition: transform 0.4s ease;
     }
     .board {
       width: 100%; height: 100%; display: grid;
@@ -70,7 +81,6 @@
     .cell.star::after { content: '★'; font-size: 4.2cqw; color: rgba(15,23,42,.45); position: absolute; pointer-events: none; }
     .cell.path-0.star::after, .cell.path-1.star::after, .cell.path-2.star::after, .cell.path-3.star::after { color: rgba(255,255,255,.9); }
 
-    /* Center Home Triangle */
     .center-home {
       grid-column: 7 / 10; grid-row: 7 / 10; position: relative; overflow: hidden;
       background: conic-gradient(from 45deg, var(--blue) 0deg 90deg, var(--red) 90deg 180deg, var(--green) 180deg 270deg, var(--yellow) 270deg 360deg);
@@ -99,26 +109,28 @@
     }
     @keyframes tokenPulse { from { transform: translate(-50%, -50%) scale(1.05); } to { transform: translate(-50%, -50%) scale(1.28); } }
 
-    /* Bottom Dock (Dice + Status + Chat) */
+    /* Bottom Dock */
     .dock {
-      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 8px 14px; padding-bottom: calc(8px + env(safe-area-inset-bottom));
       background: var(--glass); border-top: 1px solid var(--border);
     }
-    .status-text { flex: 1; font-size: .85rem; font-weight: 700; color: var(--muted); }
-    .status-text strong { color: #fff; display: block; font-size: .95rem; }
+    .status-text { flex: 1; font-size: .8rem; font-weight: 700; color: var(--muted); }
+    .status-text strong { color: #fff; display: block; font-size: .92rem; }
+    .turn-timer { font-size: .85rem; font-weight: 900; color: var(--gold); background: rgba(0,0,0,.35); padding: 4px 9px; border-radius: 10px; font-variant-numeric: tabular-nums; display: none; }
+    .turn-timer.danger { color: var(--opp); }
 
     .dice-btn {
-      width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(145deg, #ffffff, #d9e2ec);
-      color: #0f172a; font-size: 2.2rem; font-weight: 900; display: grid; place-items: center;
+      width: 54px; height: 54px; border-radius: 15px; background: linear-gradient(145deg, #ffffff, #d9e2ec);
+      color: #0f172a; font-size: 2.1rem; font-weight: 900; display: grid; place-items: center;
       box-shadow: 0 8px 20px rgba(0,0,0,.5), 0 0 0 2px var(--me); transition: .2s;
     }
-    .dice-btn:disabled { opacity: .45; box-shadow: 0 4px 10px rgba(0,0,0,.3); cursor: not-allowed; }
+    .dice-btn:disabled { opacity: .4; box-shadow: 0 4px 10px rgba(0,0,0,.3); cursor: not-allowed; }
     .dice-btn:active:not(:disabled) { transform: scale(.92); }
     .dice-btn.rolling { animation: diceSpin 0.35s ease-in-out infinite; }
     @keyframes diceSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.12); } 100% { transform: rotate(360deg) scale(1); } }
 
-    .chat-open-btn { background: var(--me); color: #000; padding: 10px 16px; border-radius: 14px; font-weight: 900; font-size: .85rem; }
+    .chat-open-btn { background: var(--me); color: #000; padding: 10px 14px; border-radius: 14px; font-weight: 900; font-size: .82rem; }
 
     /* Overlays */
     .overlay { position: fixed; inset: 0; background: rgba(8,10,16,.9); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; text-align: center; padding: 24px; }
@@ -129,20 +141,31 @@
     .pill-row { display: flex; gap: 8px; }
     .pill { flex: 1; padding: 10px; border-radius: 12px; background: rgba(255,255,255,.07); font-weight: 800; font-size: .85rem; border: 1px solid transparent; transition: .2s; }
     .pill.active { background: rgba(0,255,102,.15); border-color: var(--me); color: var(--me); }
-    .btn-primary { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; padding: 14px 30px; border-radius: 24px; font-weight: 900; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 25px rgba(0,255,102,.3); }
-    .btn-secondary { background: rgba(255,255,255,.1); color: #fff; padding: 12px 24px; border-radius: 24px; font-weight: 800; border: 1px solid var(--border); }
+    .btn-primary { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; padding: 13px 28px; border-radius: 24px; font-weight: 900; font-size: .95rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 25px rgba(0,255,102,.3); }
+    .btn-secondary { background: rgba(255,255,255,.1); color: #fff; padding: 12px 22px; border-radius: 24px; font-weight: 800; border: 1px solid var(--border); }
 
-    /* Chat Panel (Random & Custom only) */
-    .chat-panel { position: fixed; left: 0; right: 0; bottom: 0; height: 58%; background: rgba(8,10,16,.96); backdrop-filter: blur(16px); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column; z-index: 150; transform: translateY(100%); transition: transform .3s ease; border-top: 1px solid var(--border); }
+    /* Global-Style Match Chat */
+    .chat-panel { position: fixed; left: 0; right: 0; bottom: 0; height: 64%; background: rgba(8,10,16,.97); backdrop-filter: blur(16px); border-top-left-radius: 20px; border-top-right-radius: 20px; display: flex; flex-direction: column; z-index: 150; transform: translateY(100%); transition: transform .3s ease; border-top: 1px solid var(--border); }
     .chat-panel.open { transform: translateY(0); }
     .chat-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 800; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: .85rem; }
-    .chat-msg { padding: 6px 10px; background: rgba(255,255,255,.07); border-radius: 10px; align-self: flex-start; max-width: 85%; word-break: break-word; }
-    .chat-msg.mine { align-self: flex-end; background: rgba(0,255,102,.16); }
-    .chat-msg small { display: block; font-size: .65rem; color: var(--muted); font-weight: 700; margin-bottom: 2px; }
-    .chat-msg.mine small { display: none; }
-    .chat-chips { display: flex; gap: 6px; padding: 8px 12px; overflow-x: auto; border-top: 1px solid var(--border); }
-    .chat-chips button { flex-shrink: 0; padding: 6px 12px; background: rgba(255,255,255,.08); border-radius: 14px; font-size: .75rem; font-weight: 700; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: .85rem; }
+    .chat-msg { display: flex; flex-direction: column; gap: 3px; align-self: flex-start; max-width: 85%; }
+    .chat-msg.mine { align-self: flex-end; align-items: flex-end; }
+    .chat-bubble { padding: 8px 12px; background: rgba(255,255,255,.08); border-radius: 14px 14px 14px 4px; word-break: break-word; }
+    .chat-msg.mine .chat-bubble { background: rgba(0,255,102,.16); border: 1px solid rgba(0,255,102,.25); border-radius: 14px 14px 4px 14px; }
+    .chat-meta { font-size: .65rem; color: var(--muted); font-weight: 700; }
+    .msg-reply-preview { font-size: .72rem; background: rgba(0,0,0,.3); border-left: 3px solid var(--me); padding: 3px 7px; border-radius: 5px; margin-bottom: 4px; color: var(--muted); }
+    .msg-reply-preview strong { color: var(--me); display: block; font-size: .68rem; }
+    .msg-edited { font-size: .65rem; color: var(--muted); margin-left: 5px; font-style: italic; }
+    .msg-reactions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .reaction-pill { font-size: .72rem; padding: 2px 6px; border-radius: 10px; background: rgba(255,255,255,.08); border: 1px solid transparent; }
+    .reaction-pill.mine { border-color: var(--me); background: rgba(0,255,102,.15); }
+    .msg-actions { display: flex; gap: 4px; margin-top: 2px; opacity: .75; }
+    .msg-action-btn { font-size: .68rem; color: var(--muted); padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,.06); }
+    .reply-bar { display: none; align-items: center; justify-content: space-between; background: rgba(0,255,102,.1); border-left: 3px solid var(--me); padding: 6px 10px; font-size: .75rem; }
+    .reply-bar.active { display: flex; }
+    .chat-chips { display: flex; gap: 6px; padding: 6px 12px; overflow-x: auto; border-top: 1px solid var(--border); }
+    .chat-chips button { flex-shrink: 0; padding: 5px 10px; background: rgba(255,255,255,.08); border-radius: 12px; font-size: .72rem; font-weight: 700; }
     .chat-input-wrap { display: flex; gap: 8px; padding: 8px 12px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
     .chat-input-wrap input { flex: 1; padding: 10px 14px; background: rgba(0,0,0,.4); border-radius: 18px; border: 1px solid var(--border); }
     .chat-send { padding: 10px 18px; background: var(--me); color: #000; border-radius: 18px; font-weight: 900; }
@@ -158,20 +181,29 @@
   <div class="mode-badge" id="mode-badge">LUDO</div>
   <div class="room-code" id="room-code" style="display:none"></div>
   <div class="spacer"></div>
+  <button class="btn-resign" id="btn-resign" title="Resign Match">🏳️ Resign</button>
   <button class="icon-btn" id="btn-sound" title="Toggle Sound">🔊</button>
 </div>
 
 <div class="players-bar" id="players-bar"></div>
 
+<!-- TOP DICE DOCK (Same Phone Local Mode - Opposite Side) -->
+<div class="top-local-dock" id="top-local-dock">
+  <div class="status-text" id="status-top"><strong>Top Side</strong>Waiting…</div>
+  <button class="dice-btn" id="dice-btn-top" disabled>🎲</button>
+</div>
+
 <div class="arena">
-  <div class="board-wrap">
+  <div class="board-wrap" id="board-wrap">
     <div class="board" id="board"></div>
     <div class="tokens-layer" id="tokens-layer"></div>
   </div>
 </div>
 
+<!-- BOTTOM DOCK -->
 <div class="dock">
   <div class="status-text" id="status-text"><strong>Ready</strong>Roll the dice to begin</div>
+  <div class="turn-timer" id="turn-timer">15s</div>
   <button class="dice-btn" id="dice-btn" disabled>🎲</button>
   <button class="chat-open-btn" id="btn-chat" style="display:none">💬 Chat</button>
 </div>
@@ -207,6 +239,16 @@
   <button class="btn-primary" id="btn-force-start" style="display:none">Start Now</button>
 </div>
 
+<!-- RESIGN CONFIRM OVERLAY -->
+<div class="overlay hidden" id="resign-overlay">
+  <h2 style="font-size:1.6rem" id="resign-title">Resign Match?</h2>
+  <p style="color:var(--muted)" id="resign-desc">You will forfeit this game.</p>
+  <div style="display:flex;gap:12px">
+    <button class="btn-primary" id="resign-yes" style="background:var(--opp);color:#fff;box-shadow:0 8px 20px rgba(255,0,85,.35)">Resign</button>
+    <button class="btn-secondary" id="resign-no">Cancel</button>
+  </div>
+</div>
+
 <!-- RESULT OVERLAY -->
 <div class="overlay hidden" id="result-overlay">
   <h1 id="res-title" style="font-size:2.4rem;color:var(--me)">Victory!</h1>
@@ -217,13 +259,17 @@
   </div>
 </div>
 
-<!-- CHAT PANEL -->
+<!-- GLOBAL-STYLE CHAT PANEL -->
 <div class="chat-panel" id="chat-panel">
   <div class="chat-header">
     <span>💬 Match Chat</span>
     <button class="btn-ghost" id="chat-close">✕</button>
   </div>
   <div class="chat-messages" id="chat-messages"></div>
+  <div class="reply-bar" id="reply-bar">
+    <span id="reply-bar-text"></span>
+    <button id="reply-bar-cancel" style="color:var(--opp);font-weight:900;">✕</button>
+  </div>
   <div class="chat-chips">
     <button data-chip="Good luck!">Good luck!</button>
     <button data-chip="Nice cut! 🔥">Nice cut! 🔥</button>
@@ -231,7 +277,7 @@
     <button data-chip="GG!">GG!</button>
   </div>
   <div class="chat-input-wrap">
-    <input id="chat-input" maxlength="100" placeholder="Type a message..." autocomplete="off">
+    <input id="chat-input" maxlength="150" placeholder="Type a message..." autocomplete="off">
     <button class="chat-send" id="chat-send">Send</button>
   </div>
 </div>
@@ -285,10 +331,10 @@
   })();
 
   $('btn-sound').onclick = () => { $('btn-sound').textContent = SFX.toggle() ? '🔊' : '🔇'; };
-  function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+  function showToast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
 
   // ============================================================
-  // BOARD GEOMETRY (15x15 Standard Clockwise Ludo)
+  // BOARD GEOMETRY (15x15)
   // ============================================================
   const TRACK = [
     [6,1],[6,2],[6,3],[6,4],[6,5],
@@ -300,7 +346,6 @@
     [13,6],[12,6],[11,6],[10,6],[9,6],
     [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]
   ];
-  // Colors: 0=Red(BL), 1=Green(TL), 2=Yellow(TR), 3=Blue(BR)
   const START_IDX = [39, 0, 13, 26];
   const SAFE_IDX = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
   const HOME_PATHS = [
@@ -372,15 +417,47 @@
   // GAME STATE
   // ============================================================
   const S = {
-    players: [], // [{ color, name, isBot, userId, tokens: [-1,-1,-1,-1] }]
+    players: [],
     turnIdx: 0,
     dice: 0,
     sixStreak: 0,
-    phase: 'setup', // setup | roll | move | anim | over
+    phase: 'setup',
     myColor: 0,
     animating: false
   };
-  let tokenEls = {}; // key: `${color}-${tIdx}`
+  let tokenEls = {};
+  let turnTimerInt = null;
+
+  // Rotate board in Online Mode so YOUR color is always at Bottom-Left
+  function orientBoardForMe() {
+    if (!isLive) {
+      $('board-wrap').style.transform = 'rotate(0deg)';
+      return;
+    }
+    const rotMap = { 0: 0, 1: 270, 2: 180, 3: 90 };
+    const deg = rotMap[S.myColor] || 0;
+    $('board-wrap').style.transform = `rotate(${deg}deg)`;
+  }
+
+  function startTurnCountdown(seconds = 15) {
+    clearInterval(turnTimerInt);
+    const el = $('turn-timer');
+    if (!isLive) { el.style.display = 'none'; return; }
+    let left = seconds;
+    el.style.display = 'block';
+    el.textContent = `${left}s`;
+    el.classList.remove('danger');
+    turnTimerInt = setInterval(() => {
+      left--;
+      if (left <= 0) {
+        clearInterval(turnTimerInt);
+        el.textContent = '0s';
+      } else {
+        el.textContent = `${left}s`;
+        if (left <= 5) el.classList.add('danger');
+      }
+    }, 1000);
+  }
 
   function getCoords(color, tIdx, step) {
     if (step < 0) {
@@ -409,6 +486,7 @@
         tokenEls[`${p.color}-${ti}`] = el;
       });
     });
+    orientBoardForMe();
     renderPlayersBar();
     positionAllTokens();
   }
@@ -418,14 +496,13 @@
     bar.innerHTML = '';
     S.players.forEach((p, idx) => {
       const chip = document.createElement('div');
-      chip.className = `p-chip c-${p.color} ${idx === S.turnIdx ? 'active' : ''}`;
+      chip.className = `p-chip c-${p.color} ${idx === S.turnIdx ? 'active' : ''} ${p.out ? 'out' : ''}`;
       chip.innerHTML = `<div class="p-dot" style="background:${COLOR_HEX[p.color]}"></div><span class="p-name">${p.name}</span>`;
       bar.appendChild(chip);
     });
   }
 
   function positionAllTokens() {
-    // Group overlapping tokens slightly so all are visible
     const cellGroups = {};
     S.players.forEach(p => {
       p.tokens.forEach((step, ti) => {
@@ -469,13 +546,13 @@
     });
   }
 
-  function setStatus(title, sub) {
-    $('status-text').innerHTML = `<strong>${title}</strong>${sub}`;
+  function setStatus(title, sub, side = 'bottom') {
+    const el = side === 'top' ? $('status-top') : $('status-text');
+    el.innerHTML = `<strong>${title}</strong>${sub}`;
   }
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-  // Reverse-path capture animation ("goes back how it came")
   async function animateReverseCut(victimColor, victimTi, fromStep) {
     const el = tokenEls[`${victimColor}-${victimTi}`];
     if (!el) return;
@@ -483,18 +560,17 @@
     el.classList.add('fast');
     for (let s = fromStep - 1; s >= 0; s--) {
       const pos = getCoords(victimColor, victimTi, s);
-      el.style.left = pos.x + '%';
-      el.style.top = pos.y + '%';
+      el.style.left = pos.x + '%'; el.style.top = pos.y + '%';
       await sleep(32);
     }
     const basePos = getCoords(victimColor, victimTi, -1);
-    el.style.left = basePos.x + '%';
-    el.style.top = basePos.y + '%';
+    el.style.left = basePos.x + '%'; el.style.top = basePos.y + '%';
     await sleep(80);
     el.classList.remove('fast');
   }
 
   async function animateMove(player, ti, roll) {
+    if (roll <= 0) return;
     S.animating = true;
     highlightMovable([], player.color);
     const el = tokenEls[`${player.color}-${ti}`];
@@ -519,14 +595,11 @@
     const landedStep = player.tokens[ti];
     let bonusTurn = (roll === 6);
 
-    // Check reaching home
     if (landedStep === 56) {
       SFX.home();
       bonusTurn = true;
       showToast(`${player.name} reached Home! +1 Roll`);
-    }
-    // Check capture on main track
-    else if (landedStep <= 50) {
+    } else if (landedStep <= 50) {
       const gIdx = (START_IDX[player.color] + landedStep) % 52;
       if (SAFE_IDX.has(gIdx)) {
         SFX.safe();
@@ -552,24 +625,35 @@
     positionAllTokens();
     S.animating = false;
 
-    // Check Win
     if (player.tokens.every(t => t === 56)) {
-      S.phase = 'over';
-      SFX.win();
-      $('res-title').textContent = `${player.name} Wins!`;
-      $('res-title').style.color = COLOR_HEX[player.color];
-      $('res-desc').textContent = 'All 4 tokens reached home!';
-      $('result-overlay').classList.remove('hidden');
+      showWinner(player.name, COLOR_HEX[player.color], 'All 4 tokens reached home!');
       return;
     }
 
     if (!isLive) {
       if (!bonusTurn) {
-        S.turnIdx = (S.turnIdx + 1) % S.players.length;
+        advanceLocalTurn();
         S.sixStreak = 0;
       }
       startTurn();
     }
+  }
+
+  function advanceLocalTurn() {
+    for (let i = 0; i < S.players.length; i++) {
+      S.turnIdx = (S.turnIdx + 1) % S.players.length;
+      if (!S.players[S.turnIdx].out) break;
+    }
+  }
+
+  function showWinner(name, colorHex, desc) {
+    S.phase = 'over';
+    clearInterval(turnTimerInt);
+    SFX.win();
+    $('res-title').textContent = `${name} Wins!`;
+    $('res-title').style.color = colorHex || 'var(--me)';
+    $('res-desc').textContent = desc;
+    $('result-overlay').classList.remove('hidden');
   }
 
   // ============================================================
@@ -581,32 +665,23 @@
       if (out !== undefined && Math.random() < 0.7) return out;
       return movable[Math.floor(Math.random() * movable.length)];
     }
-
     let bestTi = movable[0], bestScore = -9999;
     for (const ti of movable) {
       const step = player.tokens[ti];
       const next = step === -1 ? 0 : step + roll;
-      let score = next; // Base progress
-
+      let score = next;
       if (step === -1) score += 55;
       if (next === 56) score += 120;
-      if (next >= 51 && step <= 50) score += 60; // Enter home stretch safely
-
+      if (next >= 51 && step <= 50) score += 60;
       if (next <= 50) {
         const gIdx = (START_IDX[player.color] + next) % 52;
         if (SAFE_IDX.has(gIdx)) score += 35;
-
-        // Check capture
         for (const opp of S.players) {
           if (opp.color === player.color) continue;
           opp.tokens.forEach(os => {
-            if (os >= 0 && os <= 50 && (START_IDX[opp.color] + os) % 52 === gIdx && !SAFE_IDX.has(gIdx)) {
-              score += 130;
-            }
+            if (os >= 0 && os <= 50 && (START_IDX[opp.color] + os) % 52 === gIdx && !SAFE_IDX.has(gIdx)) score += 130;
           });
         }
-
-        // Extreme: danger awareness
         if (botLevel === 'extreme') {
           const curIdx = step >= 0 && step <= 50 ? (START_IDX[player.color] + step) % 52 : -1;
           for (const opp of S.players) {
@@ -614,14 +689,8 @@
             opp.tokens.forEach(os => {
               if (os >= 0 && os <= 50) {
                 const oIdx = (START_IDX[opp.color] + os) % 52;
-                if (curIdx !== -1 && !SAFE_IDX.has(curIdx)) {
-                  const distCur = (curIdx - oIdx + 52) % 52;
-                  if (distCur >= 1 && distCur <= 6) score += 45; // Escape danger
-                }
-                if (!SAFE_IDX.has(gIdx)) {
-                  const distNext = (gIdx - oIdx + 52) % 52;
-                  if (distNext >= 1 && distNext <= 6) score -= 40; // Avoid landing in danger
-                }
+                if (curIdx !== -1 && !SAFE_IDX.has(curIdx) && ((curIdx - oIdx + 52) % 52) <= 6) score += 45;
+                if (!SAFE_IDX.has(gIdx) && ((gIdx - oIdx + 52) % 52) <= 6) score -= 40;
               }
             });
           }
@@ -633,37 +702,56 @@
   }
 
   // ============================================================
-  // TURN FLOW (LOCAL & BOT)
+  // DUAL-DICE TURN FLOW (LOCAL & BOT)
   // ============================================================
+  function isTopSidePlayer(player) {
+    // Top yards are Green (1) & Yellow (2); Bottom yards are Red (0) & Blue (3)
+    return isLocal && (player.color === 1 || player.color === 2);
+  }
+
   function startTurn() {
     renderPlayersBar();
     const cur = S.players[S.turnIdx];
     S.phase = 'roll';
+    const topSide = isTopSidePlayer(cur);
     $('dice-btn').textContent = '🎲';
+    $('dice-btn-top').textContent = '🎲';
 
     if (cur.isBot) {
       $('dice-btn').disabled = true;
-      setStatus(`${cur.name}'s Turn`, 'Bot is rolling…');
+      $('dice-btn-top').disabled = true;
+      setStatus(`${cur.name}'s Turn`, 'Bot is rolling…', 'bottom');
       setTimeout(() => rollLocalDice(), 600);
+    } else if (isLocal) {
+      $('dice-btn').disabled = topSide;
+      $('dice-btn-top').disabled = !topSide;
+      setStatus(topSide ? 'Waiting…' : `${cur.name}'s Turn`, topSide ? `${cur.name} is rolling` : 'Tap dice to roll', 'bottom');
+      setStatus(topSide ? `${cur.name}'s Turn` : 'Waiting…', topSide ? 'Tap dice to roll' : `${cur.name} is rolling`, 'top');
     } else {
       $('dice-btn').disabled = false;
-      setStatus(`${cur.name}'s Turn`, 'Tap the dice to roll');
+      setStatus(`${cur.name}'s Turn`, 'Tap the dice to roll', 'bottom');
     }
   }
 
   async function rollLocalDice() {
     if (S.phase !== 'roll' || S.animating) return;
     const cur = S.players[S.turnIdx];
+    const topSide = isTopSidePlayer(cur);
+    const activeDice = topSide ? $('dice-btn-top') : $('dice-btn');
+    const side = topSide ? 'top' : 'bottom';
+
     S.phase = 'anim';
     $('dice-btn').disabled = true;
-    $('dice-btn').classList.add('rolling');
+    $('dice-btn-top').disabled = true;
+    activeDice.classList.add('rolling');
     SFX.dice();
     await sleep(360);
-    $('dice-btn').classList.remove('rolling');
+    activeDice.classList.remove('rolling');
 
     const roll = Math.floor(Math.random() * 6) + 1;
     S.dice = roll;
-    $('dice-btn').textContent = DICE_FACES[roll];
+    activeDice.textContent = DICE_FACES[roll];
+
     if (roll === 6) {
       SFX.six();
       S.sixStreak++;
@@ -671,7 +759,7 @@
         showToast(`${cur.name} rolled three 6s! Turn lost.`);
         S.sixStreak = 0;
         await sleep(700);
-        S.turnIdx = (S.turnIdx + 1) % S.players.length;
+        advanceLocalTurn();
         return startTurn();
       }
     } else {
@@ -680,24 +768,23 @@
 
     const movable = getMovableTokens(cur, roll);
     if (movable.length === 0) {
-      setStatus(`${cur.name} rolled ${roll}`, 'No valid moves');
+      setStatus(`${cur.name} rolled ${roll}`, 'No valid moves', side);
       await sleep(750);
-      S.turnIdx = (S.turnIdx + 1) % S.players.length;
+      advanceLocalTurn();
       return startTurn();
     }
 
     if (cur.isBot) {
-      setStatus(`${cur.name} rolled ${roll}`, 'Moving token…');
+      setStatus(`${cur.name} rolled ${roll}`, 'Moving token…', 'bottom');
       await sleep(350);
-      const chosen = chooseBotToken(cur, movable, roll);
-      await animateMove(cur, chosen, roll);
+      await animateMove(cur, chooseBotToken(cur, movable, roll), roll);
     } else if (movable.length === 1) {
-      setStatus(`${cur.name} rolled ${roll}`, 'Auto-moving token');
+      setStatus(`${cur.name} rolled ${roll}`, 'Auto-moving token', side);
       await sleep(220);
       await animateMove(cur, movable[0], roll);
     } else {
       S.phase = 'move';
-      setStatus(`${cur.name} rolled ${roll}`, 'Tap a glowing token');
+      setStatus(`${cur.name} rolled ${roll}`, 'Tap a glowing token', side);
       highlightMovable(movable, cur.color);
     }
   }
@@ -728,6 +815,44 @@
       rollLocalDice();
     }
   };
+  $('dice-btn-top').onclick = () => { if (isLocal) rollLocalDice(); };
+
+  // ============================================================
+  // RESIGN BUTTON
+  // ============================================================
+  $('btn-resign').onclick = () => {
+    if (S.phase === 'setup' || S.phase === 'over') return;
+    const cur = S.players[S.turnIdx];
+    if (isLocal) {
+      $('resign-title').textContent = `${cur.name} Resigns?`;
+      $('resign-desc').textContent = `${cur.name} will be eliminated from this match.`;
+    } else {
+      $('resign-title').textContent = 'Resign Match?';
+      $('resign-desc').textContent = 'You will forfeit this game.';
+    }
+    $('resign-overlay').classList.remove('hidden');
+  };
+  $('resign-no').onclick = () => $('resign-overlay').classList.add('hidden');
+  $('resign-yes').onclick = () => {
+    $('resign-overlay').classList.add('hidden');
+    if (S.phase === 'over') return;
+    if (isLive) {
+      socket.emit('ludo:resign');
+    } else if (isBot) {
+      showWinner('Bot', 'var(--opp)', 'You resigned the match.');
+    } else {
+      const cur = S.players[S.turnIdx];
+      cur.out = true;
+      showToast(`${cur.name} resigned.`);
+      const alive = S.players.filter(p => !p.out);
+      if (alive.length === 1) {
+        showWinner(alive[0].name, COLOR_HEX[alive[0].color], 'All other players resigned!');
+      } else {
+        advanceLocalTurn();
+        startTurn();
+      }
+    }
+  };
 
   // ============================================================
   // SETUP (LOCAL / BOT)
@@ -736,6 +861,7 @@
   if (!isLive) {
     $('mode-badge').textContent = isBot ? 'VS BOT' : 'LOCAL';
     $('setup-bot-wrap').style.display = isBot ? 'block' : 'none';
+    if (isLocal) $('top-local-dock').classList.add('show');
 
     document.querySelectorAll('#count-pills .pill').forEach(b => {
       b.onclick = () => {
@@ -759,6 +885,7 @@
         color: c,
         name: i === 0 ? (isBot ? currentUser.name : COLOR_NAMES[c]) : (isBot ? `Bot ${i}` : COLOR_NAMES[c]),
         isBot: isBot && i > 0,
+        out: false,
         tokens: [-1, -1, -1, -1]
       }));
       S.turnIdx = 0; S.sixStreak = 0;
@@ -771,7 +898,7 @@
   }
 
   // ============================================================
-  // ONLINE MODE (RANDOM 2P & CUSTOM 2-4P + CHAT)
+  // ONLINE MODE (AUTO-ROTATE + TIMER + GLOBAL-STYLE CHAT)
   // ============================================================
   let socket = null;
   if (isLive) {
@@ -809,8 +936,15 @@
 
     socket.on('match:start', (data) => {
       $('wait-overlay').classList.add('hidden');
-      S.players = data.players.map(p => ({
-        color: p.color, name: p.name, userId: p.userId, isBot: false, tokens: [-1, -1, -1, -1]
+      const list = data.players || data.profiles || [];
+      const fallbackColors = list.length === 2 ? [0, 2] : list.length === 3 ? [0, 1, 2] : [0, 1, 2, 3];
+      S.players = list.map((p, i) => ({
+        color: p.color !== undefined ? p.color : fallbackColors[i],
+        name: p.name || p.profile?.name || `Player ${i + 1}`,
+        userId: p.userId || p.id,
+        isBot: false,
+        out: false,
+        tokens: [-1, -1, -1, -1]
       }));
       const me = S.players.find(p => String(p.userId) === String(currentUser.id));
       S.myColor = me ? me.color : 0;
@@ -842,49 +976,163 @@
       }
     });
 
-    socket.on('ludo:moved', async ({ playerIdx, tokenIdx, roll, nextTurnIdx, winnerName }) => {
-      const p = S.players[playerIdx];
-      await animateMove(p, tokenIdx, roll);
-      if (!winnerName) {
+    socket.on('ludo:moved', async ({ playerIdx, tokenIdx, roll, nextTurnIdx, winnerName, reason }) => {
+      if (roll > 0 && S.players[playerIdx]) {
+        await animateMove(S.players[playerIdx], tokenIdx, roll);
+      }
+      if (winnerName) {
+        const w = S.players.find(x => x.name === winnerName);
+        showWinner(winnerName, w ? COLOR_HEX[w.color] : 'var(--me)', reason || 'Match ended!');
+      } else {
         S.turnIdx = nextTurnIdx;
         S.phase = 'roll';
         updateOnlineTurnUI();
       }
     });
 
+    socket.on('ludo:player_out', ({ userId, reason, nextTurnIdx, winnerName }) => {
+      const pl = S.players.find(p => String(p.userId) === String(userId));
+      if (pl) { pl.out = true; showToast(`${pl.name} ${reason}`); }
+      renderPlayersBar();
+      if (winnerName) {
+        const w = S.players.find(x => x.name === winnerName);
+        showWinner(winnerName, w ? COLOR_HEX[w.color] : 'var(--me)', reason);
+      } else if (nextTurnIdx !== undefined) {
+        S.turnIdx = nextTurnIdx; S.phase = 'roll';
+        updateOnlineTurnUI();
+      }
+    });
+
+    socket.on('error:toast', m => showToast(m));
+
     function updateOnlineTurnUI() {
       renderPlayersBar();
       const cur = S.players[S.turnIdx];
+      if (!cur) return;
       const isMe = cur.color === S.myColor;
       $('dice-btn').disabled = !isMe;
       $('dice-btn').textContent = '🎲';
       setStatus(isMe ? 'Your Turn!' : `${cur.name}'s Turn`, isMe ? 'Tap the dice to roll' : 'Waiting for roll…');
+      startTurnCountdown(15);
     }
 
-    // Chat
-    $('btn-chat').onclick = () => $('chat-panel').classList.add('open');
+    // --- GLOBAL-STYLE MATCH CHAT (Reply, React, 5-Min Edit) ---
+    let replyingTo = null, editingMsgId = null;
+    const replyBar = $('reply-bar');
+
+    function clearChatMode() {
+      replyingTo = null; editingMsgId = null;
+      replyBar.classList.remove('active');
+    }
+    $('reply-bar-cancel').onclick = clearChatMode;
+    $('btn-chat').onclick = () => $('chat-panel').classList.toggle('open');
     $('chat-close').onclick = () => $('chat-panel').classList.remove('open');
+
+    function renderChatMsg(msg) {
+      const isMine = String(msg.senderId) === String(currentUser.id);
+      const wrap = document.createElement('div');
+      wrap.className = `chat-msg ${isMine ? 'mine' : ''}`;
+      wrap.dataset.msgId = msg.id || '';
+
+      const meta = document.createElement('div');
+      meta.className = 'chat-meta';
+      meta.textContent = isMine ? 'You' : msg.name;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      if (msg.replyTo) {
+        const rep = document.createElement('div');
+        rep.className = 'msg-reply-preview';
+        rep.innerHTML = `<strong></strong><span></span>`;
+        rep.querySelector('strong').textContent = msg.replyTo.name;
+        rep.querySelector('span').textContent = msg.replyTo.text;
+        bubble.appendChild(rep);
+      }
+      const txt = document.createElement('span');
+      txt.textContent = msg.text;
+      bubble.appendChild(txt);
+      if (msg.edited) {
+        const ed = document.createElement('span');
+        ed.className = 'msg-edited'; ed.textContent = '(edited)';
+        bubble.appendChild(ed);
+      }
+
+      const reactRow = document.createElement('div');
+      reactRow.className = 'msg-reactions';
+      if (msg.reactions) {
+        Object.entries(msg.reactions).forEach(([em, users]) => {
+          const pill = document.createElement('button');
+          pill.className = `reaction-pill ${users.includes(currentUser.id) ? 'mine' : ''}`;
+          pill.textContent = `${em} ${users.length}`;
+          pill.onclick = () => socket.emit('game:chat_react', { id: msg.id, emoji: em });
+          reactRow.appendChild(pill);
+        });
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+      const btnRep = document.createElement('button');
+      btnRep.className = 'msg-action-btn'; btnRep.textContent = '↩ Reply';
+      btnRep.onclick = () => {
+        editingMsgId = null;
+        replyingTo = { id: msg.id, name: msg.name, text: msg.text };
+        $('reply-bar-text').textContent = `Replying to ${msg.name}: "${msg.text.substring(0, 30)}"`;
+        replyBar.classList.add('active'); $('chat-input').focus();
+      };
+      actions.appendChild(btnRep);
+
+      ['🔥', '😂', '❤️'].forEach(em => {
+        const rb = document.createElement('button');
+        rb.className = 'msg-action-btn'; rb.textContent = em;
+        rb.onclick = () => socket.emit('game:chat_react', { id: msg.id, emoji: em });
+        actions.appendChild(rb);
+      });
+
+      if (isMine && msg.id && (Date.now() - (msg.time || 0) < 300000)) {
+        const btnEd = document.createElement('button');
+        btnEd.className = 'msg-action-btn'; btnEd.textContent = '✏️ Edit';
+        btnEd.onclick = () => {
+          if (Date.now() - msg.time > 300000) return showToast('Edit window (5 mins) expired.');
+          replyingTo = null; editingMsgId = msg.id;
+          $('chat-input').value = msg.text;
+          $('reply-bar-text').textContent = 'Editing message…';
+          replyBar.classList.add('active'); $('chat-input').focus();
+        };
+        actions.appendChild(btnEd);
+      }
+
+      wrap.append(meta, bubble);
+      if (reactRow.children.length) wrap.appendChild(reactRow);
+      if (msg.id) wrap.appendChild(actions);
+      return wrap;
+    }
+
     function sendChat() {
       const val = $('chat-input').value.trim();
       if (!val) return;
-      socket.emit('game:chat', val);
-      addChat(currentUser.name, val, true);
+      if (editingMsgId) {
+        socket.emit('game:chat_edit', { id: editingMsgId, text: val });
+      } else {
+        socket.emit('game:chat', { text: val, replyToId: replyingTo ? replyingTo.id : null });
+      }
       $('chat-input').value = '';
-    }
-    function addChat(name, text, mine) {
-      const d = document.createElement('div');
-      d.className = `chat-msg ${mine ? 'mine' : ''}`;
-      d.innerHTML = `<small>${name}</small><span></span>`;
-      d.querySelector('span').textContent = text;
-      $('chat-messages').appendChild(d);
-      $('chat-messages').scrollTop = $('chat-messages').scrollHeight;
+      clearChatMode();
     }
     $('chat-send').onclick = sendChat;
     $('chat-input').onkeypress = e => { if (e.key === 'Enter') sendChat(); };
     document.querySelectorAll('.chat-chips button').forEach(b => {
       b.onclick = () => { $('chat-input').value = b.dataset.chip; sendChat(); };
     });
-    socket.on('game:chat_receive', m => addChat(m.name, m.text, false));
+
+    socket.on('game:chat_receive', (msg) => {
+      const box = $('chat-messages');
+      box.appendChild(renderChatMsg(msg));
+      box.scrollTop = box.scrollHeight;
+    });
+    socket.on('game:chat_updated', (msg) => {
+      const ex = $('chat-messages').querySelector(`[data-msg-id="${msg.id}"]`);
+      if (ex) ex.replaceWith(renderChatMsg(msg));
+    });
   }
 })();
 </script>
