@@ -9,32 +9,57 @@
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
   <script>const SERVER_URL = 'https://swiplay-server.onrender.com';</script>
   <style>
-    :root { --bg1: #1a2035; --bg2: #080a10; --me: #00ff66; --opp: #ff0055; --muted: #8f96a3; }
+    :root { --bg1: #1a2035; --bg2: #080a10; --me: #00ff66; --opp: #ff0055; --gold: #ffcc00; --muted: #8f96a3; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
-    html, body { height: 100%; background: radial-gradient(circle, var(--bg1), var(--bg2)); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
-    .top-bar { display: flex; justify-content: space-between; padding: 12px; background: rgba(22,26,43,.6); border-bottom: 1px solid rgba(255,255,255,.1); }
-    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
-    
+    html, body { height: 100%; height: 100dvh; background: radial-gradient(circle, var(--bg1), var(--bg2)); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(22,26,43,.6); border-bottom: 1px solid rgba(255,255,255,.1); z-index: 20; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+    .icon-btn { background: rgba(255,255,255,.1); color: #fff; width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; font-size: 1rem; display: grid; place-items: center; }
+
     .arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 20px; position: relative; }
-    .word-display { font-size: 3.5rem; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; text-shadow: 0 0 20px var(--me); color: #fff; margin-bottom: 20px; }
-    .input-area { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
-    .type-input { width: 100%; padding: 20px; font-size: 1.5rem; text-align: center; background: rgba(255,255,255,0.05); border: 2px solid var(--me); border-radius: 15px; color: #fff; outline: none; text-transform: lowercase; font-weight: bold; }
-    
-    .score-row { display: flex; justify-content: space-between; width: 100%; max-width: 400px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; }
+    .word-display { font-size: clamp(1.6rem, 7vw, 3.2rem); font-weight: 900; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 0 18px rgba(0,255,102,0.35); color: rgba(255,255,255,0.45); margin-bottom: 16px; word-break: break-word; text-align: center; transition: transform 0.1s; }
+    .word-display .char-ok { color: var(--me); text-shadow: 0 0 14px var(--me); }
+    .word-display .char-err { color: var(--opp); text-shadow: 0 0 14px var(--opp); }
+
+    .streak-badge { font-size: 0.9rem; font-weight: 900; color: var(--gold); min-height: 22px; letter-spacing: 1px; text-transform: uppercase; }
+
+    .input-area { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 15px; }
+    .type-input { width: 100%; padding: 18px; font-size: 1.4rem; text-align: center; background: rgba(255,255,255,0.06); border: 2px solid var(--me); border-radius: 15px; color: #fff; outline: none; text-transform: lowercase; font-weight: 700; transition: border-color 0.15s, box-shadow 0.15s; }
+    .type-input.error { border-color: var(--opp); box-shadow: 0 0 18px rgba(255,0,85,0.5); }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.28s ease-in-out; }
+
+    .score-row { display: flex; justify-content: space-between; width: 100%; max-width: 420px; background: rgba(255,255,255,0.05); padding: 14px 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.08); }
     .score-box { text-align: center; }
-    .score-box .lbl { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; font-weight: 700; }
+    .score-box .lbl { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
     .score-box .val { font-size: 2rem; font-weight: 900; }
-    
-    .timer { font-size: 2rem; font-weight: 900; color: var(--opp); position: absolute; top: 20px; right: 20px; }
-    .overlay { position: absolute; inset: 0; background: rgba(8,10,16,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 100; text-align: center; padding: 20px; }
+
+    .timer { font-size: 2rem; font-weight: 900; color: var(--gold); position: absolute; top: 16px; right: 20px; font-variant-numeric: tabular-nums; }
+    .timer.danger { color: var(--opp); animation: pulse 0.5s infinite alternate; }
+    @keyframes pulse { to { transform: scale(1.12); } }
+
+    .overlay { position: absolute; inset: 0; background: rgba(8,10,16,.94); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 100; text-align: center; padding: 20px; }
     .overlay.hidden { display: none; }
-    .btn-primary { background: var(--me); color: #000; padding: 15px 40px; border-radius: 30px; font-weight: 900; border: none; cursor: pointer; font-size: 1.2rem; }
+    .btn-primary { background: var(--me); color: #000; padding: 14px 36px; border-radius: 30px; font-weight: 900; border: none; cursor: pointer; font-size: 1.1rem; }
+    .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; padding: 12px 28px; border-radius: 30px; font-weight: 700; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; font-size: 1rem; }
+    .stats-row { display: flex; gap: 20px; background: rgba(255,255,255,0.06); padding: 14px 24px; border-radius: 14px; }
+    .stat-item { display: flex; flex-direction: column; gap: 2px; }
+    .stat-item small { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; }
+    .stat-item strong { font-size: 1.4rem; color: var(--gold); }
   </style>
 </head>
 <body>
   <div class="top-bar">
     <a href="index.html" class="btn-ghost">⬅ Leave</a>
-    <div id="room-display" style="font-weight:bold; color:var(--me);">MATCHMAKING</div>
+    <div id="room-display" style="font-weight:800; color:var(--me); font-size:0.9rem;">WORD RUSH</div>
+    <button class="icon-btn" id="btn-sound" title="Toggle Sound">🔊</button>
   </div>
 
   <div class="arena">
@@ -45,7 +70,8 @@
       <div class="score-box"><div class="lbl" style="color:var(--opp);">Opp</div><div class="val" id="opp-score">0</div></div>
     </div>
 
-    <div style="text-align: center;">
+    <div style="text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <div class="streak-badge" id="streak-badge"></div>
       <div class="word-display" id="target-word">READY</div>
       <div class="input-area">
         <input type="text" class="type-input" id="input-box" placeholder="Type here..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled>
@@ -53,15 +79,22 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-      <h2>Word Rush</h2>
-      <p style="color:var(--muted);">Type the words as fast as you can.</p>
+      <h2 style="font-size:2rem; font-weight:900;">⌨️ Word Rush</h2>
+      <p style="color:var(--muted); max-width:300px;">Type the words fast. Watch out for hard words and typos!</p>
       <button class="btn-primary" id="start-btn" style="display:none;">Play vs Bot</button>
-      <div id="wait-msg" style="display:none; font-weight:800;">Waiting for opponent...</div>
+      <div id="wait-msg" style="display:none; font-weight:800; color:var(--gold);">Waiting for opponent...</div>
     </div>
 
     <div class="overlay hidden" id="result-overlay">
-      <h1 id="res-title" style="color:var(--me);">Victory!</h1>
-      <button class="btn-primary" onclick="location.href='index.html'">Back to Lobby</button>
+      <h1 id="res-title" style="color:var(--me); font-size:2.4rem;">Victory!</h1>
+      <div class="stats-row">
+        <div class="stat-item"><small>Words</small><strong id="stat-words">0</strong></div>
+        <div class="stat-item"><small>Accuracy</small><strong id="stat-acc">100%</strong></div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button class="btn-primary" id="btn-again" style="display:none;">Play Again</button>
+        <button class="btn-secondary" onclick="location.href='index.html'">Back to Lobby</button>
+      </div>
     </div>
   </div>
 
@@ -72,97 +105,255 @@
     const roomId = params.get('room') || '';
     const isLive = mode !== 'bot';
     let currentUser = { id: 'local', name: 'You' };
-    try { const u = JSON.parse(localStorage.getItem('swiplay_user')); if(u) currentUser = u; } catch {}
+    try { const u = JSON.parse(localStorage.getItem('swiplay_user')); if (u) currentUser = u; } catch {}
 
-    const WORDS = ['apple','banana','cherry','dragon','elephant','falcon','guitar','hunter','island','jacket','knight','lemon','monkey','ninja','ocean','pirate','queen','rabbit','snake','tiger','umbrella','vampire','wizard','xylophone','yacht','zebra','rocket','planet','cyber','magic'];
-    
-    const S = { myScore: 0, oppScore: 0, currentWord: '', phase: 'idle' };
-    let timeLeft = 60, timerInt = null;
+    // ============================================================
+    // WEB AUDIO SFX ENGINE
+    // ============================================================
+    const SFX = (() => {
+      let ctx = null, enabled = true;
+      function getCtx() {
+        if (!enabled) return null;
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        return ctx;
+      }
+      function tone(freq, dur, type = 'sine', vol = 0.14, delay = 0, freqEnd = null) {
+        const c = getCtx(); if (!c) return;
+        const now = c.currentTime + delay;
+        const osc = c.createOscillator(), gain = c.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, now + dur);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(gain); gain.connect(c.destination);
+        osc.start(now); osc.stop(now + dur);
+      }
+      return {
+        toggle() { enabled = !enabled; return enabled; },
+        key() { tone(520, 0.035, 'triangle', 0.08, 0, 320); },
+        error() { tone(160, 0.14, 'sawtooth', 0.18, 0, 95); },
+        word(streak = 1) {
+          const base = Math.min(880, 440 + streak * 35);
+          tone(base, 0.08, 'sine', 0.15, 0);
+          tone(base * 1.25, 0.12, 'sine', 0.16, 0.07);
+        },
+        tick() { tone(750, 0.04, 'square', 0.06, 0); },
+        win() {
+          tone(523, 0.12, 'triangle', 0.18, 0);
+          tone(659, 0.12, 'triangle', 0.18, 0.12);
+          tone(784, 0.12, 'triangle', 0.18, 0.24);
+          tone(1046, 0.3, 'triangle', 0.2, 0.36);
+        },
+        lose() {
+          tone(380, 0.18, 'sawtooth', 0.14, 0);
+          tone(310, 0.18, 'sawtooth', 0.14, 0.18);
+          tone(240, 0.32, 'sawtooth', 0.14, 0.36);
+        }
+      };
+    })();
+
+    $('btn-sound').onclick = () => {
+      const on = SFX.toggle();
+      $('btn-sound').textContent = on ? '🔊' : '🔇';
+    };
+
+    // ============================================================
+    // WORD BANK (Medium + Hard Words)
+    // ============================================================
+    const WORDS = [
+      'algorithm', 'labyrinth', 'phenomenon', 'cryptography', 'equilibrium',
+      'silhouette', 'kaleidoscope', 'quarantine', 'synchronization', 'catastrophe',
+      'fluorescent', 'bureaucracy', 'juxtapose', 'mnemonic', 'rhythm',
+      'zephyr', 'avalanche', 'vortex', 'phantom', 'eclipse',
+      'nebula', 'quantum', 'cybernetic', 'paradox', 'velocity',
+      'obsidian', 'catalyst', 'spectrum', 'infinity', 'horizon',
+      'xylophone', 'metamorphosis', 'architecture', 'psychology', 'atmosphere',
+      'electricity', 'camouflage', 'hypothesis', 'millennium', 'renaissance'
+    ];
+
+    const S = { myScore: 0, oppScore: 0, currentWord: '', phase: 'idle', streak: 0, hadTypo: false, totalKeys: 0, wrongKeys: 0 };
+    let timeLeft = 60, timerInt = null, prevInputLen = 0;
 
     function getRandomWord() {
-      return WORDS[Math.floor(Math.random() * WORDS.length)];
+      let w = WORDS[Math.floor(Math.random() * WORDS.length)];
+      if (w === S.currentWord) w = WORDS[Math.floor(Math.random() * WORDS.length)];
+      return w;
+    }
+
+    function renderWord(typed = '') {
+      const el = $('target-word');
+      el.innerHTML = '';
+      for (let i = 0; i < S.currentWord.length; i++) {
+        const span = document.createElement('span');
+        span.textContent = S.currentWord[i];
+        if (i < typed.length) {
+          span.className = typed[i] === S.currentWord[i] ? 'char-ok' : 'char-err';
+        }
+        el.appendChild(span);
+      }
+    }
+
+    function triggerShake() {
+      const box = $('input-box');
+      const wordEl = $('target-word');
+      box.classList.remove('shake', 'error');
+      wordEl.classList.remove('shake');
+      void box.offsetWidth; // Restart CSS animation
+      box.classList.add('shake', 'error');
+      wordEl.classList.add('shake');
+      SFX.error();
+      if (navigator.vibrate) navigator.vibrate(40);
+      setTimeout(() => box.classList.remove('error'), 300);
+    }
+
+    function updateStreakUI() {
+      $('streak-badge').textContent = S.streak >= 2 ? `🔥 ${S.streak}x STREAK` : '';
     }
 
     function nextWord() {
       S.currentWord = getRandomWord();
-      $('target-word').textContent = S.currentWord;
+      S.hadTypo = false;
+      prevInputLen = 0;
       $('input-box').value = '';
+      renderWord('');
     }
 
     function endGame(win) {
-      S.phase = 'over'; clearInterval(timerInt);
-      $('res-title').textContent = win ? "Victory!" : "Defeat!";
-      $('res-title').style.color = win ? "var(--me)" : "var(--opp)";
+      S.phase = 'over';
+      clearInterval(timerInt);
+      $('input-box').disabled = true;
+      $('res-title').textContent = win ? 'Victory!' : 'Defeat!';
+      $('res-title').style.color = win ? 'var(--me)' : 'var(--opp)';
+      $('stat-words').textContent = S.myScore;
+      const acc = S.totalKeys > 0 ? Math.max(0, Math.round(((S.totalKeys - S.wrongKeys) / S.totalKeys) * 100)) : 100;
+      $('stat-acc').textContent = `${acc}%`;
+      if (!isLive) $('btn-again').style.display = 'inline-block';
       $('result-overlay').classList.remove('hidden');
+      win ? SFX.win() : SFX.lose();
+    }
+
+    function handleTyping(val) {
+      if (S.phase !== 'playing') return;
+      const typed = val.toLowerCase();
+      renderWord(typed);
+
+      // Check if user just typed a new character
+      if (typed.length > prevInputLen) {
+        S.totalKeys++;
+        if (!S.currentWord.startsWith(typed)) {
+          S.wrongKeys++;
+          S.hadTypo = true;
+          S.streak = 0;
+          updateStreakUI();
+          triggerShake();
+        } else {
+          SFX.key();
+        }
+      }
+      prevInputLen = typed.length;
+
+      if (typed === S.currentWord) {
+        S.streak = S.hadTypo ? 1 : S.streak + 1;
+        updateStreakUI();
+        SFX.word(S.streak);
+        if (isLive) {
+          socket.emit('word:typed');
+        } else {
+          S.myScore++;
+          $('my-score').textContent = S.myScore;
+          nextWord();
+        }
+      }
+    }
+
+    $('input-box').addEventListener('input', (e) => handleTyping(e.target.value));
+
+    // ============================================================
+    // BOT MODE
+    // ============================================================
+    function startBotGame() {
+      $('start-overlay').classList.add('hidden');
+      $('result-overlay').classList.add('hidden');
+      S.phase = 'playing'; S.myScore = 0; S.oppScore = 0; S.streak = 0; S.totalKeys = 0; S.wrongKeys = 0;
+      timeLeft = 60;
+      $('my-score').textContent = 0; $('opp-score').textContent = 0;
+      $('timer').textContent = 60; $('timer').classList.remove('danger');
+      updateStreakUI();
+      $('input-box').disabled = false; $('input-box').focus();
+      nextWord();
+
+      clearInterval(timerInt);
+      timerInt = setInterval(() => {
+        timeLeft--;
+        $('timer').textContent = timeLeft;
+        if (timeLeft <= 10 && timeLeft > 0) {
+          $('timer').classList.add('danger');
+          SFX.tick();
+        }
+        if (timeLeft <= 0) {
+          endGame(S.myScore >= S.oppScore);
+          return;
+        }
+        if (Math.random() < 0.25) {
+          S.oppScore++;
+          $('opp-score').textContent = S.oppScore;
+        }
+      }, 1000);
     }
 
     if (!isLive) {
-      $('start-overlay').classList.add('hidden');
+      $('room-display').textContent = 'VS BOT';
       $('start-btn').style.display = 'inline-block';
-      $('start-btn').onclick = () => {
-        $('start-overlay').classList.add('hidden');
-        S.phase = 'playing'; S.myScore = 0; S.oppScore = 0; timeLeft = 60;
-        $('my-score').textContent = 0; $('opp-score').textContent = 0;
-        $('input-box').disabled = false; $('input-box').focus();
-        nextWord();
-        
-        timerInt = setInterval(() => {
-          timeLeft--; $('timer').textContent = timeLeft;
-          if(timeLeft <= 0) {
-            clearInterval(timerInt);
-            endGame(S.myScore >= S.oppScore);
-          }
-          if(Math.random() < 0.3) S.oppScore++; // Bot types randomly
-          $('opp-score').textContent = S.oppScore;
-        }, 1000);
-      };
-
-      $('input-box').addEventListener('input', (e) => {
-        if(e.target.value.toLowerCase() === S.currentWord) {
-          S.myScore++; $('my-score').textContent = S.myScore;
-          nextWord();
-        }
-      });
+      $('start-btn').onclick = startBotGame;
+      $('btn-again').onclick = startBotGame;
     }
 
+    // ============================================================
+    // ONLINE MODE
+    // ============================================================
     let socket = null;
     if (isLive) {
-      $('start-overlay').style.display = 'none';
       $('wait-msg').style.display = 'block';
-      if(mode === 'friend') $('room-display').textContent = 'ROOM: ' + roomId;
+      if (mode === 'friend') $('room-display').textContent = 'ROOM: ' + roomId;
 
       socket = io(SERVER_URL);
       socket.on('connect', () => { socket.emit('hello', currentUser); socket.emit('game:ready', { roomId }); });
       
       socket.on('match:start', () => {
         $('start-overlay').classList.add('hidden');
-        S.phase = 'playing'; S.myScore = 0; S.oppScore = 0; timeLeft = 60;
+        S.phase = 'playing'; S.myScore = 0; S.oppScore = 0; S.streak = 0; S.totalKeys = 0; S.wrongKeys = 0;
+        timeLeft = 60;
         $('my-score').textContent = 0; $('opp-score').textContent = 0;
+        $('timer').textContent = 60; $('timer').classList.remove('danger');
+        updateStreakUI();
         $('input-box').disabled = false; $('input-box').focus();
         
+        clearInterval(timerInt);
         timerInt = setInterval(() => {
-          timeLeft--; $('timer').textContent = timeLeft;
-          if(timeLeft <= 0) { clearInterval(timerInt); $('input-box').disabled = true; }
+          timeLeft--;
+          $('timer').textContent = timeLeft;
+          if (timeLeft <= 10 && timeLeft > 0) {
+            $('timer').classList.add('danger');
+            SFX.tick();
+          }
+          if (timeLeft <= 0) { clearInterval(timerInt); $('input-box').disabled = true; }
         }, 1000);
       });
 
       socket.on('word:next', (word) => {
         S.currentWord = word;
-        $('target-word').textContent = word;
+        S.hadTypo = false;
+        prevInputLen = 0;
         $('input-box').value = '';
+        renderWord('');
       });
 
       socket.on('word:state', (data) => {
         S.myScore = data.myScore; S.oppScore = data.oppScore;
         $('my-score').textContent = S.myScore; $('opp-score').textContent = S.oppScore;
-        if(data.winner) { clearInterval(timerInt); endGame(data.winner === currentUser.id); }
-      });
-
-      $('input-box').addEventListener('input', (e) => {
-        if(S.phase !== 'playing') return;
-        if(e.target.value.toLowerCase() === S.currentWord) {
-          socket.emit('word:typed');
-        }
+        if (data.winner) { endGame(data.winner === currentUser.id); }
       });
     }
   </script>
