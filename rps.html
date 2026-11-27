@@ -1,25 +1,475 @@
-socket.on('rps:pick', ({ move }) => {
-    const room = getRoomForSocket(socket.id);
-    const p = Store.players.get(socket.id);
-    if (!room || !p || room.gameId !== 'rps' || room.status !== 'playing') return;
-    if (!['rock', 'paper', 'scissors'].includes(move)) return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#080a10">
+  <title>Swiplay — RPS: Clash</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+  <script>const SERVER_URL = 'https://swiplay-server.onrender.com';</script>
 
-    room.picks[p.userId] = move;
-    const [p1, p2] = room.players.map(x => x.userId);
-    if (room.picks[p1] && room.picks[p2]) {
-      const m1 = room.picks[p1], m2 = room.picks[p2];
-      if ((m1 === 'rock' && m2 === 'scissors') || (m1 === 'paper' && m2 === 'rock') || (m1 === 'scissors' && m2 === 'paper')) {
-        room.scores[p1]++;
-      } else if (m1 !== m2) {
-        room.scores[p2]++;
+  <style>
+    :root {
+      --bg1: #1a2035; --bg2: #080a10;
+      --me: #00ff66; --opp: #ff0055; --gold: #ffcc00; --muted: #8f96a3;
+      --glass: rgba(22, 26, 43, 0.65); --border: rgba(255, 255, 255, 0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%; height: 100dvh;
+      background: radial-gradient(circle at center, var(--bg1) 0%, var(--bg2) 100%);
+      color: #fff; overflow: hidden; display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .top-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(22,26,43,.6); border-bottom: 1px solid var(--border); z-index: 20; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 7px 14px; border-radius: 18px; font-weight: 700; font-size: .85rem; text-decoration: none; border: 1px solid var(--border); }
+    .mode-badge { background: rgba(0,255,102,.12); border: 1px solid var(--me); color: var(--me); padding: 5px 12px; border-radius: 16px; font-weight: 800; font-size: .75rem; letter-spacing: 1px; text-transform: uppercase; }
+    .room-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: .85rem; letter-spacing: 2px; color: var(--gold); }
+    .spacer { flex: 1; }
+    .icon-btn { background: rgba(255,255,255,.08); color: #fff; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); font-size: 1rem; cursor: pointer; display: grid; place-items: center; }
+
+    /* Scoreboard */
+    .scoreboard { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--glass); border-bottom: 1px solid var(--border); }
+    .sb-side { display: flex; flex-direction: column; gap: 6px; }
+    .sb-side.right { align-items: flex-end; }
+    .sb-name { font-size: .85rem; font-weight: 800; color: #fff; }
+    .sb-dots { display: flex; gap: 6px; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); transition: .25s; }
+    .dot.me-on { background: var(--me); border-color: var(--me); box-shadow: 0 0 10px var(--me); transform: scale(1.15); }
+    .dot.opp-on { background: var(--opp); border-color: var(--opp); box-shadow: 0 0 10px var(--opp); transform: scale(1.15); }
+    .sb-vs { font-size: .75rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; text-align: center; }
+
+    /* Arena */
+    .arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 16px; position: relative; overflow: hidden; }
+    .arena.flash-win { box-shadow: inset 0 0 80px rgba(0,255,102,0.45); }
+    .arena.flash-lose { box-shadow: inset 0 0 80px rgba(255,0,85,0.45); }
+    .arena.flash-draw { box-shadow: inset 0 0 80px rgba(255,204,0,0.35); }
+
+    .stage { flex: 1; width: 100%; max-width: 460px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; position: relative; }
+    .hands-row { display: flex; align-items: center; justify-content: space-around; width: 100%; }
+    .hand-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .hand { font-size: clamp(4.2rem, 16vw, 6.5rem); line-height: 1; filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6)); transition: transform 0.2s; }
+    .hand.opp { transform: scaleX(-1); }
+    .hand-label { font-size: .75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    @keyframes pumpLeft {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-22px) rotate(-14deg); }
+    }
+    @keyframes pumpRight {
+      0%, 100% { transform: scaleX(-1) translateY(0) rotate(0deg); }
+      50% { transform: scaleX(-1) translateY(-22px) rotate(-14deg); }
+    }
+    .pumping-me { animation: pumpLeft 0.32s ease-in-out 3; }
+    .pumping-opp { animation: pumpRight 0.32s ease-in-out 3; }
+
+    @keyframes clashPop {
+      0% { transform: scale(0.5); opacity: 0.4; }
+      60% { transform: scale(1.22); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pop-me { animation: clashPop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+    .pop-opp { animation: clashPop 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-8px, 4px); }
+      40% { transform: translate(8px, -4px); }
+      60% { transform: translate(-6px, -3px); }
+      80% { transform: translate(6px, 3px); }
+    }
+    .shake { animation: shake 0.32s ease-in-out; }
+
+    .status-banner { font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; min-height: 36px; text-align: center; }
+    .status-banner.win { color: var(--me); text-shadow: 0 0 20px rgba(0,255,102,0.5); }
+    .status-banner.lose { color: var(--opp); text-shadow: 0 0 20px rgba(255,0,85,0.5); }
+    .status-banner.draw { color: var(--gold); }
+
+    /* Choice Buttons */
+    .controls { width: 100%; max-width: 440px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 8px; }
+    .choice-btn {
+      background: rgba(255,255,255,0.06); border: 2px solid var(--border); border-radius: 18px;
+      padding: 16px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: #fff; cursor: pointer; transition: 0.2s;
+    }
+    .choice-btn .emoji { font-size: 2.4rem; line-height: 1; }
+    .choice-btn .lbl { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .choice-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); transform: translateY(-3px); border-color: rgba(255,255,255,0.3); }
+    .choice-btn:active:not(:disabled) { transform: scale(0.94); }
+    .choice-btn.selected { border-color: var(--me); background: rgba(0,255,102,0.15); box-shadow: 0 0 20px rgba(0,255,102,0.25); }
+    .choice-btn.selected .lbl { color: var(--me); }
+    .choice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Particles */
+    .particle { position: absolute; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; z-index: 50; }
+
+    /* Overlays */
+    .overlay { position: fixed; inset: 0; background: rgba(8,10,16,.92); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; z-index: 100; text-align: center; padding: 24px; }
+    .overlay.hidden { display: none; }
+    .overlay h1 { font-size: 2.3rem; font-weight: 900; text-transform: uppercase; }
+    .overlay p { color: var(--muted); font-size: .95rem; max-width: 320px; }
+    .btn-primary { background: linear-gradient(135deg, var(--me), #00cc52); color: #000; padding: 14px 36px; border-radius: 28px; font-weight: 900; font-size: 1.05rem; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 10px 25px rgba(0,255,102,.3); }
+    .btn-secondary { background: rgba(255,255,255,.1); color: #fff; padding: 12px 26px; border-radius: 28px; font-weight: 800; font-size: .95rem; border: 1px solid var(--border); cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="index.html" class="btn-ghost">← Leave</a>
+    <div class="mode-badge" id="mode-badge">VS BOT</div>
+    <div class="room-code" id="room-code" style="display:none"></div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="btn-sound" title="Toggle Sound">🔊</button>
+  </div>
+
+  <div class="scoreboard">
+    <div class="sb-side">
+      <div class="sb-name" id="my-name">You</div>
+      <div class="sb-dots" id="my-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    </div>
+    <div class="sb-vs">FIRST TO 3</div>
+    <div class="sb-side right">
+      <div class="sb-name" id="opp-name">Bot</div>
+      <div class="sb-dots" id="opp-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    </div>
+  </div>
+
+  <div class="arena" id="arena">
+    <div class="stage">
+      <div class="hands-row">
+        <div class="hand-box">
+          <div class="hand" id="hand-me">✊</div>
+          <div class="hand-label" id="lbl-me">You</div>
+        </div>
+        <div class="hand-box">
+          <div class="hand opp" id="hand-opp">✊</div>
+          <div class="hand-label" id="lbl-opp">Bot</div>
+        </div>
+      </div>
+      <div class="status-banner" id="status-banner">Choose your move!</div>
+    </div>
+
+    <div class="controls">
+      <button class="choice-btn" data-move="rock"><span class="emoji">✊</span><span class="lbl">Rock</span></button>
+      <button class="choice-btn" data-move="paper"><span class="emoji">✋</span><span class="lbl">Paper</span></button>
+      <button class="choice-btn" data-move="scissors"><span class="emoji">✌️</span><span class="lbl">Scissors</span></button>
+    </div>
+  </div>
+
+  <!-- START / WAITING OVERLAY -->
+  <div class="overlay" id="start-overlay">
+    <h1>✊ RPS: Clash</h1>
+    <p id="start-desc">First to 3 round wins takes the match.</p>
+    <button class="btn-primary" id="start-btn">Start Clash</button>
+    <div id="wait-msg" style="display:none; color:var(--gold); font-weight:800;">Waiting for opponent...</div>
+  </div>
+
+  <!-- RESULT OVERLAY -->
+  <div class="overlay hidden" id="result-overlay">
+    <h1 id="res-title">Victory!</h1>
+    <p id="res-desc">You won 3 - 1</p>
+    <div style="display:flex; gap:12px;">
+      <button class="btn-primary" id="again-btn">Play Again</button>
+      <button class="btn-secondary" onclick="location.href='index.html'">Lobby</button>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') || 'bot';
+    const roomId = params.get('room') || '';
+    const isLive = mode === 'friend' || mode === 'random';
+
+    let currentUser = { id: 'local_' + Math.random().toString(36).slice(2, 7), name: 'You' };
+    try { const u = JSON.parse(localStorage.getItem('swiplay_user')); if (u && u.name) currentUser = u; } catch {}
+    $('my-name').textContent = currentUser.name;
+    $('lbl-me').textContent = currentUser.name;
+
+    // ============================================================
+    // WEB AUDIO SOUND ENGINE
+    // ============================================================
+    const SFX = (() => {
+      let ctx = null, enabled = true;
+      function getCtx() {
+        if (!enabled) return null;
+        if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+        return ctx;
+      }
+      function tone(freq, dur, type = 'sine', vol = 0.16, delay = 0, freqEnd = null) {
+        const c = getCtx(); if (!c) return;
+        const now = c.currentTime + delay;
+        const osc = c.createOscillator(), gain = c.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, now + dur);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(gain); gain.connect(c.destination);
+        osc.start(now); osc.stop(now + dur);
+      }
+      return {
+        toggle() { enabled = !enabled; return enabled; },
+        pick() { tone(480, 0.06, 'triangle', 0.14, 0, 620); },
+        pump() {
+          tone(180, 0.09, 'triangle', 0.18, 0, 110);
+          tone(210, 0.09, 'triangle', 0.18, 0.32, 120);
+          tone(250, 0.09, 'triangle', 0.18, 0.64, 140);
+        },
+        roundWin() {
+          tone(523, 0.1, 'sine', 0.18, 0);
+          tone(659, 0.14, 'sine', 0.18, 0.08);
+          tone(784, 0.2, 'triangle', 0.2, 0.16);
+        },
+        roundLose() {
+          tone(240, 0.14, 'sawtooth', 0.15, 0, 140);
+          tone(170, 0.22, 'sawtooth', 0.15, 0.12, 95);
+        },
+        roundDraw() {
+          tone(400, 0.1, 'triangle', 0.14, 0);
+          tone(400, 0.12, 'triangle', 0.14, 0.14);
+        },
+        matchWin() {
+          [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'triangle', 0.2, i * 0.11));
+        },
+        matchLose() {
+          [340, 290, 240, 180].forEach((f, i) => tone(f, 0.24, 'sawtooth', 0.14, i * 0.13));
+        }
+      };
+    })();
+
+    $('btn-sound').onclick = () => {
+      const on = SFX.toggle();
+      $('btn-sound').textContent = on ? '🔊' : '🔇';
+    };
+
+    // ============================================================
+    // VISUAL EFFECTS (Particles + Screen Flash + Shake)
+    // ============================================================
+    function spawnParticles(color) {
+      const arena = $('arena');
+      const rect = arena.getBoundingClientRect();
+      const cx = rect.width / 2, cy = rect.height * 0.42;
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.background = color;
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        const angle = (Math.PI * 2 * i) / 18 + Math.random() * 0.3;
+        const dist = 60 + Math.random() * 90;
+        p.animate([
+          { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px)) scale(0)`, opacity: 0 }
+        ], { duration: 500 + Math.random() * 200, easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)' });
+        arena.appendChild(p);
+        setTimeout(() => p.remove(), 750);
+      }
+    }
+
+    function flashArena(type) {
+      const arena = $('arena');
+      arena.classList.remove('flash-win', 'flash-lose', 'flash-draw', 'shake');
+      void arena.offsetWidth;
+      arena.classList.add(`flash-${type}`);
+      if (type === 'lose') arena.classList.add('shake');
+      setTimeout(() => arena.classList.remove(`flash-${type}`, 'shake'), 450);
+    }
+
+    // ============================================================
+    // GAME LOGIC
+    // ============================================================
+    const EMOJI = { rock: '✊', paper: '✋', scissors: '✌️' };
+    const MOVES = ['rock', 'paper', 'scissors'];
+    const S = { myScore: 0, oppScore: 0, locked: true, phase: 'idle' };
+    const choiceBtns = document.querySelectorAll('.choice-btn');
+
+    function setButtonsEnabled(enabled) {
+      S.locked = !enabled;
+      choiceBtns.forEach(b => {
+        b.disabled = !enabled;
+        if (enabled) b.classList.remove('selected');
+      });
+    }
+
+    function updateDots() {
+      const myDots = $('my-dots').children;
+      const oppDots = $('opp-dots').children;
+      for (let i = 0; i < 3; i++) {
+        myDots[i].classList.toggle('me-on', i < S.myScore);
+        oppDots[i].classList.toggle('opp-on', i < S.oppScore);
+      }
+    }
+
+    function judge(myMove, oppMove) {
+      if (myMove === oppMove) return 'draw';
+      if ((myMove === 'rock' && oppMove === 'scissors') ||
+          (myMove === 'paper' && oppMove === 'rock') ||
+          (myMove === 'scissors' && oppMove === 'paper')) return 'win';
+      return 'lose';
+    }
+
+    function playClashAnimation(myMove, oppMove, outcome, myNewScore, oppNewScore, matchWinner) {
+      const hMe = $('hand-me'), hOpp = $('hand-opp'), banner = $('status-banner');
+      hMe.textContent = '✊'; hOpp.textContent = '✊';
+      banner.className = 'status-banner';
+      banner.textContent = 'ROCK... PAPER... SCISSORS!';
+
+      hMe.classList.remove('pumping-me', 'pop-me');
+      hOpp.classList.remove('pumping-opp', 'pop-opp');
+      void hMe.offsetWidth;
+      hMe.classList.add('pumping-me');
+      hOpp.classList.add('pumping-opp');
+      SFX.pump();
+
+      setTimeout(() => {
+        hMe.classList.remove('pumping-me');
+        hOpp.classList.remove('pumping-opp');
+        hMe.textContent = EMOJI[myMove];
+        hOpp.textContent = EMOJI[oppMove];
+        hMe.classList.add('pop-me');
+        hOpp.classList.add('pop-opp');
+
+        S.myScore = myNewScore;
+        S.oppScore = oppNewScore;
+        updateDots();
+
+        if (outcome === 'win') {
+          banner.textContent = 'YOU WIN THE ROUND!';
+          banner.className = 'status-banner win';
+          flashArena('win');
+          spawnParticles('#00ff66');
+          SFX.roundWin();
+          if (navigator.vibrate) navigator.vibrate(30);
+        } else if (outcome === 'lose') {
+          banner.textContent = 'OPPONENT WINS ROUND!';
+          banner.className = 'status-banner lose';
+          flashArena('lose');
+          spawnParticles('#ff0055');
+          SFX.roundLose();
+          if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+        } else {
+          banner.textContent = 'DRAW — GO AGAIN!';
+          banner.className = 'status-banner draw';
+          flashArena('draw');
+          spawnParticles('#ffcc00');
+          SFX.roundDraw();
+        }
+
+        if (matchWinner) {
+          setTimeout(() => finishMatch(matchWinner === 'me'), 900);
+        } else {
+          setTimeout(() => {
+            if (S.phase === 'playing') {
+              banner.className = 'status-banner';
+              banner.textContent = 'Choose your move!';
+              setButtonsEnabled(true);
+            }
+          }, 1100);
+        }
+      }, 960);
+    }
+
+    function finishMatch(didWin) {
+      S.phase = 'over';
+      setButtonsEnabled(false);
+      $('res-title').textContent = didWin ? 'Victory!' : 'Defeat!';
+      $('res-title').style.color = didWin ? 'var(--me)' : 'var(--opp)';
+      $('res-desc').textContent = `Final Score: ${S.myScore} - ${S.oppScore}`;
+      $('result-overlay').classList.remove('hidden');
+      didWin ? SFX.matchWin() : SFX.matchLose();
+    }
+
+    function resetBoard() {
+      S.myScore = 0; S.oppScore = 0; S.phase = 'playing';
+      updateDots();
+      $('hand-me').textContent = '✊'; $('hand-opp').textContent = '✊';
+      $('status-banner').className = 'status-banner';
+      $('status-banner').textContent = 'Choose your move!';
+      $('start-overlay').classList.add('hidden');
+      $('result-overlay').classList.add('hidden');
+      setButtonsEnabled(true);
+    }
+
+    // Button clicks
+    choiceBtns.forEach(btn => {
+      btn.onclick = () => {
+        if (S.locked || S.phase !== 'playing') return;
+        const move = btn.dataset.move;
+        SFX.pick();
+        setButtonsEnabled(false);
+        btn.classList.add('selected');
+
+        if (!isLive) {
+          const oppMove = MOVES[Math.floor(Math.random() * 3)];
+          const outcome = judge(move, oppMove);
+          const nextMy = S.myScore + (outcome === 'win' ? 1 : 0);
+          const nextOpp = S.oppScore + (outcome === 'lose' ? 1 : 0);
+          const winner = nextMy >= 3 ? 'me' : (nextOpp >= 3 ? 'opp' : null);
+          playClashAnimation(move, oppMove, outcome, nextMy, nextOpp, winner);
+        } else {
+          $('status-banner').textContent = 'Waiting for opponent...';
+          socket.emit('rps:pick', { move });
+        }
+      };
+    });
+
+    // ============================================================
+    // BOT vs ONLINE SETUP
+    // ============================================================
+    let socket = null;
+    if (!isLive) {
+      $('start-btn').onclick = resetBoard;
+      $('again-btn').onclick = resetBoard;
+    } else {
+      $('mode-badge').textContent = 'ONLINE';
+      $('start-btn').style.display = 'none';
+      $('wait-msg').style.display = 'block';
+      $('again-btn').style.display = 'none';
+      if (mode === 'friend') {
+        $('room-code').textContent = 'ROOM: ' + roomId;
+        $('room-code').style.display = 'block';
       }
 
-      let winner = null;
-      if (room.scores[p1] >= 3) winner = p1;
-      else if (room.scores[p2] >= 3) winner = p2;
-      if (winner) room.status = 'ended';
+      socket = io(SERVER_URL);
+      socket.on('connect', () => {
+        socket.emit('hello', currentUser);
+        if (mode === 'friend') socket.emit('game:ready', { roomId });
+        else socket.emit('room:enter', { gameId: 'rps', mode: 'random' });
+      });
 
-      io.to(room.id).emit('rps:result', { moves: { ...room.picks }, scores: { ...room.scores }, winner });
-      room.picks = {};
+      socket.on('match:found', (data) => {
+        socket.emit('game:ready', { roomId: data.room });
+        window.history.replaceState({}, '', `?mode=friend&room=${data.room}`);
+      });
+
+      socket.on('match:start', (data) => {
+        const opp = data.profiles.find(p => String(p.userId) !== String(currentUser.id));
+        if (opp && opp.profile) {
+          $('opp-name').textContent = opp.profile.name;
+          $('lbl-opp').textContent = opp.profile.name;
+        }
+        resetBoard();
+      });
+
+      socket.on('rps:result', (data) => {
+        const myMove = data.moves[currentUser.id];
+        const oppId = Object.keys(data.moves).find(id => id !== String(currentUser.id));
+        const oppMove = data.moves[oppId];
+        const outcome = judge(myMove, oppMove);
+        const myNew = data.scores[currentUser.id] || 0;
+        const oppNew = data.scores[oppId] || 0;
+        const winner = data.winner ? (String(data.winner) === String(currentUser.id) ? 'me' : 'opp') : null;
+        playClashAnimation(myMove, oppMove, outcome, myNew, oppNew, winner);
+      });
+
+      socket.on('match:end', (data) => {
+        if (S.phase === 'playing') finishMatch(String(data.winnerId) === String(currentUser.id));
+      });
     }
-  });
+  </script>
+</body>
+</html>
