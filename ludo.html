@@ -2,195 +2,129 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#080a10">
-  <title>Swiplay - Ludo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <title>Swiplay — Ludo Classic</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
   <script>const SERVER_URL = 'https://swiplay-server.onrender.com';</script>
+
   <style>
-    :root { --bg1: #1a2035; --bg2: #080a10; --me: #00ff66; --opp: #ff0055; --gold: #ffcc00; --muted: #8f96a3; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
-    html, body { height: 100%; background: radial-gradient(circle, var(--bg1), var(--bg2)); color: #fff; overflow: hidden; display: flex; flex-direction: column; }
-    .top-bar { display: flex; justify-content: space-between; padding: 12px; background: rgba(22,26,43,.6); border-bottom: 1px solid rgba(255,255,255,.1); }
-    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
-    .scoreboard { display: flex; justify-content: space-between; padding: 15px; max-width: 500px; width: 100%; margin: 0 auto; }
-    .player { background: rgba(255,255,255,.05); padding: 10px 15px; border-radius: 15px; border-bottom: 3px solid #555; text-align: center; width: 45%; }
-    .player.me { border-color: var(--me); } .player.opp { border-color: var(--opp); }
-    .player.active { background: rgba(255,255,255,.15); box-shadow: 0 0 15px rgba(255,255,255,.1); }
-    .arena { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; gap: 20px; }
-    
-    /* Simplified Ludo Track */
-    .board { width: min(350px, 90vw); display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: #161a2b; padding: 10px; border-radius: 12px; }
-    .cell { aspect-ratio: 1; background: #2a3145; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.8rem; color: var(--muted); position: relative; }
-    .cell.active { background: rgba(255,204,0,0.2); border: 1px solid var(--gold); }
-    .token { width: 60%; height: 60%; border-radius: 50%; position: absolute; transition: 0.3s; box-shadow: 0 0 10px rgba(0,0,0,0.8); }
-    .token.me { background: var(--me); } .token.opp { background: var(--opp); }
-    
-    .controls { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-    .dice { width: 60px; height: 60px; background: #fff; color: #000; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-    .btn-primary { background: var(--me); color: #000; padding: 12px 30px; border-radius: 30px; font-weight: 900; border: none; cursor: pointer; font-size: 1.1rem; }
-    .btn-primary:disabled { background: #555; color: #888; }
-    .overlay { position: absolute; inset: 0; background: rgba(8,10,16,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 100; text-align: center; padding: 20px; }
+    :root {
+      --bg1: #1a2035; --bg2: #080a10;
+      --glass: rgba(22, 26, 43, 0.72); --border: rgba(255,255,255,0.1);
+      --me: #00ff66; --opp: #ff0055; --gold: #ffcc00; --muted: #8f96a3;
+      --red: #ff3b5c; --green: #00e676; --yellow: #ffca28; --blue: #29b6f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%; height: 100dvh;
+      background: radial-gradient(circle at center, var(--bg1) 0%, var(--bg2) 100%);
+      color: #fff; overflow: hidden; display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+      overscroll-behavior: none;
+    }
+    button { background: none; border: none; color: inherit; cursor: pointer; font: inherit; outline: none; }
+    a { text-decoration: none; color: inherit; }
+    input { font: inherit; outline: none; border: none; background: transparent; color: inherit; }
+
+    /* Top Bar */
+    .top-bar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(22,26,43,.6); border-bottom: 1px solid var(--border); z-index: 20; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: #fff; padding: 6px 12px; border-radius: 16px; font-weight: 700; font-size: .85rem; border: 1px solid var(--border); }
+    .mode-badge { background: rgba(0,255,102,.12); border: 1px solid var(--me); color: var(--me); padding: 4px 10px; border-radius: 14px; font-weight: 800; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
+    .room-code { font-family: ui-monospace, monospace; font-weight: 800; font-size: .85rem; letter-spacing: 2px; color: var(--gold); }
+    .spacer { flex: 1; }
+    .icon-btn { background: rgba(255,255,255,.08); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 1rem; border: 1px solid var(--border); }
+
+    /* Turn & Players Strip */
+    .players-bar { flex-shrink: 0; display: flex; justify-content: center; gap: 8px; padding: 6px 10px; background: rgba(8,10,16,.5); border-bottom: 1px solid var(--border); }
+    .p-chip { flex: 1; max-width: 120px; display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 12px; background: rgba(255,255,255,.04); border: 2px solid transparent; opacity: .55; transition: .25s; }
+    .p-chip.active { opacity: 1; background: rgba(255,255,255,.1); transform: scale(1.03); }
+    .p-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .p-name { font-size: .75rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .p-chip.c-0.active { border-color: var(--red); box-shadow: 0 0 12px rgba(255,59,92,.35); }
+    .p-chip.c-1.active { border-color: var(--green); box-shadow: 0 0 12px rgba(0,230,118,.35); }
+    .p-chip.c-2.active { border-color: var(--yellow); box-shadow: 0 0 12px rgba(255,202,40,.35); }
+    .p-chip.c-3.active { border-color: var(--blue); box-shadow: 0 0 12px rgba(41,182,246,.35); }
+
+    /* Arena & 15x15 Board */
+    .arena { flex: 1; display: flex; justify-content: center; align-items: center; padding: 8px; min-height: 0; overflow: hidden; position: relative; }
+    .board-wrap {
+      height: 100%; max-height: min(94vw, 500px); max-width: 94vw;
+      aspect-ratio: 1 / 1; position: relative; container-type: inline-size;
+      border-radius: 14px; padding: 4px; background: #141929;
+      box-shadow: 0 16px 45px rgba(0,0,0,.75), 0 0 0 2px rgba(255,255,255,.08);
+    }
+    .board {
+      width: 100%; height: 100%; display: grid;
+      grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr);
+      border-radius: 10px; overflow: hidden; background: #e8ecf4; position: relative;
+    }
+    .cell { border: 0.5px solid rgba(15,23,42,.15); position: relative; display: flex; align-items: center; justify-content: center; }
+    .cell.yard { border: none; }
+    .cell.y-0 { background: var(--red); } .cell.y-1 { background: var(--green); }
+    .cell.y-2 { background: var(--yellow); } .cell.y-3 { background: var(--blue); }
+    .cell.yard-inner { background: rgba(255,255,255,.92); border: none; }
+    .cell.path-0 { background: rgba(255,59,92,.85); } .cell.path-1 { background: rgba(0,230,118,.85); }
+    .cell.path-2 { background: rgba(255,202,40,.85); } .cell.path-3 { background: rgba(41,182,246,.85); }
+    .cell.star::after { content: '★'; font-size: 4.2cqw; color: rgba(15,23,42,.45); position: absolute; pointer-events: none; }
+    .cell.path-0.star::after, .cell.path-1.star::after, .cell.path-2.star::after, .cell.path-3.star::after { color: rgba(255,255,255,.9); }
+
+    /* Center Home Triangle */
+    .center-home {
+      grid-column: 7 / 10; grid-row: 7 / 10; position: relative; overflow: hidden;
+      background: conic-gradient(from 45deg, var(--blue) 0deg 90deg, var(--red) 90deg 180deg, var(--green) 180deg 270deg, var(--yellow) 270deg 360deg);
+      border: 1px solid rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center;
+    }
+    .center-home::after { content: '👑'; font-size: 6cqw; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+
+    /* Tokens Layer */
+    .tokens-layer { position: absolute; inset: 4px; pointer-events: none; z-index: 10; }
+    .token {
+      position: absolute; width: 5.6%; height: 5.6%; border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: left 0.14s cubic-bezier(.25,.8,.25,1), top 0.14s cubic-bezier(.25,.8,.25,1), transform 0.14s;
+      border: 2.5px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,.55), inset 0 -3px 5px rgba(0,0,0,.35);
+      pointer-events: auto; cursor: default; display: flex; align-items: center; justify-content: center;
+    }
+    .token.fast { transition: left 0.045s linear, top 0.045s linear; }
+    .token.c-0 { background: radial-gradient(circle at 35% 30%, #ff7a90, var(--red)); }
+    .token.c-1 { background: radial-gradient(circle at 35% 30%, #69f0ae, var(--green)); }
+    .token.c-2 { background: radial-gradient(circle at 35% 30%, #ffe57f, var(--yellow)); }
+    .token.c-3 { background: radial-gradient(circle at 35% 30%, #81d4fa, var(--blue)); }
+    .token.movable {
+      cursor: pointer; z-index: 25;
+      animation: tokenPulse 0.7s infinite alternate;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.9), 0 0 18px var(--me);
+    }
+    @keyframes tokenPulse { from { transform: translate(-50%, -50%) scale(1.05); } to { transform: translate(-50%, -50%) scale(1.28); } }
+
+    /* Bottom Dock (Dice + Status + Chat) */
+    .dock {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      background: var(--glass); border-top: 1px solid var(--border);
+    }
+    .status-text { flex: 1; font-size: .85rem; font-weight: 700; color: var(--muted); }
+    .status-text strong { color: #fff; display: block; font-size: .95rem; }
+
+    .dice-btn {
+      width: 58px; height: 58px; border-radius: 16px; background: linear-gradient(145deg, #ffffff, #d9e2ec);
+      color: #0f172a; font-size: 2.2rem; font-weight: 900; display: grid; place-items: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,.5), 0 0 0 2px var(--me); transition: .2s;
+    }
+    .dice-btn:disabled { opacity: .45; box-shadow: 0 4px 10px rgba(0,0,0,.3); cursor: not-allowed; }
+    .dice-btn:active:not(:disabled) { transform: scale(.92); }
+    .dice-btn.rolling { animation: diceSpin 0.35s ease-in-out infinite; }
+    @keyframes diceSpin { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.12); } 100% { transform: rotate(360deg) scale(1); } }
+
+    .chat-open-btn { background: var(--me); color: #000; padding: 10px 16px; border-radius: 14px; font-weight: 900; font-size: .85rem; }
+
+    /* Overlays */
+    .overlay { position: fixed; inset: 0; background: rgba(8,10,16,.9); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; text-align: center; padding: 24px; }
     .overlay.hidden { display: none; }
-    .chat-container { position: absolute; bottom: 70px; width: 90%; max-width: 380px; background: #161a2b; border-radius: 12px; display: none; flex-direction: column; z-index: 50; }
-    .chat-container.active { display: flex; }
-    .chat-history { height: 120px; overflow-y: auto; padding: 10px; font-size: 0.8rem; }
-    .chat-input-area { display: flex; border-top: 1px solid rgba(255,255,255,.1); }
-    .chat-input-area input { flex: 1; padding: 10px; background: transparent; border: none; color: #fff; outline: none; }
-    .chat-input-area button { padding: 0 15px; background: var(--me); border: none; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="top-bar">
-    <a href="index.html" class="btn-ghost">⬅ Leave</a>
-    <div id="room-display" style="font-weight:bold; color:var(--me);">MATCHMAKING</div>
-    <button class="btn-ghost" id="toggle-chat" style="display:none;">💬</button>
-  </div>
-
-  <div class="scoreboard">
-    <div class="player me" id="card-me"><div>You</div><div style="font-size:1.2rem; font-weight:900;" id="my-pos">Start</div></div>
-    <div class="player opp" id="card-opp"><div>Opponent</div><div style="font-size:1.2rem; font-weight:900;" id="opp-pos">Start</div></div>
-  </div>
-
-  <div class="arena">
-    <div class="board" id="board"></div>
-    
-    <div class="controls">
-      <div class="dice" id="dice">?</div>
-      <button class="btn-primary" id="roll-btn">ROLL DICE</button>
-      <div style="color:var(--muted); font-size:0.8rem;" id="turn-text">Waiting to start...</div>
-    </div>
-
-    <div class="overlay" id="start-overlay">
-      <h2>Ludo Classic</h2>
-      <p style="color:var(--muted);">First to square 25 wins. 3 AFKs = Loss.</p>
-      <button class="btn-primary" id="start-btn" style="display:none;">Play vs Bot</button>
-      <div id="wait-msg" style="display:none; font-weight:800;">Waiting for opponent...</div>
-    </div>
-
-    <div class="overlay hidden" id="result-overlay">
-      <h1 id="res-title" style="color:var(--me);">Victory!</h1>
-      <button class="btn-primary" onclick="location.href='index.html'">Back to Lobby</button>
-    </div>
-    
-    <div class="chat-container" id="chat-box">
-      <div class="chat-history" id="chat-hist"></div>
-      <div class="chat-input-area"><input id="chat-inp" placeholder="Type..."><button id="chat-send">➤</button></div>
-    </div>
-  </div>
-
-  <script>
-    const $ = id => document.getElementById(id);
-    const params = new URLSearchParams(location.search);
-    const mode = params.get('mode') || 'bot';
-    const roomId = params.get('room') || '';
-    const isLive = mode !== 'bot';
-    let currentUser = { id: 'local', name: 'You' };
-    try { const u = JSON.parse(localStorage.getItem('swiplay_user')); if(u) currentUser = u; } catch {}
-
-    const S = { myPos: 0, oppPos: 0, myTurn: true, canRoll: true, afkMisses: 0, phase: 'idle' };
-    const BOARD_SIZE = 25;
-
-    function renderBoard() {
-      const b = $('board'); b.innerHTML = '';
-      for (let i = 1; i <= BOARD_SIZE; i++) {
-        const c = document.createElement('div'); c.className = 'cell';
-        if(i === S.myPos || i === S.oppPos) c.classList.add('active');
-        c.textContent = i;
-        if(S.myPos === i) { const t = document.createElement('div'); t.className = 'token me'; c.appendChild(t); }
-        if(S.oppPos === i) { const t = document.createElement('div'); t.className = 'token opp'; t.style.transform = 'translateX(10px)'; c.appendChild(t); }
-        b.appendChild(c);
-      }
-      $('my-pos').textContent = S.myPos === 0 ? 'Start' : 'Pos ' + S.myPos;
-      $('opp-pos').textContent = S.oppPos === 0 ? 'Start' : 'Pos ' + S.oppPos;
-      
-      $('card-me').classList.toggle('active', S.myTurn && S.phase === 'playing');
-      $('card-opp').classList.toggle('active', !S.myTurn && S.phase === 'playing');
-      
-      const isMyTurn = (isLive ? S.myTurn : true) && S.phase === 'playing';
-      $('roll-btn').disabled = !isMyTurn || !S.canRoll;
-      $('turn-text').textContent = S.phase !== 'playing' ? "Waiting..." : (S.myTurn ? "Your Turn" : "Opponent's Turn");
-    }
-
-    function showResult(win) {
-      S.phase = 'over';
-      $('res-title').textContent = win ? "Victory!" : "Defeat!";
-      $('res-title').style.color = win ? "var(--me)" : "var(--opp)";
-      $('result-overlay').classList.remove('hidden');
-    }
-
-    // --- BOT MODE ---
-    if (!isLive) {
-      $('start-overlay').classList.add('hidden');
-      $('start-btn').style.display = 'inline-block';
-      $('start-btn').textContent = "Start Bot Game";
-      $('start-btn').onclick = () => {
-        $('start-overlay').classList.add('hidden');
-        S.phase = 'playing'; S.myPos = 0; S.oppPos = 0; S.myTurn = true; S.canRoll = true;
-        renderBoard();
-      };
-      
-      $('roll-btn').onclick = () => {
-        if(!S.canRoll || S.phase !== 'playing') return;
-        S.canRoll = false;
-        const roll = Math.floor(Math.random() * 6) + 1;
-        $('dice').textContent = roll;
-        S.myPos = Math.min(BOARD_SIZE, S.myPos + roll);
-        renderBoard();
-        if(S.myPos >= BOARD_SIZE) return showResult(true);
-        
-        setTimeout(() => {
-          S.myTurn = false; renderBoard();
-          setTimeout(() => {
-            const botRoll = Math.floor(Math.random() * 6) + 1;
-            $('dice').textContent = botRoll;
-            S.oppPos = Math.min(BOARD_SIZE, S.oppPos + botRoll);
-            renderBoard();
-            if(S.oppPos >= BOARD_SIZE) return showResult(false);
-            S.myTurn = true; S.canRoll = true; renderBoard();
-          }, 1000);
-        }, 500);
-      };
-    }
-
-    // --- LIVE MODE ---
-    let socket = null;
-    if (isLive) {
-      $('start-overlay').style.display = 'none';
-      $('wait-msg').style.display = 'block';
-      $('toggle-chat').style.display = 'block';
-      if(mode === 'friend') $('room-display').textContent = 'ROOM: ' + roomId;
-
-      socket = io(SERVER_URL);
-      socket.on('connect', () => { socket.emit('hello', currentUser); socket.emit('game:ready', { roomId }); });
-      
-      socket.on('match:start', (data) => {
-        $('start-overlay').classList.add('hidden');
-        S.phase = 'playing'; S.myPos = 0; S.oppPos = 0; S.myTurn = true; S.canRoll = true;
-        renderBoard();
-      });
-
-      socket.on('ludo:state', (data) => {
-        S.myPos = data.myPos; S.oppPos = data.oppPos; S.myTurn = data.turn === currentUser.id; S.canRoll = true;
-        renderBoard();
-        if(data.winner) showResult(data.winner === currentUser.id);
-      });
-
-      socket.on('game:chat_receive', (msg) => {
-        const d = document.createElement('div'); d.innerHTML = `<b style="color:var(--me)">${msg.name}:</b> ${msg.text}`;
-        $('chat-hist').appendChild(d); $('chat-hist').scrollTop = 9999;
-      });
-
-      $('roll-btn').onclick = () => {
-        if(!S.myTurn || !S.canRoll) return;
-        S.canRoll = false; socket.emit('ludo:roll');
-      };
-      
-      $('toggle-chat').onclick = () => $('chat-box').classList.toggle('active');
-      $('chat-send').onclick = () => { if($('chat-inp').value.trim()) { socket.emit('game:chat', $('chat-inp').value); $('chat-inp').value=''; } };
-    }
-    renderBoard();
-  </script>
-</body>
-</html>
+    .setup-card { background: var(--glass); border: 1px solid var(--border); border-radius: 22px; padding: 24px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 14px; }
+    .setup-card h1 { font-size: 1.8rem; font-weight: 900; }
+    .opt-label { font-size: .75rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+    .pill-row { display: flex; gap: 8px; }
+    .pill { flex: 1; padding: 10px; border-radius: 12px; background: rgba(25
